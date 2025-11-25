@@ -1,0 +1,60 @@
+# node modules (bun, npm, yarn)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+assets/css/output.css
+
+# compiled binaries (use tmp/ to store build artifacts)
+bin/
+tmp/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# generated files from `go tool templ` (templ generates files like *_templ.go)
+*_templ.go
+
+# build artifacts and package directories
+pkg/
+vendor/
+
+# coverage and profiling
+coverage.out
+*.coverprofile
+*.pprof
+
+# air creates temporary binaries, keep the Toml (config) file, but ignore outputs
+*.air
+
+# environment
+.env
+.env.*
+!.env.example
+
+# ide specific settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?  # vim/nvim swap
+*.swo
+*.swn
+*.bak
+*.tmp
+*.log
+
+# system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# js/css build output
+dist/
+build/

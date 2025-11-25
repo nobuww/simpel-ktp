@@ -1,0 +1,29 @@
+version: '3'
+
+tasks:
+  tailwind:
+    desc: Watch and build tailwind
+    cmds:
+      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --watch
+
+  air:
+    desc: Run Air hot-reload
+    cmds:
+      - go tool air
+
+  dev:
+    desc: Run the full stack (Air + Tailwind)
+    deps: [tailwind, air]
+
+  build:
+    desc: Generate templates, minify CSS, and build binary
+    cmds:
+      - go tool templ generate
+      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --minify
+      - go build -o ./tmp/main.exe ./cmd/main.go
+
+  fmt:
+    desc: Format all Go and Templ files
+    cmds:
+      - go tool templ fmt .
+      - go fmt ./...
