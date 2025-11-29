@@ -1,29 +1,77 @@
 version: '3'
 
+dotenv: ['.env']
+
 tasks:
-  tailwind:
-    desc: Watch and build tailwind
+  dev:
+    desc: Run the full stack (Air + Tailwind + Bun Watch)
     cmds:
-      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --watch
+      - task: watch-assets
+      - task: air
+
+  build:
+    desc: Production Build (Clean -> Generate -> Minify -> Compile)
+    cmds:
+      - task: clean
+      - go tool templ generate
+      - task: build-assets
+      - go build -o ./bin/app ./cmd/server/main.go
+
+  watch-assets:
+    desc: Watch CSS and JS for changes (Runs in background)
+    cmds:
+      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/style.css --watch &
+      - bun build ./assets/js/main.js --outdir ./static/js --watch &
+
+  build-assets:
+    desc: One-off build for CSS and JS (Minified)
+    cmds:
+      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/style.css --minify
+      - bun build ./assets/js/main.js --outdir ./static/js --minify
+
+  clean:
+    desc: Remove generated artifacts
+    cmds:
+      - rm -rf ./static ./tmp ./bin
 
   air:
     desc: Run Air hot-reload
     cmds:
       - go tool air
 
-  dev:
-    desc: Run the full stack (Air + Tailwind)
-    deps: [tailwind, air]
-
-  build:
-    desc: Generate templates, minify CSS, and build binary
-    cmds:
-      - go tool templ generate
-      - bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --minify
-      - go build -o ./tmp/main.exe ./cmd/main.go
-
   fmt:
     desc: Format all Go and Templ files
     cmds:
       - go tool templ fmt .
       - go fmt ./...
+
+  sqlc:
+    desc: Generate Go code from SQL (sqlc)
+    cmds:
+      - CGO_ENABLED=0 go tool sqlc generate
+
+  migrate-up:
+    desc: Run database migrations up
+    cmds:
+      - go tool goose -dir db/migrations postgres "{{.DATABASE_URL}}" up
+
+  migrate-down:
+    desc: Rollback the last migration
+    cmds:
+      - go tool goose -dir db/migrations postgres "{{.DATABASE_URL}}" down
+
+  migrate-create:
+    desc: Create a new migration file (task migrate-create NAME=add_users)
+    cmds:
+      - go tool goose -dir db/migrations create {{.NAME}} sql
+
+  migrate-status:
+    desc: Check migration status
+    cmds:
+      - go tool goose -dir db/migrations postgres "{{.DATABASE_URL}}" status
+
+  db-reset:
+    desc: Reset all migrations
+    cmds:
+      - go tool goose -dir db/migrations postgres "{{.DATABASE_URL}}" down-to 0
+      - task: migrate-up

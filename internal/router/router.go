@@ -1,0 +1,21 @@
+package router
+
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/nobuww/simpel-ktp/internal/features/home"
+	"github.com/nobuww/simpel-ktp/internal/store"
+)
+
+func New(s *store.Store) *chi.Mux {
+	r := chi.NewRouter()
+
+	staticServer := http.FileServer(http.Dir("./static"))
+	r.Handle("/static/*", http.StripPrefix("/static", staticServer))
+
+	homeHandler := home.New(s)
+	r.Get("/", homeHandler.HomeHandler)
+
+	return r
+}

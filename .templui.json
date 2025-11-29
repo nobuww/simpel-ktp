@@ -1,5 +1,5 @@
 {
-  "componentsDir": "ui/components",
+  "componentsDir": "ui/templui",
   "utilsDir": "ui/utils",
   "moduleName": "github.com/nobuww/simpel-ktp",
   "jsDir": "assets/js",

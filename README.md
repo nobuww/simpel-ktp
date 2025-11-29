@@ -14,9 +14,9 @@ This repository contains a Go server that serves HTML templates and static asset
 * **Go** (1.19+) installed and available on your PATH. Install from [https://go.dev/dl/](https://go.dev/dl/).
 * **Bun** to run Tailwind CLI via `bunx`. See [here](https://bun.sh/) for installation instructions. On Windows PowerShell you can run:
   ```powershell
-  iwr https://bun.sh/install -useb | iex
+  powershell -c "irm bun.sh/install.ps1 | iex"
   ```
-* **Task** (optional) if you want to use the Taskfile in the root for convenience. [Install here](https://taskfile.dev/installation/) or run commands manually listed below.
+* **Task** for convenience of managing tasks. [Install here](https://taskfile.dev/installation/)
 
 ---
 
@@ -26,6 +26,11 @@ This repository contains a Go server that serves HTML templates and static asset
 bun install
 ```
 
+> **Before running the development server, download Go modules:**
+> ```bash
+> go mod download
+> ```
+
 ### 2) Development - It uses a Taskfile with a few convenient tasks
 The repository includes a Taskfile.yml with predefined workflows. If you have the `task` CLI installed, run:
 ```bash
@@ -33,27 +38,10 @@ task dev
 ```
 This runs the Tailwind watcher and a hot-reloading Go server using Air.
 
-### 2a) Manual development alternative
-If you don’t have `task`, open two terminals and run the following commands separately:
-1. Build Tailwind in watch mode (requires `bun`):
-   ```bash
-   bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --watch
-   ```
-2. Run the Go server with automatic reload using Air (optional):
-   ```bash
-   go run github.com/air-verse/air@latest
-   ```
-   Or run the server directly (no auto-reload):
-   ```bash
-   go run ./cmd/main.go
-   ```
-
 ### 3) Build
 To produce a minified CSS and build a binary (this matches the Taskfile `build` task):
 ```bash
-go tool templ generate
-bunx @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css --minify
-go build -o ./tmp/main.exe ./cmd/main.go
+task build
 ```
 Adjust the binary name and path for your target OS.
 
