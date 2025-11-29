@@ -6,14 +6,10 @@ package pg_store
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type Querier interface {
-	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	GetUser(ctx context.Context, id uuid.UUID) (User, error)
-	ListUsers(ctx context.Context) ([]User, error)
+	CheckHealth(ctx context.Context) (int32, error)
 }
 
 var _ Querier = (*Queries)(nil)

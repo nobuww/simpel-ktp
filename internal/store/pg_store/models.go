@@ -5,15 +5,77 @@
 package pg_store
 
 import (
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type User struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	FullName  string    `json:"fullName"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+type DokumenSyarat struct {
+	ID           uuid.UUID        `json:"id"`
+	PermohonanID pgtype.UUID      `json:"permohonanId"`
+	FilePath     string           `json:"filePath"`
+	UploadedAt   pgtype.Timestamp `json:"uploadedAt"`
+	JenisDokumen string           `json:"jenisDokumen"`
+}
+
+type JadwalSesi struct {
+	ID                uuid.UUID   `json:"id"`
+	LokasiKelurahanID pgtype.Int2 `json:"lokasiKelurahanId"`
+	Tanggal           pgtype.Date `json:"tanggal"`
+	JamMulai          pgtype.Time `json:"jamMulai"`
+	JamSelesai        pgtype.Time `json:"jamSelesai"`
+	KuotaMaksimal     int16       `json:"kuotaMaksimal"`
+	KuotaTerisi       int16       `json:"kuotaTerisi"`
+	StatusSesi        pgtype.Text `json:"statusSesi"`
+}
+
+type Penduduk struct {
+	Nik          string           `json:"nik"`
+	KelurahanID  pgtype.Int2      `json:"kelurahanId"`
+	Email        pgtype.Text      `json:"email"`
+	PasswordHash pgtype.Text      `json:"passwordHash"`
+	NamaLengkap  string           `json:"namaLengkap"`
+	Alamat       pgtype.Text      `json:"alamat"`
+	NoHp         pgtype.Text      `json:"noHp"`
+	CreatedAt    pgtype.Timestamp `json:"createdAt"`
+	JenisKelamin string           `json:"jenisKelamin"`
+}
+
+type Permohonan struct {
+	ID               uuid.UUID        `json:"id"`
+	Nik              pgtype.Text      `json:"nik"`
+	JadwalSesiID     pgtype.UUID      `json:"jadwalSesiId"`
+	KodeBooking      pgtype.Text      `json:"kodeBooking"`
+	NomorAntrianSesi pgtype.Int2      `json:"nomorAntrianSesi"`
+	CreatedAt        pgtype.Timestamp `json:"createdAt"`
+	JenisPermohonan  string           `json:"jenisPermohonan"`
+	StatusTerkini    pgtype.Text      `json:"statusTerkini"`
+}
+
+type Petuga struct {
+	ID           uuid.UUID        `json:"id"`
+	KelurahanID  pgtype.Int2      `json:"kelurahanId"`
+	Nip          pgtype.Text      `json:"nip"`
+	NamaPetugas  string           `json:"namaPetugas"`
+	CreatedBy    pgtype.UUID      `json:"createdBy"`
+	Username     string           `json:"username"`
+	PasswordHash string           `json:"passwordHash"`
+	IsActive     pgtype.Bool      `json:"isActive"`
+	CreatedAt    pgtype.Timestamp `json:"createdAt"`
+	Role         string           `json:"role"`
+}
+
+type RefKelurahan struct {
+	ID            int16            `json:"id"`
+	NamaKelurahan string           `json:"namaKelurahan"`
+	KodeArea      string           `json:"kodeArea"`
+	CreatedAt     pgtype.Timestamp `json:"createdAt"`
+}
+
+type RiwayatStatus struct {
+	ID            uuid.UUID        `json:"id"`
+	PermohonanID  pgtype.UUID      `json:"permohonanId"`
+	PetugasID     pgtype.UUID      `json:"petugasId"`
+	StatusBaru    string           `json:"statusBaru"`
+	CatatanProses pgtype.Text      `json:"catatanProses"`
+	WaktuProses   pgtype.Timestamp `json:"waktuProses"`
 }
