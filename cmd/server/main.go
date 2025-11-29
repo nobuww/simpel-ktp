@@ -12,11 +12,16 @@ import (
 
 	"github.com/nobuww/simpel-ktp/internal/router"
 	"github.com/nobuww/simpel-ktp/internal/store"
+	"github.com/nobuww/simpel-ktp/internal/vite"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
+	}
+
+	if err := vite.Init(os.Getenv("GO_ENV")); err != nil {
+		log.Fatalf("Failed to initialize vite: %v", err)
 	}
 
 	dbURL := os.Getenv("DATABASE_URL")

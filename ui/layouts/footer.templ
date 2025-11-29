@@ -1,0 +1,27 @@
+package layouts
+
+import "github.com/nobuww/simpel-ktp/ui/templui/button"
+
+templ Footer() {
+	<footer class="bg-slate-900 text-white py-12">
+		<div class="container mx-auto px-6">
+			<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+				<div class="text-center md:text-left">
+					<span class="text-xl font-bold tracking-tight">SIMPEL-KTP</span>
+					<p class="text-sm text-slate-400 mt-1">Layanan Kependudukan Digital Kecamatan Pademangan</p>
+				</div>
+				<div class="flex flex-wrap justify-center gap-6 text-sm">
+					@button.Button(button.Props{Href: "#", Variant: button.VariantLink, Class: "text-slate-400 hover:text-white p-0 h-auto transition-colors"}) {
+						Kebijakan Privasi
+					}
+					@button.Button(button.Props{Href: "#", Variant: button.VariantLink, Class: "text-slate-400 hover:text-white p-0 h-auto transition-colors"}) {
+						Syarat & Ketentuan
+					}
+					@button.Button(button.Props{Href: "#", Variant: button.VariantLink, Class: "text-slate-400 hover:text-white p-0 h-auto transition-colors"}) {
+						Bantuan
+					}
+				</div>
+			</div>
+		</div>
+	</footer>
+}

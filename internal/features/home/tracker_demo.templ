@@ -1,0 +1,14 @@
+package home
+
+import "github.com/nobuww/simpel-ktp/ui/templui/badge"
+
+templ TrackerDemo() {
+	<div class="flex items-center gap-3">
+		@badge.Badge(badge.Props{
+			Class: "bg-emerald-100 text-emerald-600 border-emerald-200 animate-pulse",
+		}) {
+			<span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+			Sedang Diverifikasi
+		}
+	</div>
+}

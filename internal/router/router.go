@@ -16,6 +16,8 @@ func New(s *store.Store) *chi.Mux {
 
 	homeHandler := home.New(s)
 	r.Get("/", homeHandler.HomeHandler)
+	r.Get("/components/infographic", homeHandler.InfographicHandler)
+	r.Get("/api/tracker-demo", homeHandler.TrackerDemoHandler)
 
 	return r
 }

@@ -1,38 +1,33 @@
 set dotenv-load
 set shell := ["sh.exe", "-c"]
 
-# Run the full stack (Air + Tailwind + Bun Watch)
+# Run the full stack (Air + Vite Dev Server)
 dev:
-    @echo "Starting watchers and Air..."
+    @echo "Starting Vite and Air..."
     @trap 'kill 0' EXIT; \
-    bunx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/style.css --watch & \
-    bun build ./assets/js/main.js --outdir ./static/js --watch & \
+    bun run dev & \
     go tool air
 
-# Production Build (Clean -> Generate -> Minify -> Compile)
+# Production Build (Clean -> Templ -> Vite Build -> Go Build)
 build: clean
     go tool templ generate
     just build-assets
-    go build -o ./bin/app ./cmd/server/main.go
+    go build -o ./bin/app.exe ./cmd/server/main.go
 
+# build backend (used in .air.toml)
 build-backend:
     go tool templ generate
     go build -o ./tmp/main.exe ./cmd/server/main.go
 
-# Watch CSS and JS for changes (Standalone)
 watch-assets:
-    bunx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/style.css --watch & \
-    bun build ./assets/js/main.js --outdir ./static/js --watch & \
-    wait
+    bun run dev
 
-# One-off build for CSS and JS (Minified)
 build-assets:
-    bunx @tailwindcss/cli -i ./assets/css/input.css -o ./static/css/style.css --minify
-    bun build ./assets/js/main.js --outdir ./static/js --minify
+    bun run build
 
 # Remove generated artifacts
 clean:
-    rm -rf ./static ./tmp ./bin
+    rm -rf ./static ./tmp ./bin ./dist
 
 # Run Air hot-reload
 air:
@@ -47,23 +42,23 @@ fmt:
 sqlc:
     CGO_ENABLED=0 go tool sqlc generate
 
-# Run database migrations up
+# apply migrations to db
 migrate-up:
     go tool goose -dir db/migrations postgres "$DATABASE_URL" up
 
-# Rollback the last migration
+# cancel applied migrations
 migrate-down:
     go tool goose -dir db/migrations postgres "$DATABASE_URL" down
 
-# Create a new migration file (usage: just migrate-create add_users)
+# create new migrations file 
 migrate-create name:
     go tool goose -dir db/migrations create {{name}} sql
 
-# Check migration status
+# check migrations status
 migrate-status:
     go tool goose -dir db/migrations postgres "$DATABASE_URL" status
 
-# Reset all migrations
+# reset db
 db-reset:
     go tool goose -dir db/migrations postgres "$DATABASE_URL" down-to 0
     just migrate-up

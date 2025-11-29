@@ -1,0 +1,62 @@
+package home
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/icon"
+)
+
+templ CTASection() {
+	<section class="py-20 md:py-32 bg-white">
+		<div class="container mx-auto px-6">
+			<div class="grid md:grid-cols-2 gap-6 lg:gap-8" x-data="{ shown: false }" x-intersect.once="shown = true">
+				@CTACardWarga()
+				@CTACardPetugas()
+			</div>
+		</div>
+	</section>
+}
+
+templ CTACardWarga() {
+	@card.Card(card.Props{
+		Class:      "group relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 md:p-10 text-white hover:shadow-2xl hover:shadow-slate-900/20 transition-all duration-500 border-0",
+		Attributes: templ.Attributes{"x-show": "shown", "x-transition:enter": "transition ease-out duration-700", "x-transition:enter-start": "opacity-0 transform -translate-x-8", "x-transition:enter-end": "opacity-100 transform translate-x-0"},
+	}) {
+		<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+		<div class="relative z-10">
+			<div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 mb-6">
+				@icon.Icon("user")(icon.Props{Size: 28})
+			</div>
+			<h3 class="text-2xl md:text-3xl font-bold mb-3">Untuk Warga</h3>
+			<p class="text-slate-400 mb-8 leading-relaxed">Urus dokumen kependudukan dari rumah tanpa perlu mengantri di kantor kecamatan.</p>
+			@button.Button(button.Props{
+				Class: "px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition-all group-hover:shadow-lg group-hover:shadow-emerald-500/25",
+			}) {
+				Masuk sebagai Warga
+				@icon.Icon("arrow-right")(icon.Props{Size: 18, Class: "ml-2"})
+			}
+		</div>
+	}
+}
+
+templ CTACardPetugas() {
+	@card.Card(card.Props{
+		Class:      "group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50 p-8 md:p-10 text-slate-900 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 border-emerald-100/50",
+		Attributes: templ.Attributes{"x-show": "shown", "x-transition:enter": "transition ease-out duration-700 delay-100", "x-transition:enter-start": "opacity-0 transform translate-x-8", "x-transition:enter-end": "opacity-100 transform translate-x-0"},
+	}) {
+		<div class="relative z-10">
+			<div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
+				@icon.Icon("shield")(icon.Props{Size: 28})
+			</div>
+			<h3 class="text-2xl md:text-3xl font-bold mb-3">Untuk Petugas</h3>
+			<p class="text-slate-600 mb-8 leading-relaxed">Kelola permohonan warga dan verifikasi data dengan dashboard yang efisien.</p>
+			@button.Button(button.Props{
+				Variant: button.VariantOutline,
+				Class:   "px-6 py-3 bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl font-semibold transition-all",
+			}) {
+				Masuk sebagai Petugas
+				@icon.Icon("arrow-right")(icon.Props{Size: 18, Class: "ml-2"})
+			}
+		</div>
+	}
+}

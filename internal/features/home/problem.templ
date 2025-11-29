@@ -1,0 +1,57 @@
+package home
+
+import "github.com/nobuww/simpel-ktp/ui/templui/card"
+
+templ ProblemSection() {
+	<section class="py-20 md:py-32 bg-slate-50">
+		<div class="container mx-auto px-6">
+			<div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+				<div class="space-y-6" x-data="{ shown: false }" x-intersect.once="shown = true">
+					<h2
+						class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight"
+						x-show="shown"
+						x-transition:enter="transition ease-out duration-700"
+						x-transition:enter-start="opacity-0 transform -translate-x-8"
+						x-transition:enter-end="opacity-100 transform translate-x-0"
+					>
+						Lupakan antrian panjang di kantor kecamatan
+					</h2>
+					<p
+						class="text-lg text-slate-600 leading-relaxed"
+						x-show="shown"
+						x-transition:enter="transition ease-out duration-700 delay-100"
+						x-transition:enter-start="opacity-0 transform -translate-x-8"
+						x-transition:enter-end="opacity-100 transform translate-x-0"
+					>
+						Proses manual yang memakan waktu berjam-jam kini bisa diselesaikan dalam hitungan menit dengan sistem digital kami.
+					</p>
+					@card.Card(card.Props{
+						Class:      "relative h-64 overflow-hidden",
+						Attributes: templ.Attributes{"x-show": "shown", "x-transition:enter": "transition ease-out duration-1000 delay-200", "x-transition:enter-start": "opacity-0 transform translate-y-10", "x-transition:enter-end": "opacity-100 transform translate-y-0"},
+					}) {
+						<!-- Before/After Animation -->
+						<div class="absolute inset-0 flex">
+							<div class="w-1/2 bg-slate-100 flex items-center justify-center border-r border-slate-200">
+								<div class="text-center opacity-50">
+									<div class="text-4xl mb-2">⏳</div>
+									<div class="font-bold">4 Jam</div>
+									<div class="text-sm">Manual</div>
+								</div>
+							</div>
+							<div class="w-1/2 bg-emerald-50 flex items-center justify-center">
+								<div class="text-center text-emerald-600">
+									<div class="text-4xl mb-2">⚡</div>
+									<div class="font-bold">5 Menit</div>
+									<div class="text-sm">Digital</div>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+				<div hx-get="/components/infographic" hx-trigger="revealed" class="min-h-[300px] flex items-center justify-center">
+					<div class="htmx-indicator animate-pulse text-slate-400">Memuat Data...</div>
+				</div>
+			</div>
+		</div>
+	</section>
+}

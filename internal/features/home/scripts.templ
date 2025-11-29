@@ -1,0 +1,43 @@
+package home
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+)
+
+templ Scripts() {
+	@ParticlesScript()
+	@dialog.Script()
+	@input.Script()
+}
+
+templ ParticlesScript() {
+	<script>
+		document.addEventListener('init-particles', () => {
+			const { animate } = window.m;
+			const particles = document.getElementById('particles');
+			if (!particles || particles.dataset.initialized) return;
+			particles.dataset.initialized = 'true';
+			
+			for(let i=0; i<20; i++) {
+				const p = document.createElement('div');
+				p.className = 'absolute rounded-full bg-emerald-500/20';
+				const size = Math.random() * 10 + 5;
+				p.style.width = `${size}px`;
+				p.style.height = `${size}px`;
+				p.style.left = `${Math.random() * 100}%`;
+				p.style.top = `${Math.random() * 100}%`;
+				particles.appendChild(p);
+				
+				animate(p, { 
+					y: [0, Math.random() * -100], 
+					opacity: [0.5, 0] 
+				}, { 
+					duration: Math.random() * 5 + 5, 
+					repeat: Infinity,
+					easing: "linear"
+				});
+			}
+		});
+	</script>
+}

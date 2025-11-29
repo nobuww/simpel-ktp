@@ -1,0 +1,27 @@
+package home
+
+import "github.com/nobuww/simpel-ktp/ui/layouts"
+
+// home is the main landing page component that composes all section components.
+// each section is defined in its own file for better maintainability:
+// - hero.templ: Hero section with animated text and registration dialog
+// - problem.templ: Problem statement section with comparison card
+// - features.templ: Features bento grid section
+// - testimonials.templ: Testimonials carousel section
+// - cta.templ: Call-to-action cards section
+// - footer.templ: Footer with links
+// - scripts.templ: JavaScript for particles animation
+// - infographic.templ: Animated infographic component
+// - register_modal.templ: Registration modal component
+// - tracker_demo.templ: Tracker demo badge component
+templ Page() {
+	@layouts.Base("Simpel KTP", Scripts()) {
+		<div class="flex flex-col min-h-screen overflow-x-hidden bg-white">
+			@Hero()
+			@ProblemSection()
+			@FeaturesSection()
+			@TestimonialsSection()
+			@CTASection()
+		</div>
+	}
+}

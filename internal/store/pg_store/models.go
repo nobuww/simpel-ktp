@@ -51,7 +51,7 @@ type Permohonan struct {
 	StatusTerkini    pgtype.Text      `json:"statusTerkini"`
 }
 
-type Petuga struct {
+type Petugas struct {
 	ID           uuid.UUID        `json:"id"`
 	KelurahanID  pgtype.Int2      `json:"kelurahanId"`
 	Nip          pgtype.Text      `json:"nip"`

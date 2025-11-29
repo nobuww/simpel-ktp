@@ -1,19 +1,30 @@
 package layouts
 
-templ Base(title string, content templ.Component) {
+import "github.com/nobuww/simpel-ktp/internal/vite"
+
+// scripts is an explicit parameter.
+// The main content is implicit via { children... }
+templ Base(title string, scripts templ.Component) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="id" class="scroll-smooth">
 		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
-			<link href="/static/css/style.css" rel="stylesheet"/>
-			<script defer src="/static/js/main.js"></script>
+			if vite.IsDev() {
+				<script type="module" src="http://localhost:5173/@vite/client"></script>
+				<script type="module" src="http://localhost:5173/assets/js/main.js"></script>
+			} else {
+				<link rel="stylesheet" href={ vite.AssetPath("assets/css/input.css") }/>
+				<script type="module" src={ vite.AssetPath("assets/js/main.js") }></script>
+			}
 		</head>
-		<body class="bg-gray-100 font-sans leading-normal tracking-normal">
-			<main class="container mx-auto p-4">
-				@content
+		<body class="bg-slate-50 font-sans text-slate-900 antialiased">
+			<main class="w-full">
+				{ children... }
 			</main>
+			@Footer()
+			if scripts != nil {
+				@scripts
+			}
 		</body>
 	</html>
 }

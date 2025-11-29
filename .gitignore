@@ -39,6 +39,7 @@ coverage.out
 # ide specific settings
 .vscode/
 .idea/
+.github/*.md
 *.suo
 *.ntvs*
 *.njsproj
