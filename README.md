@@ -16,7 +16,15 @@ This repository contains a Go server that serves HTML templates and static asset
   ```powershell
   powershell -c "irm bun.sh/install.ps1 | iex"
   ```
-* **Task** for convenience of managing tasks. [Install here](https://taskfile.dev/installation/)
+* **Just** for convenience of managing tasks.
+  ```powershell
+  # install using bun/npm/pnpm/yarn
+  bun install -g rust-just # or npm install -g rust-just
+
+  # install using winget
+  winget install --id Casey.Just --exact
+  ```
+  See [here](https://github.com/casey/just?tab=readme-ov-file#installation) for other installation instructions.
 
 ---
 
@@ -31,28 +39,28 @@ bun install
 > go mod download
 > ```
 
-### 2) Development - It uses a Taskfile with a few convenient tasks
-The repository includes a Taskfile.yml with predefined workflows. If you have the `task` CLI installed, run:
+### 2) Development - It uses a Justfile with a few convenient tasks
+The repository includes a `Justfile` with predefined workflows. If you have the `just` CLI installed, run:
 ```bash
-task dev
+just dev
 ```
-This runs the Tailwind watcher and a hot-reloading Go server using Air.
+This runs the Tailwind watcher, the Bun JS watcher, and a hot-reloading Go server via Air.
 
 ### 3) Build
-To produce a minified CSS and build a binary (this matches the Taskfile `build` task):
+To produce minified assets and build a binary (this matches the `build` task in the Justfile):
 ```bash
-task build
+just build
 ```
 Adjust the binary name and path for your target OS.
 
 ---
 
 ## Useful commands
-* `task css` - watch and build CSS with Tailwind.
-* `task air` - run Air hot-reload for Go server.
-* `task dev` - run both CSS and Air for development.
-* `task build` - generate templates, minify CSS and build binary.
-* `task fmt` - format Go and templ files.
+* `just watch-assets` - watch and rebuild CSS/JS when sources change.
+* `just air` - run Air hot-reload for the Go server.
+* `just dev` - run all development watchers and the Go server (same as manual Taskfile `dev`).
+* `just build` - generate templates, minify assets, and build the binary.
+* `just fmt` - format Go and templ files.
 * `go run ./cmd/main.go` - run the server without hot reload.
 
 ---
@@ -60,7 +68,7 @@ Adjust the binary name and path for your target OS.
 ## Notes & Technical details
 * The server binds to port `:8080` by default (see `cmd/main.go`).
 * Static assets are served from `/assets` using the `assets` directory.
-* Templates are generated using `go tool templ generate` (see Taskfile).
+* Templates are generated using `go tool templ generate` (see the `build` task in the Justfile).
 * Tailwind is invoked via `bunx` which runs CLI packages installed by `bun` locally.
 
 ---
@@ -68,10 +76,10 @@ Adjust the binary name and path for your target OS.
 ## Troubleshooting
 * If the CSS doesn’t update, ensure the Tailwind watcher is running and writing to `assets/css/output.css`.
 * If Go build fails with missing modules, run `go mod tidy` to tidy and install dependencies.
-* On Windows, confirm `bun` and `task` are available in your shell PATH.
+* On Windows, confirm `bun` and `just` are available in your shell PATH.
 
 ---
 
 ## Development hints
-* Run `task fmt` periodically to keep files formatted.
-* Use the Taskfile for common commands; it runs the recommended flags and sequence used by the project.
+* Run `just fmt` periodically to keep files formatted.
+* Use the Justfile for common commands; it runs the recommended flags and sequences used by the project.
