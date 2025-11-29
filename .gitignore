@@ -58,3 +58,4 @@ desktop.ini
 # js/css build output
 dist/
 build/
+static/
