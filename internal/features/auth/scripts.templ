@@ -1,9 +1,6 @@
 package auth
 
-import "github.com/nobuww/simpel-ktp/ui/templui/input"
-
 templ Scripts() {
-	@input.Script()
 	<script nonce={ templ.GetNonce(ctx) }>
         document.addEventListener('htmx:afterSwap', (event) => {
             if (event.target && event.target.id === 'auth-message') {

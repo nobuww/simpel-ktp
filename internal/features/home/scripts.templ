@@ -1,17 +1,6 @@
 package home
 
-import (
-	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
-	"github.com/nobuww/simpel-ktp/ui/templui/input"
-)
-
 templ Scripts() {
-	@ParticlesScript()
-	@dialog.Script()
-	@input.Script()
-}
-
-templ ParticlesScript() {
 	<script>
 		document.addEventListener('init-particles', () => {
 			const { animate } = window.m;

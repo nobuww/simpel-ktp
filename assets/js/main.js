@@ -8,6 +8,9 @@ import "./carousel.min.js"
 import "./dialog.min.js"
 import "./input.min.js"
 import "./label.min.js"
+import "./popover.min.js"
+import "./selectbox.min.js"
+import "./textarea.min.js"
 
 window.Alpine = Alpine
 window.m = m

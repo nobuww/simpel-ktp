@@ -5,6 +5,8 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
 	"github.com/nobuww/simpel-ktp/ui/templui/label"
+	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
+	"github.com/nobuww/simpel-ktp/ui/templui/textarea"
 )
 
 templ RegisterPage() {
@@ -49,6 +51,7 @@ templ RegisterPage() {
 								"required": "true",
 								"pattern":  "[0-9]{16}",
 								"title":    "NIK harus 16 digit angka",
+								"placeholder": "16 digit NIK",
 							},
 						})
 					</div>
@@ -62,6 +65,7 @@ templ RegisterPage() {
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
 								"required": "true",
+								"placeholder": "Sesuai KTP",
 							},
 						})
 					</div>
@@ -76,6 +80,7 @@ templ RegisterPage() {
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
 								"autocomplete": "email",
+								"placeholder": "nama@email.com",
 							},
 						})
 					</div>
@@ -90,6 +95,7 @@ templ RegisterPage() {
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
 								"required": "true",
+								"placeholder": "Minimal 8 karakter",
 							},
 						})
 						<p class="text-xs text-gray-500">Minimal 8 karakter</p>
@@ -98,12 +104,13 @@ templ RegisterPage() {
 						@label.Label(label.Props{For: "register-alamat"}) {
 							Alamat
 						}
-						<textarea
-							id="register-alamat"
-							name="alamat"
-							class="flex w-full rounded-md border border-gray-200 bg-white/50 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-							rows="3"
-						></textarea>
+						@textarea.Textarea(textarea.Props{
+							ID:          "register-alamat",
+							Name:        "alamat",
+							Rows:        3,
+							Placeholder: "Alamat lengkap sesuai KTP",
+							Class:       "border-gray-200 focus-visible:ring-gray-400",
+						})
 					</div>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-nohp"}) {
@@ -114,22 +121,37 @@ templ RegisterPage() {
 							Name:  "no_hp",
 							Type:  input.TypeTel,
 							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Attributes: templ.Attributes{
+								"placeholder": "08...",
+							},
 						})
 					</div>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-jk"}) {
 							Jenis Kelamin
 						}
-						<select
-							id="register-jk"
-							name="jenis_kelamin"
-							class="flex h-10 w-full rounded-md border border-gray-200 bg-white/50 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-							required
-						>
-							<option value="">Pilih Jenis Kelamin</option>
-							<option value="L">Laki-laki</option>
-							<option value="P">Perempuan</option>
-						</select>
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{
+								ID:    "register-jk",
+								Name:  "jenis_kelamin",
+								Class: "border-gray-200 focus-visible:ring-gray-400",
+								Attributes: templ.Attributes{
+									"required": "true",
+								},
+							}) {
+								@selectbox.Value(selectbox.ValueProps{
+									Placeholder: "Pilih Jenis Kelamin",
+								})
+							}
+							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+								@selectbox.Item(selectbox.ItemProps{Value: "L"}) {
+									Laki-laki
+								}
+								@selectbox.Item(selectbox.ItemProps{Value: "P"}) {
+									Perempuan
+								}
+							}
+						}
 					</div>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-kelurahan"}) {
@@ -142,6 +164,7 @@ templ RegisterPage() {
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
 								"required": "true",
+								"placeholder": "Kode Kelurahan",
 							},
 						})
 					</div>
