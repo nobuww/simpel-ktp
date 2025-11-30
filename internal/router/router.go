@@ -24,8 +24,10 @@ func New(s *store.Store) *chi.Mux {
 	// Auth
 	authHandler := auth.New(s)
 	r.Get("/login", authHandler.LoginPageHandler)
+	r.Get("/petugas/login", authHandler.LoginPetugasPageHandler)
 	r.Get("/register", authHandler.RegisterPageHandler)
 	// r.Post("/auth/login", authHandler.HandleLogin)    // future implementation
+	// r.Post("/auth/login/petugas", authHandler.HandleLoginPetugas) // future implementation
 	// r.Post("/auth/register", authHandler.HandleRegister) // future implementation
 
 	return r

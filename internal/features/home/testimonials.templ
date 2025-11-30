@@ -3,51 +3,68 @@ package home
 import "github.com/nobuww/simpel-ktp/ui/templui/card"
 
 templ TestimonialsSection() {
-	<section class="py-20 md:py-32 bg-slate-50">
-		<div class="container mx-auto px-6" x-data="{ shown: false }" x-intersect.once="shown = true">
-			<div class="text-center mb-12">
+	<section
+		class="py-20 md:py-32 bg-slate-50 overflow-hidden"
+		x-data="{ shown: false }"
+		x-intersect.threshold.10.once="shown = true"
+	>
+		<div class="container mx-auto px-6 mb-12">
+			<div class="text-center">
 				<h2
 					class="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight"
 					x-show="shown"
 					x-transition:enter="transition ease-out duration-700"
 					x-transition:enter-start="opacity-0 transform -translate-y-4"
 					x-transition:enter-end="opacity-100 transform translate-y-0"
+					style="display: none;"
 				>
 					Apa kata warga?
 				</h2>
+				<p
+					class="text-slate-600 max-w-2xl mx-auto text-lg mt-4"
+					x-show="shown"
+					x-transition:enter="transition ease-out duration-700 delay-100"
+					x-transition:enter-start="opacity-0 transform translate-y-4"
+					x-transition:enter-end="opacity-100 transform translate-y-0"
+					style="display: none;"
+				>
+					Pendapat mereka tentang layanan digital baru ini.
+				</p>
 			</div>
-			<div
-				class="max-w-4xl mx-auto"
-				x-data="{ active: 0, testimonials: [
-					{ text: 'Akhirnya tidak perlu cuti kerja cuma buat urus KTP. Prosesnya cepat dan mudah!', name: 'Budi Santoso', role: 'Warga RT 05' },
-					{ text: 'Prosesnya transparan, saya tahu persis dokumen saya ada di tahap mana.', name: 'Siti Aminah', role: 'Warga RT 12' },
-					{ text: 'Tampilan aplikasinya bersih dan mudah dimengerti, bahkan orang tua saya bisa pakai.', name: 'Rahmat Hidayat', role: 'Warga RT 08' }
-				] }"
-				x-show="shown"
-				x-transition:enter="transition ease-out duration-700 delay-200"
-				x-transition:enter-start="opacity-0 transform translate-y-8"
-				x-transition:enter-end="opacity-100 transform translate-y-0"
-			>
-				<div class="relative h-56">
-					<template x-for="(t, index) in testimonials">
-						@card.Card(card.Props{
-							Class:      "absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-white",
-							Attributes: templ.Attributes{"x-show": "active === index", "x-transition:enter": "transition ease-out duration-500", "x-transition:enter-start": "opacity-0 transform translate-x-10", "x-transition:enter-end": "opacity-100 transform translate-x-0", "x-transition:leave": "transition ease-in duration-300", "x-transition:leave-start": "opacity-100 transform translate-x-0", "x-transition:leave-end": "opacity-0 transform -translate-x-10"},
-						}) {
-							<p class="text-xl md:text-2xl text-slate-700 mb-6 leading-relaxed">"<span x-text="t.text"></span>"</p>
-							<div>
-								<div class="font-semibold text-slate-900" x-text="t.name"></div>
-								<div class="text-sm text-slate-500" x-text="t.role"></div>
-							</div>
-						}
-					</template>
-				</div>
-				<div class="flex justify-center gap-2 mt-6">
-					<template x-for="(t, index) in testimonials">
-						<button @click="active = index" :class="{ 'bg-emerald-500 w-8': active === index, 'bg-slate-300 w-2': active !== index }" class="h-2 rounded-full transition-all duration-300"></button>
-					</template>
-				</div>
+		</div>
+		<div
+			x-show="shown"
+			x-transition:enter="transition ease-out duration-1000 delay-200"
+			x-transition:enter-start="opacity-0 transform translate-y-8 scale-95"
+			x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+			style="display: none;"
+			class="relative w-full flex gap-6 overflow-hidden select-none [mask-image:_linear-gradient(to_right,transparent,white_20%,white_80%,transparent)] group"
+		>
+			<div class="flex min-w-full shrink-0 items-center justify-around gap-6 animate-infinite-scroll group-hover:[animation-play-state:paused]">
+				@TestimonialCards()
+			</div>
+			<div class="flex min-w-full shrink-0 items-center justify-around gap-6 animate-infinite-scroll group-hover:[animation-play-state:paused]" aria-hidden="true">
+				@TestimonialCards()
 			</div>
 		</div>
 	</section>
+}
+
+templ TestimonialCards() {
+	@TestimonialCard("Akhirnya tidak perlu cuti kerja cuma buat urus KTP. Prosesnya cepat dan mudah!", "Budi Santoso", "Warga RT 05")
+	@TestimonialCard("Prosesnya transparan, saya tahu persis dokumen saya ada di tahap mana.", "Siti Aminah", "Warga RT 12")
+	@TestimonialCard("Tampilan aplikasinya bersih dan mudah dimengerti, bahkan orang tua saya bisa pakai.", "Rahmat Hidayat", "Warga RT 08")
+	@TestimonialCard("Pelayanan yang sangat membantu, petugas sangat responsif.", "Dedi Kurniawan", "Warga RT 02")
+}
+
+templ TestimonialCard(text, name, role string) {
+	@card.Card(card.Props{
+		Class: "flex flex-col items-center justify-center text-center p-8 bg-white h-64 w-[350px] md:w-[450px] border-none shadow-sm shrink-0",
+	}) {
+		<p class="text-lg text-slate-700 mb-6 leading-relaxed italic">"{ text }"</p>
+		<div>
+			<div class="font-semibold text-slate-900">{ name }</div>
+			<div class="text-sm text-slate-500">{ role }</div>
+		</div>
+	}
 }

@@ -4,6 +4,11 @@ import Alpine from "alpinejs"
 import intersect from "@alpinejs/intersect"
 import * as m from "motion"
 
+import "./carousel.min.js"
+import "./dialog.min.js"
+import "./input.min.js"
+import "./label.min.js"
+
 window.Alpine = Alpine
 window.m = m
 Alpine.plugin(intersect)
