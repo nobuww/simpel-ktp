@@ -2,8 +2,10 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", sans-serif;
-  --font-serif: "Playfair Display", serif;
+  --font-serif: "Tinos", serif;
 }
 
-@source "../../**/*.templ";
-@source "../../**/*.go";
+@source "../../internal/**/*.templ";
+@source "../../internal/**/*.go";
+@source "../../ui/**/*.templ";
+@source "../../ui/**/*.go";

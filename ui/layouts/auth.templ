@@ -1,0 +1,44 @@
+package layouts
+
+import "github.com/nobuww/simpel-ktp/internal/vite"
+
+// Auth layout for authentication pages (login, register, etc.)
+// No footer, centered content with full height
+templ Auth(title string, scripts templ.Component) {
+	<!DOCTYPE html>
+	<html lang="id" class="scroll-smooth h-full">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			@Font()
+			if vite.IsDev() {
+				<script type="module" src="http://localhost:5173/@vite/client"></script>
+				<script type="module" src="http://localhost:5173/assets/js/main.js"></script>
+			} else {
+				<link rel="stylesheet" href={ vite.AssetPath("assets/css/input.css") }/>
+				<script type="module" src={ vite.AssetPath("assets/js/main.js") }></script>
+			}
+		</head>
+		<body class="min-h-full py-12 sm:px-6 lg:px-8 font-sans text-gray-900 bg-slate-50 relative">
+			<!-- Decorative background elements (fixed to viewport) -->
+			<div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+				<!-- Top-right gradient blob -->
+				<div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-full opacity-60 blur-3xl"></div>
+				<!-- Bottom-left gradient blob -->
+				<div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-100 to-pink-100 rounded-full opacity-50 blur-3xl"></div>
+				<!-- Center accent -->
+				<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-cyan-50 to-blue-50 rounded-full opacity-40 blur-3xl"></div>
+				<!-- Grid pattern overlay -->
+				<div class="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
+			</div>
+			<!-- Content -->
+			<div class="relative z-10">
+				{ children... }
+			</div>
+			if scripts != nil {
+				@scripts
+			}
+		</body>
+	</html>
+}

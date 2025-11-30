@@ -5,6 +5,7 @@ set shell := ["sh.exe", "-c"]
 dev:
     @echo "Starting Vite and Air..."
     @trap 'kill 0' EXIT; \
+    go tool templ generate; \
     bun run dev & \
     go tool air
 
@@ -13,6 +14,10 @@ build: clean
     go tool templ generate
     just build-assets
     go build -o ./bin/app.exe ./cmd/server/main.go
+
+build-run:
+    just build
+    ./bin/app.exe
 
 # build backend (used in .air.toml)
 build-backend:

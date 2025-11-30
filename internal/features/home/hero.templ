@@ -14,20 +14,25 @@ templ Hero() {
 		x-data="{ 
 			shown: false, 
 			typing: true,
-			fullText: 'Urus KTP tanpa antri, langsung dari rumah.',
+			fullText: 'Urus KTP tanpa antri,\nlangsung dari rumah.',
 			
 			animateText() {
 				this.shown = true;
 				const container = this.$refs.textContainer;
 				container.innerHTML = ''; // Clear initial state
 				
-			const chars = this.fullText.split('').map(char => {
+			const chars = [];
+			this.fullText.split('').forEach(char => {
+				if (char === '\n') {
+					container.appendChild(document.createElement('br'));
+					return;
+				}
 				const span = document.createElement('span');
 				span.textContent = char === ' ' ? '\u00A0' : char;
 				span.style.opacity = '0';
 				span.className = 'inline-block';
 				container.appendChild(span);
-				return span;
+				chars.push(span);
 			});					
 			window.m.animate(
 				chars,
@@ -78,9 +83,6 @@ templ Hero() {
 				x-transition:enter-end="opacity-100"
 			>
 				<span x-ref="textContainer" class="inline-block"></span>
-				<span
-					class="inline-block w-1 h-[1em] bg-emerald-400 align-middle ml-1"
-				></span>
 			</h1>
 			<p
 				class="text-lg md:text-xl text-slate-300 mb-12 max-w-xl mx-auto"
@@ -118,7 +120,7 @@ templ Hero() {
 								<label class="block text-sm font-medium text-slate-700 mb-1">NIK</label>
 								@input.Input(input.Props{
 									Placeholder: "16 digit NIK",
-									Class:       "focus:ring-emerald-500 focus:border-emerald-500",
+									Class:       "border-gray-200 focus:ring-emerald-500 focus:border-emerald-500",
 								})
 							</div>
 							<div>
@@ -126,7 +128,7 @@ templ Hero() {
 								@input.Input(input.Props{
 									Type:        input.TypeEmail,
 									Placeholder: "nama@email.com",
-									Class:       "focus:ring-emerald-500 focus:border-emerald-500",
+									Class:       "border-gray-200 focus:ring-emerald-500 focus:border-emerald-500",
 								})
 							</div>
 							@button.Button(button.Props{

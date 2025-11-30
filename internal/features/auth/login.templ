@@ -1,0 +1,109 @@
+package auth
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/checkbox"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+	"github.com/nobuww/simpel-ktp/ui/templui/label"
+)
+
+templ LoginPage() {
+	@layouts.Auth("Masuk - Simpel KTP", Scripts()) {
+		<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+			<h2 class="text-3xl font-bold tracking-tight text-gray-900">Simpel KTP</h2>
+			<p class="mt-2 text-sm text-gray-500">
+				Nikmati layanan kependudukan secara mudah dan cepat.
+			</p>
+		</div>
+		<div
+			id="auth-panel"
+			class="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+			x-data="{ pending: false }"
+			x-on:htmx:beforeRequest.window="if ($event.target.closest('#auth-panel')) { pending = true }"
+			x-on:htmx:afterRequest.window="if ($event.target.closest('#auth-panel')) { pending = false }"
+			x-on:htmx:error.window="if ($event.target.closest('#auth-panel')) { pending = false }"
+		>
+			<div class="bg-white/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-gray-900/10 sm:rounded-2xl sm:px-10 border border-white/60 ring-1 ring-gray-900/5">
+				<h3 class="text-xl font-semibold leading-6 text-gray-900 mb-1">Masuk ke akun Anda</h3>
+				<div class="mb-6 text-sm text-gray-500">
+					Belum punya akun?
+					<a href="/register" class="font-medium text-gray-900 hover:text-gray-700 underline underline-offset-4 decoration-gray-300 hover:decoration-gray-500 transition-colors">Buat akun</a>
+				</div>
+				<form
+					id="login-form"
+					class="space-y-6"
+					hx-post="/auth/login"
+					hx-target="#auth-message"
+					hx-swap="innerHTML"
+					hx-indicator="#auth-loading"
+				>
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "login-nik"}) {
+							NIK
+						}
+						@input.Input(input.Props{
+							ID:    "login-nik",
+							Name:  "nik",
+							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Attributes: templ.Attributes{
+								"required": "true",
+								"pattern":  "[0-9]+",
+							},
+						})
+					</div>
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "login-password"}) {
+							Password
+						}
+						@input.Input(input.Props{
+							ID:    "login-password",
+							Name:  "password",
+							Type:  input.TypePassword,
+							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Attributes: templ.Attributes{
+								"autocomplete": "current-password",
+								"required":     "true",
+							},
+						})
+					</div>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							@checkbox.Checkbox(checkbox.Props{ID: "remember-me", Name: "remember"})
+							@label.Label(label.Props{For: "remember-me", Class: "text-gray-500 text-sm"}) {
+								Ingat saya
+							}
+						</div>
+						<a href="#" class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Lupa password?</a>
+					</div>
+					@button.Button(button.Props{
+						FullWidth: true,
+						Type:      button.TypeSubmit,
+						Class:     "bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-900/25 hover:shadow-gray-900/30 transition-all duration-200",
+						Attributes: templ.Attributes{
+							":disabled": "pending",
+						},
+					}) {
+						Masuk
+					}
+				</form>
+				<div class="mt-6 space-y-3">
+					<div id="auth-message" class="text-sm text-gray-700 space-y-2"></div>
+					<div id="auth-loading" class="text-sm text-gray-500 hidden htmx-indicator flex items-center gap-2">
+						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						Memproses...
+					</div>
+				</div>
+				<!-- Divider -->
+				<div class="mt-6 pt-6 border-t border-gray-100">
+					<p class="text-xs text-center text-gray-400">
+						Dilindungi oleh enkripsi tingkat enterprise
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+}
