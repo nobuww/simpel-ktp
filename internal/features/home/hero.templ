@@ -3,9 +3,7 @@ package home
 import (
 	"github.com/nobuww/simpel-ktp/ui/templui/badge"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
-	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
 	"github.com/nobuww/simpel-ktp/ui/templui/icon"
-	"github.com/nobuww/simpel-ktp/ui/templui/input"
 )
 
 templ Hero() {
@@ -70,6 +68,7 @@ templ Hero() {
 				@badge.Badge(badge.Props{
 					Class: "mb-6 px-4 py-2 rounded-full bg-white/10 border-white/20 text-emerald-300 text-sm font-medium backdrop-blur-md",
 				}) {
+					<span class="w-2 h-2 inline-block rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
 					SIMPEL-KTP Kecamatan Pademangan
 				}
 			</div>
@@ -99,48 +98,12 @@ templ Hero() {
 				x-transition:enter-start="opacity-0 transform translate-y-4"
 				x-transition:enter-end="opacity-100 transform translate-y-0"
 			>
-				@dialog.Dialog(dialog.Props{ID: "register-dialog"}) {
-					@dialog.Trigger() {
-						@button.Button(button.Props{
-							Class: "px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/25 group",
-						}) {
-							Daftar Sekarang
-							@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
-						}
-					}
-					@dialog.Content(dialog.ContentProps{Class: "max-w-md"}) {
-						@dialog.Header() {
-							@dialog.Title(dialog.TitleProps{Class: "text-xl font-bold text-slate-900"}) {
-								Pendaftaran Warga
-							}
-						}
-						<div class="space-y-4">
-							<div>
-								<label class="block text-sm font-medium text-slate-700 mb-1">NIK</label>
-								@input.Input(input.Props{
-									Placeholder: "16 digit NIK",
-									Class:       "border-gray-200 focus:ring-emerald-500 focus:border-emerald-500",
-								})
-							</div>
-							<div>
-								<label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-								@input.Input(input.Props{
-									Type:        input.TypeEmail,
-									Placeholder: "nama@email.com",
-									Class:       "border-gray-200 focus:ring-emerald-500 focus:border-emerald-500",
-								})
-							</div>
-							@button.Button(button.Props{
-								Class:     "w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold shadow-lg shadow-emerald-500/20",
-								FullWidth: true,
-							}) {
-								Lanjutkan
-							}
-						</div>
-						@dialog.Footer(dialog.FooterProps{Class: "mt-4 pt-4 border-t border-slate-100 text-center text-xs text-slate-500"}) {
-							Data Anda aman dan terenkripsi.
-						}
-					}
+				@button.Button(button.Props{
+					Href:  "/register",
+					Class: "px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/25 group",
+				}) {
+					Daftar Sekarang
+					@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
 				}
 				@button.Button(button.Props{
 					Href:    "#features",

@@ -30,6 +30,7 @@ templ CTACardWarga() {
 			<h3 class="text-2xl md:text-3xl font-bold mb-3">Untuk Warga</h3>
 			<p class="text-slate-400 mb-8 leading-relaxed">Urus dokumen kependudukan dari rumah tanpa perlu mengantri di kantor kecamatan.</p>
 			@button.Button(button.Props{
+				Href:  "/login",
 				Class: "px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition-all group-hover:shadow-lg group-hover:shadow-emerald-500/25",
 			}) {
 				Masuk sebagai Warga
@@ -51,6 +52,7 @@ templ CTACardPetugas() {
 			<h3 class="text-2xl md:text-3xl font-bold mb-3">Untuk Petugas</h3>
 			<p class="text-slate-600 mb-8 leading-relaxed">Kelola permohonan warga dan verifikasi data dengan dashboard yang efisien.</p>
 			@button.Button(button.Props{
+				Href:    "/petugas/login",
 				Variant: button.VariantOutline,
 				Class:   "px-6 py-3 bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl font-semibold transition-all",
 			}) {
