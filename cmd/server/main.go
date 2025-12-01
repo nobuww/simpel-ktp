@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/nobuww/simpel-ktp/internal/router"
+	"github.com/nobuww/simpel-ktp/internal/session"
 	"github.com/nobuww/simpel-ktp/internal/store"
 	"github.com/nobuww/simpel-ktp/internal/vite"
 )
@@ -35,10 +35,25 @@ func main() {
 	}
 	defer dbPool.Close()
 
+	// Verify database connection
+	if err := dbPool.Ping(context.Background()); err != nil {
+		log.Fatalf("Unable to ping database: %v\n", err)
+	}
+
 	queryStore := store.New(dbPool)
 
-	r := router.New(queryStore)
+	// Initialize session manager
+	sessionMgr := session.New(os.Getenv("SESSION_SECRET"))
 
-	fmt.Println("Server starting on :8080")
-	http.ListenAndServe(":8080", r)
+	r := router.New(queryStore, sessionMgr)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on :%s", port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 }

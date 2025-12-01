@@ -2,9 +2,8 @@ package layouts
 
 import "github.com/nobuww/simpel-ktp/internal/vite"
 
-// scripts is an explicit parameter.
-// The main content is implicit via { children... }
-templ Base(title string, scripts templ.Component) {
+// Admin layout for dashboard pages - no footer
+templ Admin(title string, scripts templ.Component) {
 	<!DOCTYPE html>
 	<html lang="id" class="scroll-smooth">
 		<head>
@@ -20,11 +19,8 @@ templ Base(title string, scripts templ.Component) {
 				<script type="module" src={ vite.AssetPath("assets/js/main.js") }></script>
 			}
 		</head>
-		<body class="bg-slate-50 font-sans text-slate-900 antialiased">
-			<main class="w-full">
-				{ children... }
-			</main>
-			@Footer()
+		<body class="bg-background font-sans text-foreground antialiased">
+			{ children... }
 			if scripts != nil {
 				@scripts
 			}

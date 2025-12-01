@@ -8,7 +8,9 @@ export default defineConfig({
   ],
 
   server: {
-    origin: 'http://localhost:5173',
+    host: '127.0.0.1', // Use IPv4 to avoid Windows permission issues
+    port: 3000,
+    origin: 'http://localhost:3000',
   },
   
   build: {

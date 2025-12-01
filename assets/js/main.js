@@ -11,6 +11,7 @@ import "./label.min.js"
 import "./popover.min.js"
 import "./selectbox.min.js"
 import "./textarea.min.js"
+import "./sidebar.min.js"
 
 window.Alpine = Alpine
 window.m = m

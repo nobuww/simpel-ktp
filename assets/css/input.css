@@ -19,6 +19,16 @@
   --color-ring: oklch(0.708 0 0);
   --color-destructive: oklch(0.577 0.245 27.325);
   
+  /* Sidebar colors */
+  --color-sidebar: oklch(0.985 0 0);
+  --color-sidebar-foreground: oklch(0.145 0 0);
+  --color-sidebar-primary: oklch(0.205 0 0);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.97 0 0);
+  --color-sidebar-accent-foreground: oklch(0.205 0 0);
+  --color-sidebar-border: oklch(0.922 0 0);
+  --color-sidebar-ring: oklch(0.708 0 0);
+  
   --animate-infinite-scroll: infinite-scroll 40s linear infinite;
   
   @keyframes infinite-scroll {

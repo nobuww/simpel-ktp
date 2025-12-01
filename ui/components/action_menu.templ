@@ -1,0 +1,64 @@
+package components
+
+// ActionMenuProps configures the action menu dropdown
+type ActionMenuProps struct {
+	ID string // Unique identifier for this menu
+}
+
+// ActionMenuItem represents a single menu item
+type ActionMenuItem struct {
+	Label   string
+	HxGet   string
+	Target  string
+	Swap    string
+	OnClick string // Additional Alpine.js click handler
+}
+
+// ActionMenu renders a dropdown menu with actions
+// Uses Alpine.js for dropdown state and HTMX for actions
+templ ActionMenu(props ActionMenuProps) {
+	<div class="relative" x-data="{ open: false }">
+		<button
+			type="button"
+			class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+			@click="open = !open"
+			@click.outside="open = false"
+			aria-haspopup="true"
+			:aria-expanded="open"
+		>
+			@IconMoreVertical()
+			<span class="sr-only">Buka menu aksi</span>
+		</button>
+		<div
+			x-show="open"
+			x-transition:enter="transition ease-out duration-100"
+			x-transition:enter-start="opacity-0 scale-95"
+			x-transition:enter-end="opacity-100 scale-100"
+			x-transition:leave="transition ease-in duration-75"
+			x-transition:leave-start="opacity-100 scale-100"
+			x-transition:leave-end="opacity-0 scale-95"
+			class="absolute right-0 top-full mt-1 z-50 w-40 p-1 bg-popover rounded-lg border text-popover-foreground text-sm shadow-lg"
+			@keydown.escape.window="open = false"
+			x-cloak
+		>
+			{ children... }
+		</div>
+	</div>
+}
+
+// ActionMenuButton renders a single action button within the menu
+templ ActionMenuButton(label, hxGet, target string) {
+	<button
+		type="button"
+		class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-slate-100 transition-colors text-left"
+		hx-get={ hxGet }
+		hx-target={ target }
+		hx-swap="innerHTML"
+		@click="open = false"
+	>
+		{ children... }
+	</button>
+}
+
+// IconMoreVertical is defined in icons.templ - use that canonical version
+// IconEye and IconPencil are also defined in icons.templ

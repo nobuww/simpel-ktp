@@ -1,0 +1,177 @@
+package components
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
+)
+
+// DataTable - Reusable table container with search and filters
+type DataTableProps struct {
+	ID          string
+	SearchURL   string
+	Placeholder string
+}
+
+templ DataTable(props DataTableProps) {
+	<div
+		if props.ID != "" {
+			id={ props.ID }
+		}
+		class="space-y-4"
+	>
+		{ children... }
+	</div>
+}
+
+templ DataTableToolbar() {
+	<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+		{ children... }
+	</div>
+}
+
+templ DataTableSearch(props DataTableProps) {
+	<div class="relative w-full sm:w-80">
+		<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+			@IconSearch()
+		</span>
+		@input.Input(input.Props{
+			Type:        input.TypeSearch,
+			Placeholder: props.Placeholder,
+			Class:       "pl-10",
+			Attributes: templ.Attributes{
+				"hx-get":       props.SearchURL,
+				"hx-trigger":   "input changed delay:300ms, search",
+				"hx-target":    "#" + props.ID + "-body",
+				"hx-swap":      "innerHTML",
+				"hx-indicator": "#" + props.ID + "-loading",
+				"name":         "search",
+			},
+		})
+	</div>
+}
+
+templ DataTableFilters() {
+	<div class="flex flex-wrap gap-2">
+		{ children... }
+	</div>
+}
+
+templ DataTableContent() {
+	<div class="rounded-md border overflow-hidden">
+		<div class="overflow-x-auto">
+			{ children... }
+		</div>
+	</div>
+}
+
+templ DataTableLoading(id string) {
+	<div id={ id + "-loading" } class="htmx-indicator absolute inset-0 bg-background/50 flex items-center justify-center">
+		<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+	</div>
+}
+
+// FilterSelect - Reusable filter dropdown
+type FilterSelectProps struct {
+	Name        string
+	Placeholder string
+	Options     []FilterOption
+	HxGet       string
+	HxTarget    string
+}
+
+type FilterOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+templ FilterSelect(props FilterSelectProps) {
+	@selectbox.SelectBox() {
+		@selectbox.Trigger(selectbox.TriggerProps{
+			Name:  props.Name,
+			Class: "w-40",
+			Attributes: templ.Attributes{
+				"hx-get":     props.HxGet,
+				"hx-trigger": "change",
+				"hx-target":  props.HxTarget,
+				"hx-swap":    "innerHTML",
+				"hx-include": "closest form",
+			},
+		}) {
+			@selectbox.Value(selectbox.ValueProps{Placeholder: props.Placeholder})
+		}
+		@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+			for _, opt := range props.Options {
+				@selectbox.Item(selectbox.ItemProps{Value: opt.Value, Selected: opt.Selected}) {
+					{ opt.Label }
+				}
+			}
+		}
+	}
+}
+
+// Pagination component
+type PaginationProps struct {
+	CurrentPage int
+	TotalPages  int
+	BaseURL     string
+	HxTarget    string
+}
+
+templ Pagination(props PaginationProps) {
+	<div class="flex items-center justify-between px-2 py-4">
+		<p class="text-sm text-muted-foreground">
+			Halaman { toString(props.CurrentPage) } dari { toString(props.TotalPages) }
+		</p>
+		<div class="flex items-center gap-2">
+			@button.Button(button.Props{
+				Variant:  button.VariantOutline,
+				Size:     button.SizeSm,
+				Disabled: props.CurrentPage <= 1,
+				Attributes: templ.Attributes{
+					"hx-get":    props.BaseURL + "?page=" + toString(props.CurrentPage-1),
+					"hx-target": props.HxTarget,
+					"hx-swap":   "innerHTML",
+				},
+			}) {
+				@IconChevronLeft()
+				Sebelumnya
+			}
+			@button.Button(button.Props{
+				Variant:  button.VariantOutline,
+				Size:     button.SizeSm,
+				Disabled: props.CurrentPage >= props.TotalPages,
+				Attributes: templ.Attributes{
+					"hx-get":    props.BaseURL + "?page=" + toString(props.CurrentPage+1),
+					"hx-target": props.HxTarget,
+					"hx-swap":   "innerHTML",
+				},
+			}) {
+				Selanjutnya
+				@IconChevronRightSmall()
+			}
+		</div>
+	</div>
+}
+
+// Helper to convert int to string
+func toString(i int) string {
+	return templ.EscapeString(string(rune('0' + i)))
+}
+
+// Additional icons for data table
+templ IconChevronLeft() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="m15 18-6-6 6-6"></path>
+	</svg>
+}
+
+templ IconChevronRightSmall() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="m9 18 6-6-6-6"></path>
+	</svg>
+}
+
+// Note: IconFilter, IconDownload, IconEye, IconEdit, IconTrash, IconMoreVertical
+// are defined in icons.templ - use those canonical versions

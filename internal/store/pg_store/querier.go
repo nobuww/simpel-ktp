@@ -6,10 +6,40 @@ package pg_store
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	CheckEmailExists(ctx context.Context, email pgtype.Text) (bool, error)
 	CheckHealth(ctx context.Context) (int32, error)
+	CheckPendudukExists(ctx context.Context, nik string) (bool, error)
+	CountPermohonanByNIK(ctx context.Context, nik pgtype.Text) (CountPermohonanByNIKRow, error)
+	CountPermohonanByStatus(ctx context.Context) (CountPermohonanByStatusRow, error)
+	CreateJadwalSesi(ctx context.Context, arg CreateJadwalSesiParams) (uuid.UUID, error)
+	CreateKelurahan(ctx context.Context, arg CreateKelurahanParams) (RefKelurahan, error)
+	CreatePenduduk(ctx context.Context, arg CreatePendudukParams) (Penduduk, error)
+	CreatePetugas(ctx context.Context, arg CreatePetugasParams) (Petugas, error)
+	GetJadwalSesiById(ctx context.Context, id uuid.UUID) (GetJadwalSesiByIdRow, error)
+	GetKelurahanByKodeArea(ctx context.Context, kodeArea string) (RefKelurahan, error)
+	GetPendudukByNIK(ctx context.Context, nik string) (Penduduk, error)
+	GetPendudukProfile(ctx context.Context, nik string) (GetPendudukProfileRow, error)
+	GetPermohonanByNIK(ctx context.Context, arg GetPermohonanByNIKParams) ([]GetPermohonanByNIKRow, error)
+	GetPermohonanDetail(ctx context.Context, id uuid.UUID) (GetPermohonanDetailRow, error)
+	GetPermohonanStatusById(ctx context.Context, id uuid.UUID) (GetPermohonanStatusByIdRow, error)
+	GetPetugasByNIP(ctx context.Context, nip pgtype.Text) (Petugas, error)
+	GetPetugasByUsername(ctx context.Context, username string) (Petugas, error)
+	GetRiwayatStatusByPermohonan(ctx context.Context, permohonanID pgtype.UUID) ([]GetRiwayatStatusByPermohonanRow, error)
+	IncrementKuotaTerisi(ctx context.Context, id uuid.UUID) error
+	InsertRiwayatStatus(ctx context.Context, arg InsertRiwayatStatusParams) error
+	ListAllKelurahan(ctx context.Context) ([]ListAllKelurahanRow, error)
+	ListJadwalSesi(ctx context.Context, arg ListJadwalSesiParams) ([]ListJadwalSesiRow, error)
+	ListKelurahan(ctx context.Context) ([]RefKelurahan, error)
+	ListPermohonanByStatus(ctx context.Context, arg ListPermohonanByStatusParams) ([]ListPermohonanByStatusRow, error)
+	TruncateSeedTables(ctx context.Context) error
+	UpdateJadwalSesi(ctx context.Context, arg UpdateJadwalSesiParams) error
+	UpdatePermohonanStatus(ctx context.Context, arg UpdatePermohonanStatusParams) error
 }
 
 var _ Querier = (*Queries)(nil)

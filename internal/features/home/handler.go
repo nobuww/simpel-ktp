@@ -6,20 +6,19 @@ import (
 	"github.com/nobuww/simpel-ktp/internal/store"
 )
 
+// Handler manages home page HTTP handlers
 type Handler struct {
-	Store *store.Store
+	store *store.Store
 }
 
-func New(store *store.Store) *Handler {
+// New creates a new home handler with the required dependencies
+func New(s *store.Store) *Handler {
 	return &Handler{
-		Store: store,
+		store: s,
 	}
 }
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	// ex: fetch users
-	// users, err := h.Store.ListUsers(r.Context())
-
 	Page().Render(r.Context(), w)
 }
 

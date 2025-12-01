@@ -1,0 +1,752 @@
+package admin
+
+import (
+	"strconv"
+
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+	"github.com/nobuww/simpel-ktp/ui/templui/label"
+	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
+	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
+	"github.com/nobuww/simpel-ktp/ui/templui/textarea"
+)
+
+type PermohonanPageData struct {
+	UserName   string
+	UserRole   string
+	ActivePage string
+	List       []PermohonanItem
+	Stats      PermohonanStats
+}
+
+type PermohonanItem struct {
+	ID              string
+	KodeBooking     string
+	NIK             string
+	NamaLengkap     string
+	JenisPermohonan string
+	StatusTerkini   string
+	TanggalDaftar   string
+	JadwalSesi      string
+	NomorAntrian    int
+}
+
+// PermohonanDetail contains full detail of a permohonan for detail view
+type PermohonanDetail struct {
+	ID               string
+	KodeBooking      string
+	NIK              string
+	NamaLengkap      string
+	TempatLahir      string
+	TanggalLahir     string
+	JenisKelamin     string
+	Alamat           string
+	RT               string
+	RW               string
+	Kelurahan        string
+	Kecamatan        string
+	Agama            string
+	StatusPerkawinan string
+	Pekerjaan        string
+	Kewarganegaraan  string
+	NoTelp           string
+	JenisPermohonan  string
+	AlasanPermohonan string
+	StatusTerkini    string
+	TanggalDaftar    string
+	JadwalSesi       string
+	NomorAntrian     int
+	Catatan          string
+	RiwayatStatus    []RiwayatStatusItem
+}
+
+type RiwayatStatusItem struct {
+	Status  string
+	Waktu   string
+	Petugas string
+	Catatan string
+}
+
+type PermohonanStats struct {
+	Total      int
+	Verifikasi int
+	Proses     int
+	SiapAmbil  int
+	Selesai    int
+	Ditolak    int
+}
+
+templ PermohonanPage(data PermohonanPageData) {
+	@layouts.Admin("Permohonan - Simpel KTP", PermohonanScripts()) {
+		@sidebar.Layout() {
+			@components.AdminSidebar(components.AdminSidebarData{
+				UserName:   data.UserName,
+				UserRole:   data.UserRole,
+				ActivePage: data.ActivePage,
+			})
+			@sidebar.Inset() {
+				@components.AdminMobileHeader("Permohonan")
+				<div class="flex-1 p-4 md:p-6 lg:p-8">
+					@components.PageHeader(components.PageHeaderProps{
+						Title:       "Daftar Permohonan",
+						Description: "Kelola permohonan pembuatan KTP dari warga",
+					})
+					<!-- Stats Summary -->
+					<div
+						class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6"
+						x-data="{ shown: false }"
+						x-init="setTimeout(() => shown = true, 100)"
+					>
+						@PermohonanStatCard("Total", data.Stats.Total, "bg-slate-50 text-slate-700", 0)
+						@PermohonanStatCard("Verifikasi", data.Stats.Verifikasi, "bg-blue-50 text-blue-700", 1)
+						@PermohonanStatCard("Proses", data.Stats.Proses, "bg-yellow-50 text-yellow-700", 2)
+						@PermohonanStatCard("Siap Ambil", data.Stats.SiapAmbil, "bg-green-50 text-green-700", 3)
+						@PermohonanStatCard("Selesai", data.Stats.Selesai, "bg-slate-50 text-slate-600", 4)
+						@PermohonanStatCard("Ditolak", data.Stats.Ditolak, "bg-red-50 text-red-700", 5)
+					</div>
+					<!-- Data Table with Client-Side Filtering -->
+					<div
+						class="bg-white rounded-lg border shadow-sm"
+						x-data="permohonanFilter()"
+					>
+						<!-- Toolbar -->
+						<div class="p-4 border-b">
+							<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+								<!-- Search -->
+								<div class="relative w-full sm:w-80">
+									<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+										@components.IconSearch()
+									</span>
+									<input
+										type="search"
+										placeholder="Cari NIK, nama, atau kode booking..."
+										class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-10"
+										x-model="search"
+									/>
+								</div>
+								<!-- Filters & Actions -->
+								<div class="flex flex-wrap gap-2">
+									<select
+										x-model="statusFilter"
+										class="flex h-9 w-36 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										<option value="">Semua Status</option>
+										<option value="VERIFIKASI">Verifikasi</option>
+										<option value="PROSES">Dalam Proses</option>
+										<option value="SIAP_AMBIL">Siap Diambil</option>
+										<option value="SELESAI">Selesai</option>
+										<option value="DITOLAK">Ditolak</option>
+									</select>
+									<select
+										x-model="jenisFilter"
+										class="flex h-9 w-36 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										<option value="">Semua Jenis</option>
+										<option value="BARU">Baru</option>
+										<option value="HILANG">Hilang</option>
+										<option value="RUSAK">Rusak</option>
+										<option value="UPDATE">Update</option>
+									</select>
+									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+										@components.IconDownload()
+										Export
+									}
+								</div>
+							</div>
+						</div>
+						<!-- Table (Desktop) -->
+						<div class="hidden md:block overflow-x-auto">
+							<table class="w-full">
+								<thead class="bg-slate-50 border-b">
+									<tr>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kode Booking</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Pemohon</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider hidden lg:table-cell">Jadwal</th>
+										<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider hidden lg:table-cell">Antrian</th>
+										<th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+									</tr>
+								</thead>
+								<tbody id="permohonan-table-body" class="divide-y divide-slate-100">
+									<template x-if="filteredItems.length === 0">
+										<tr>
+											<td colspan="7" class="px-4 py-12 text-center">
+												<div class="flex flex-col items-center justify-center gap-2">
+													<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+													</svg>
+													<p class="text-sm font-medium text-slate-900">Tidak ada permohonan</p>
+													<p class="text-xs text-slate-500">Belum ada permohonan yang sesuai dengan filter</p>
+												</div>
+											</td>
+										</tr>
+									</template>
+									<template x-for="item in filteredItems" :key="item.id">
+										<tr class="hover:bg-slate-50 transition-colors">
+											<td class="px-4 py-3">
+												<span class="font-mono text-sm font-medium text-primary" x-text="item.kodeBooking"></span>
+											</td>
+											<td class="px-4 py-3">
+												<div>
+													<p class="text-sm font-medium text-slate-900" x-text="item.namaLengkap"></p>
+													<p class="text-xs text-slate-500 font-mono" x-text="item.nik"></p>
+												</div>
+											</td>
+											<td class="px-4 py-3">
+												<span
+													class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+													:class="getJenisBadgeClass(item.jenisPermohonan)"
+													x-text="item.jenisPermohonan"
+												></span>
+											</td>
+											<td class="px-4 py-3">
+												<span
+													class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+													:class="getStatusBadgeClass(item.statusTerkini)"
+													x-text="getStatusLabel(item.statusTerkini)"
+												></span>
+											</td>
+											<td class="px-4 py-3 hidden lg:table-cell">
+												<p class="text-sm text-slate-600" x-text="item.jadwalSesi"></p>
+											</td>
+											<td class="px-4 py-3 hidden lg:table-cell">
+												<span class="inline-flex items-center justify-center size-8 rounded-full bg-slate-100 text-sm font-medium" x-text="item.nomorAntrian"></span>
+											</td>
+											<td class="px-4 py-3 text-right">
+												<div class="relative" x-data="{ open: false }">
+													<button
+														type="button"
+														class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+														@click="open = !open"
+														@click.outside="open = false"
+													>
+														<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+													</button>
+													<div
+														x-show="open"
+														x-transition:enter="transition ease-out duration-100"
+														x-transition:enter-start="opacity-0 scale-95"
+														x-transition:enter-end="opacity-100 scale-100"
+														x-transition:leave="transition ease-in duration-75"
+														x-transition:leave-start="opacity-100 scale-100"
+														x-transition:leave-end="opacity-0 scale-95"
+														class="absolute right-0 top-full mt-1 z-50 w-40 p-1 bg-popover rounded-lg border text-popover-foreground text-sm shadow-lg"
+														@keydown.escape.window="open = false"
+													>
+														<button
+															type="button"
+															class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-slate-100 transition-colors"
+															:hx-get="'/admin/permohonan/' + item.id"
+															hx-target="#detail-content"
+															hx-swap="innerHTML"
+															hx-on--after-request="window.tui.dialog.open('detail-dialog')"
+															@click="open = false; htmx.process(document.body)"
+														>
+															<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
+															Lihat Detail
+														</button>
+														<button
+															type="button"
+															class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-slate-100 transition-colors"
+															:hx-get="'/admin/permohonan/' + item.id + '/status'"
+															hx-target="#status-form"
+															hx-swap="innerHTML"
+															hx-on--after-request="window.tui.dialog.open('status-dialog')"
+															@click="open = false; htmx.process(document.body)"
+														>
+															<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+															Update Status
+														</button>
+													</div>
+												</div>
+											</td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+						<!-- Mobile Card View -->
+						<div class="md:hidden divide-y divide-slate-100" id="permohonan-mobile-body">
+							<template x-if="filteredItems.length === 0">
+								<div class="px-4 py-12 text-center">
+									<div class="flex flex-col items-center justify-center gap-2">
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+										</svg>
+										<p class="text-sm font-medium text-slate-900">Tidak ada permohonan</p>
+										<p class="text-xs text-slate-500">Belum ada permohonan yang sesuai dengan filter</p>
+									</div>
+								</div>
+							</template>
+							<template x-for="item in filteredItems" :key="item.id">
+								<div class="p-4 hover:bg-slate-50 transition-colors">
+									<div class="flex items-start justify-between gap-3 mb-3">
+										<div class="flex-1 min-w-0">
+											<p class="font-mono text-sm font-medium text-primary" x-text="item.kodeBooking"></p>
+											<p class="text-sm font-medium text-slate-900 mt-1" x-text="item.namaLengkap"></p>
+											<p class="text-xs text-slate-500 font-mono" x-text="item.nik"></p>
+										</div>
+										<div class="relative" x-data="{ open: false }">
+											<button
+												type="button"
+												class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9"
+												@click="open = !open"
+												@click.outside="open = false"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+											</button>
+											<div
+												x-show="open"
+												x-transition:enter="transition ease-out duration-100"
+												x-transition:enter-start="opacity-0 scale-95"
+												x-transition:enter-end="opacity-100 scale-100"
+												x-transition:leave="transition ease-in duration-75"
+												x-transition:leave-start="opacity-100 scale-100"
+												x-transition:leave-end="opacity-0 scale-95"
+												class="absolute right-0 top-full mt-1 z-50 w-40 p-1 bg-popover rounded-lg border text-popover-foreground text-sm shadow-lg"
+												@keydown.escape.window="open = false"
+											>
+												<button
+													type="button"
+													class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-slate-100 transition-colors"
+													:hx-get="'/admin/permohonan/' + item.id"
+													hx-target="#detail-content"
+													hx-swap="innerHTML"
+													hx-on--after-request="window.tui.dialog.open('detail-dialog')"
+													@click="open = false; htmx.process(document.body)"
+												>
+													<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>
+													Lihat Detail
+												</button>
+												<button
+													type="button"
+													class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-slate-100 transition-colors"
+													:hx-get="'/admin/permohonan/' + item.id + '/status'"
+													hx-target="#status-form"
+													hx-swap="innerHTML"
+													hx-on--after-request="window.tui.dialog.open('status-dialog')"
+													@click="open = false; htmx.process(document.body)"
+												>
+													<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+													Update Status
+												</button>
+											</div>
+										</div>
+									</div>
+									<div class="flex flex-wrap items-center gap-2">
+										<span
+											class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+											:class="getJenisBadgeClass(item.jenisPermohonan)"
+											x-text="item.jenisPermohonan"
+										></span>
+										<span
+											class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+											:class="getStatusBadgeClass(item.statusTerkini)"
+											x-text="getStatusLabel(item.statusTerkini)"
+										></span>
+										<span class="text-xs text-slate-500" x-text="item.jadwalSesi"></span>
+										<span class="inline-flex items-center justify-center size-6 rounded-full bg-slate-100 text-xs font-medium" x-text="item.nomorAntrian"></span>
+									</div>
+								</div>
+							</template>
+						</div>
+						<!-- Pagination -->
+						<div class="px-4 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+							<p class="text-sm text-slate-500 text-center sm:text-left">
+								Menampilkan <span class="font-medium" x-text="filteredItems.length"></span> dari <span class="font-medium" x-text="items.length"></span> permohonan
+							</p>
+							<div class="flex gap-2" x-show="search || statusFilter || jenisFilter">
+								<button
+									type="button"
+									class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+									@click="resetFilters()"
+								>
+									Reset Filter
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		}
+		<!-- Detail Dialog -->
+		@PermohonanDetailDialog()
+		<!-- Update Status Dialog -->
+		@UpdateStatusDialog()
+		<!-- Alpine.js Data Script -->
+		@PermohonanFilterScript(data.List)
+	}
+}
+
+templ PermohonanStatCard(label string, value int, colorClass string, index int) {
+	<div
+		class={ "rounded-lg p-4 " + colorClass }
+		x-show="shown"
+		x-transition:enter="transition ease-out duration-300"
+		x-transition:enter-start="opacity-0 translate-y-2"
+		x-transition:enter-end="opacity-100 translate-y-0"
+		:style={ "'transition-delay: ' + " + intToStr(index) + " * 50 + 'ms'" }
+	>
+		<p class="text-2xl font-bold">{ intToStr(value) }</p>
+		<p class="text-xs font-medium opacity-80">{ label }</p>
+	</div>
+}
+
+templ PermohonanDetailDialog() {
+	@dialog.Dialog(dialog.Props{ID: "detail-dialog"}) {
+		@dialog.Trigger()
+		@dialog.Content(dialog.ContentProps{Class: "max-w-2xl w-[calc(100vw-2rem)] sm:w-full"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Detail Permohonan
+				}
+				@dialog.Description() {
+					Informasi lengkap permohonan KTP
+				}
+			}
+			<div id="detail-content" class="py-4 max-h-[60vh] overflow-y-auto">
+				<!-- Content loaded via HTMX -->
+				<div class="flex items-center justify-center py-8">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+				</div>
+			</div>
+		}
+	}
+}
+
+templ UpdateStatusDialog() {
+	@dialog.Dialog(dialog.Props{ID: "status-dialog"}) {
+		@dialog.Trigger()
+		@dialog.Content(dialog.ContentProps{Class: "max-w-md"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Update Status Permohonan
+				}
+				@dialog.Description() {
+					Ubah status dan tambahkan catatan proses
+				}
+			}
+			<form
+				id="status-form"
+				hx-post="/admin/permohonan/update-status"
+				hx-swap="none"
+				hx-on::after-request="if(event.detail.successful) { window.tui.dialog.close('status-dialog'); window.location.reload(); }"
+			>
+				<!-- Content loaded via HTMX -->
+				<div class="flex items-center justify-center py-8">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+				</div>
+			</form>
+		}
+	}
+}
+
+// Partial: Status update form
+templ StatusUpdateForm(permohonanID, currentStatus string) {
+	<input type="hidden" name="id" value={ permohonanID }/>
+	<div class="space-y-4 py-4">
+		<div class="space-y-2">
+			@label.Label(label.Props{}) {
+				Status Baru
+			}
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{Name: "status", Class: "w-full"}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: "Pilih status"})
+				}
+				@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+					@selectbox.Item(selectbox.ItemProps{Value: "VERIFIKASI", Selected: currentStatus == "VERIFIKASI"}) {
+						Verifikasi
+					}
+					@selectbox.Item(selectbox.ItemProps{Value: "PROSES", Selected: currentStatus == "PROSES"}) {
+						Dalam Proses
+					}
+					@selectbox.Item(selectbox.ItemProps{Value: "SIAP_AMBIL", Selected: currentStatus == "SIAP_AMBIL"}) {
+						Siap Diambil
+					}
+					@selectbox.Item(selectbox.ItemProps{Value: "SELESAI", Selected: currentStatus == "SELESAI"}) {
+						Selesai
+					}
+					@selectbox.Item(selectbox.ItemProps{Value: "DITOLAK", Selected: currentStatus == "DITOLAK"}) {
+						Ditolak
+					}
+				}
+			}
+		</div>
+		<div class="space-y-2">
+			@label.Label(label.Props{}) {
+				Catatan Proses
+			}
+			@textarea.Textarea(textarea.Props{
+				Name:        "catatan",
+				Placeholder: "Tambahkan catatan proses (opsional)",
+				Class:       "min-h-24",
+			})
+		</div>
+	</div>
+	@dialog.Footer() {
+		@dialog.Close() {
+			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+				Batal
+			}
+		}
+		@button.Button(button.Props{Type: button.TypeSubmit}) {
+			Simpan Perubahan
+		}
+	}
+}
+
+// Partial: Detail content
+templ PermohonanDetailContent(detail PermohonanDetail) {
+	<div class="space-y-6" x-data="{ activeTab: 'info' }">
+		<!-- Header -->
+		<div class="flex items-center justify-between pb-4 border-b">
+			<div>
+				<p class="text-xs text-slate-500 uppercase tracking-wide">Kode Booking</p>
+				<p class="text-2xl font-mono font-bold text-primary">{ detail.KodeBooking }</p>
+			</div>
+			<div class="flex items-center gap-3">
+				@components.JenisBadge(detail.JenisPermohonan)
+				@components.StatusBadge(components.StatusBadgeProps{Status: detail.StatusTerkini})
+			</div>
+		</div>
+		<!-- Tab Navigation -->
+		<div class="flex gap-1 p-1 bg-slate-100 rounded-lg overflow-x-auto">
+			<button
+				type="button"
+				class="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap"
+				:class="activeTab === 'info' ? 'bg-white shadow-sm text-primary' : 'text-slate-600 hover:text-slate-900'"
+				@click="activeTab = 'info'"
+			>
+				<span class="hidden sm:inline">Informasi Pemohon</span>
+				<span class="sm:hidden">Info</span>
+			</button>
+			<button
+				type="button"
+				class="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap"
+				:class="activeTab === 'permohonan' ? 'bg-white shadow-sm text-primary' : 'text-slate-600 hover:text-slate-900'"
+				@click="activeTab = 'permohonan'"
+			>
+				<span class="hidden sm:inline">Detail Permohonan</span>
+				<span class="sm:hidden">Detail</span>
+			</button>
+			<button
+				type="button"
+				class="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap"
+				:class="activeTab === 'riwayat' ? 'bg-white shadow-sm text-primary' : 'text-slate-600 hover:text-slate-900'"
+				@click="activeTab = 'riwayat'"
+			>
+				<span class="hidden sm:inline">Riwayat Status</span>
+				<span class="sm:hidden">Riwayat</span>
+			</button>
+		</div>
+		<!-- Tab Content: Informasi Pemohon -->
+		<div x-show="activeTab === 'info'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+				@DetailField("NIK", detail.NIK, true)
+				@DetailField("Nama Lengkap", detail.NamaLengkap, false)
+				@DetailField("Tempat Lahir", detail.TempatLahir, false)
+				@DetailField("Tanggal Lahir", detail.TanggalLahir, false)
+				@DetailField("Jenis Kelamin", detail.JenisKelamin, false)
+				@DetailField("Agama", detail.Agama, false)
+				@DetailField("Status Perkawinan", detail.StatusPerkawinan, false)
+				@DetailField("Pekerjaan", detail.Pekerjaan, false)
+				@DetailField("Kewarganegaraan", detail.Kewarganegaraan, false)
+				@DetailField("No. Telepon", detail.NoTelp, false)
+			</div>
+			<div class="mt-4 pt-4 border-t">
+				<p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Alamat Lengkap</p>
+				<p class="text-sm text-slate-900">{ detail.Alamat }</p>
+				<p class="text-sm text-slate-600 mt-1">
+					RT { detail.RT } / RW { detail.RW }, { detail.Kelurahan }, { detail.Kecamatan }
+				</p>
+			</div>
+		</div>
+		<!-- Tab Content: Detail Permohonan -->
+		<div x-show="activeTab === 'permohonan'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-cloak>
+			<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+				<div>
+					<p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Jenis Permohonan</p>
+					<div class="mt-1">
+						@components.JenisBadge(detail.JenisPermohonan)
+					</div>
+				</div>
+				@DetailField("Nomor Antrian", intToStr(detail.NomorAntrian), false)
+				@DetailField("Tanggal Daftar", detail.TanggalDaftar, false)
+				@DetailField("Jadwal Sesi", detail.JadwalSesi, false)
+			</div>
+			if detail.AlasanPermohonan != "" {
+				<div class="mt-4 pt-4 border-t">
+					<p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Alasan Permohonan</p>
+					<p class="text-sm text-slate-900 bg-slate-50 rounded-lg p-3">{ detail.AlasanPermohonan }</p>
+				</div>
+			}
+			if detail.Catatan != "" {
+				<div class="mt-4 pt-4 border-t">
+					<p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Catatan Petugas</p>
+					<p class="text-sm text-slate-900 bg-amber-50 border border-amber-200 rounded-lg p-3">{ detail.Catatan }</p>
+				</div>
+			}
+		</div>
+		<!-- Tab Content: Riwayat Status -->
+		<div x-show="activeTab === 'riwayat'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-cloak>
+			if len(detail.RiwayatStatus) == 0 {
+				<div class="text-center py-8 text-slate-500">
+					<p>Belum ada riwayat status</p>
+				</div>
+			} else {
+				<div class="relative">
+					<!-- Timeline line -->
+					<div class="absolute left-3 top-2 bottom-2 w-0.5 bg-slate-200"></div>
+					<div class="space-y-4">
+						for i, riwayat := range detail.RiwayatStatus {
+							@RiwayatStatusItemTemplate(riwayat, i == 0)
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ DetailField(label, value string, isMono bool) {
+	<div>
+		<p class="text-xs font-medium text-slate-500 uppercase tracking-wide">{ label }</p>
+		if isMono {
+			<p class="text-sm font-mono text-slate-900 mt-1">{ value }</p>
+		} else {
+			<p class="text-sm text-slate-900 mt-1">{ value }</p>
+		}
+	</div>
+}
+
+templ RiwayatStatusItemTemplate(item RiwayatStatusItem, isLatest bool) {
+	<div class="relative pl-8">
+		<!-- Timeline dot -->
+		<div class={ "absolute left-0 top-1 size-6 rounded-full flex items-center justify-center", templ.KV("bg-primary text-primary-foreground", isLatest), templ.KV("bg-slate-200 text-slate-500", !isLatest) }>
+			if isLatest {
+				@IconCheckSmall()
+			} else {
+				<span class="size-2 rounded-full bg-current"></span>
+			}
+		</div>
+		<div class={ "p-3 rounded-lg", templ.KV("bg-primary/5 border border-primary/20", isLatest), templ.KV("bg-slate-50", !isLatest) }>
+			<div class="flex items-center justify-between mb-1">
+				@components.StatusBadge(components.StatusBadgeProps{Status: item.Status})
+				<span class="text-xs text-slate-500">{ item.Waktu }</span>
+			</div>
+			<p class="text-sm text-slate-600">Diproses oleh <span class="font-medium text-slate-900">{ item.Petugas }</span></p>
+			if item.Catatan != "" {
+				<p class="text-sm text-slate-500 mt-1 italic">"{ item.Catatan }"</p>
+			}
+		</div>
+	</div>
+}
+
+templ IconCheckSmall() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+		<polyline points="20 6 9 17 4 12"></polyline>
+	</svg>
+}
+
+templ PermohonanScripts() {
+	@sidebar.Script()
+	@dialog.Script()
+	@selectbox.Script()
+}
+
+// PermohonanFilterScript generates the Alpine.js data for client-side filtering
+templ PermohonanFilterScript(items []PermohonanItem) {
+	@templ.JSONScript("permohonan-data", itemsToJSON(items))
+	<script>
+		function permohonanFilter() {
+			return {
+				search: '',
+				statusFilter: '',
+				jenisFilter: '',
+				items: [],
+				init() {
+					this.items = JSON.parse(document.getElementById('permohonan-data').textContent);
+				},
+				get filteredItems() {
+					const searchLower = this.search.toLowerCase();
+					return this.items.filter(item => {
+						// Search filter
+						const matchSearch = !this.search || 
+							item.kodeBooking.toLowerCase().includes(searchLower) ||
+							item.nik.toLowerCase().includes(searchLower) ||
+							item.namaLengkap.toLowerCase().includes(searchLower);
+						
+						// Status filter
+						const matchStatus = !this.statusFilter || item.statusTerkini === this.statusFilter;
+						
+						// Jenis filter
+						const matchJenis = !this.jenisFilter || item.jenisPermohonan === this.jenisFilter;
+						
+						return matchSearch && matchStatus && matchJenis;
+					});
+				},
+				resetFilters() {
+					this.search = '';
+					this.statusFilter = '';
+					this.jenisFilter = '';
+				},
+				getStatusBadgeClass(status) {
+					const classes = {
+						'VERIFIKASI': 'bg-blue-100 text-blue-800',
+						'PROSES': 'bg-yellow-100 text-yellow-800',
+						'SIAP_AMBIL': 'bg-green-100 text-green-800',
+						'SELESAI': 'bg-slate-100 text-slate-800',
+						'DITOLAK': 'bg-red-100 text-red-800'
+					};
+					return classes[status] || 'bg-slate-100 text-slate-800';
+				},
+				getStatusLabel(status) {
+					const labels = {
+						'VERIFIKASI': 'Verifikasi',
+						'PROSES': 'Proses',
+						'SIAP_AMBIL': 'Siap Ambil',
+						'SELESAI': 'Selesai',
+						'DITOLAK': 'Ditolak'
+					};
+					return labels[status] || status;
+				},
+				getJenisBadgeClass(jenis) {
+					const classes = {
+						'BARU': 'bg-emerald-100 text-emerald-800',
+						'HILANG': 'bg-orange-100 text-orange-800',
+						'RUSAK': 'bg-red-100 text-red-800',
+						'UPDATE': 'bg-blue-100 text-blue-800'
+					};
+					return classes[jenis] || 'bg-slate-100 text-slate-800';
+				}
+			}
+		}
+	</script>
+}
+
+// itemsToJSON converts PermohonanItem slice to JSON-friendly format
+func itemsToJSON(items []PermohonanItem) []map[string]any {
+	result := make([]map[string]any, len(items))
+	for i, item := range items {
+		result[i] = map[string]any{
+			"id":              item.ID,
+			"kodeBooking":     item.KodeBooking,
+			"nik":             item.NIK,
+			"namaLengkap":     item.NamaLengkap,
+			"jenisPermohonan": item.JenisPermohonan,
+			"statusTerkini":   item.StatusTerkini,
+			"tanggalDaftar":   item.TanggalDaftar,
+			"jadwalSesi":      item.JadwalSesi,
+			"nomorAntrian":    item.NomorAntrian,
+		}
+	}
+	return result
+}
+
+// intToStr converts an integer to string - wrapper around strconv.Itoa
+func intToStr(n int) string {
+	return strconv.Itoa(n)
+}

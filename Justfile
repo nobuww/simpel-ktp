@@ -67,3 +67,16 @@ migrate-status:
 db-reset:
     go tool goose -dir db/migrations postgres "$DATABASE_URL" down-to 0
     just migrate-up
+
+# seed database with initial data
+seed:
+    go run ./cmd/seed/main.go
+
+# seed database with reset
+seed-reset:
+    go run ./cmd/seed/main.go --reset --force
+
+# reset db and seed
+db-fresh:
+    just db-reset
+    just seed

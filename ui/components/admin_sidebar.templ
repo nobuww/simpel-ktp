@@ -1,0 +1,245 @@
+package components
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
+)
+
+type AdminSidebarData struct {
+	UserName   string
+	UserRole   string
+	ActivePage string
+}
+
+// activeMenuClass returns additional classes for active menu items
+func activeMenuClass(isActive bool) string {
+	if isActive {
+		return "data-[tui-sidebar-active=true]:bg-primary data-[tui-sidebar-active=true]:text-primary-foreground"
+	}
+	return ""
+}
+
+// AdminMobileHeader renders a mobile header with sidebar trigger
+templ AdminMobileHeader(title string) {
+	<header class="md:hidden sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
+		@sidebar.Trigger()
+		<div class="flex-1">
+			<h1 class="font-semibold text-lg">{ title }</h1>
+		</div>
+	</header>
+}
+
+templ AdminSidebar(data AdminSidebarData) {
+	@sidebar.Sidebar(sidebar.Props{
+		Variant:     sidebar.VariantInset,
+		Collapsible: sidebar.CollapsibleIcon,
+	}) {
+		@sidebar.Header() {
+			<div class="flex items-center gap-2 px-2">
+				<div class="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+					@IconLogo()
+				</div>
+				<div class="flex flex-col gap-0.5 leading-none group-data-[tui-sidebar-state=collapsed]:hidden">
+					<span class="font-semibold">Simpel KTP</span>
+					<span class="text-xs text-muted-foreground">Admin Panel</span>
+				</div>
+			</div>
+		}
+		@sidebar.Separator()
+		@sidebar.Content() {
+			@sidebar.Group() {
+				@sidebar.GroupLabel() {
+					Menu Utama
+				}
+				@sidebar.Menu() {
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin",
+							IsActive: data.ActivePage == "dashboard",
+							Tooltip:  "Dashboard",
+							Class:    activeMenuClass(data.ActivePage == "dashboard"),
+						}) {
+							@IconDashboard()
+							<span>Dashboard</span>
+						}
+					}
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin/permohonan",
+							IsActive: data.ActivePage == "permohonan",
+							Tooltip:  "Permohonan",
+							Class:    activeMenuClass(data.ActivePage == "permohonan"),
+						}) {
+							@IconFileText()
+							<span>Permohonan</span>
+							@sidebar.MenuBadge() {
+								12
+							}
+						}
+					}
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin/jadwal",
+							IsActive: data.ActivePage == "jadwal",
+							Tooltip:  "Jadwal Sesi",
+							Class:    activeMenuClass(data.ActivePage == "jadwal"),
+						}) {
+							@IconCalendar()
+							<span>Jadwal Sesi</span>
+						}
+					}
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin/penduduk",
+							IsActive: data.ActivePage == "penduduk",
+							Tooltip:  "Data Penduduk",
+							Class:    activeMenuClass(data.ActivePage == "penduduk"),
+						}) {
+							@IconUsers()
+							<span>Data Penduduk</span>
+						}
+					}
+				}
+			}
+			@sidebar.Group() {
+				@sidebar.GroupLabel() {
+					Pengaturan
+				}
+				@sidebar.Menu() {
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin/petugas",
+							IsActive: data.ActivePage == "petugas",
+							Tooltip:  "Kelola Petugas",
+							Class:    activeMenuClass(data.ActivePage == "petugas"),
+						}) {
+							@IconUserCog()
+							<span>Kelola Petugas</span>
+						}
+					}
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Href:     "/admin/laporan",
+							IsActive: data.ActivePage == "laporan",
+							Tooltip:  "Laporan",
+							Class:    activeMenuClass(data.ActivePage == "laporan"),
+						}) {
+							@IconBarChart()
+							<span>Laporan</span>
+						}
+					}
+				}
+			}
+		}
+		@sidebar.Footer() {
+			@sidebar.Menu() {
+				@sidebar.MenuItem() {
+					@sidebar.MenuButton(sidebar.MenuButtonProps{
+						Size:    sidebar.MenuButtonSizeLg,
+						Tooltip: data.UserName,
+					}) {
+						<div class="flex size-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 text-sm font-medium">
+							{ string([]rune(data.UserName)[0]) }
+						</div>
+						<div class="flex flex-col gap-0.5 leading-none">
+							<span class="font-medium truncate">{ data.UserName }</span>
+							<span class="text-xs text-muted-foreground">{ data.UserRole }</span>
+						</div>
+					}
+				}
+				@sidebar.MenuItem() {
+					<form hx-post="/auth/logout" hx-swap="none" class="w-full">
+						@button.Button(button.Props{
+							Variant: button.VariantGhost,
+							Size:    button.SizeSm,
+							Type:    button.TypeSubmit,
+							Class:   "w-full justify-start gap-2",
+						}) {
+							@IconLogout()
+							<span class="group-data-[tui-sidebar-state=collapsed]:hidden">Keluar</span>
+						}
+					</form>
+				}
+			}
+		}
+	}
+}
+
+// Sidebar Icons
+templ IconLogo() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect width="7" height="9" x="3" y="3" rx="1"></rect>
+		<rect width="7" height="5" x="14" y="3" rx="1"></rect>
+		<rect width="7" height="9" x="14" y="12" rx="1"></rect>
+		<rect width="7" height="5" x="3" y="16" rx="1"></rect>
+	</svg>
+}
+
+templ IconDashboard() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect width="7" height="9" x="3" y="3" rx="1"></rect>
+		<rect width="7" height="5" x="14" y="3" rx="1"></rect>
+		<rect width="7" height="9" x="14" y="12" rx="1"></rect>
+		<rect width="7" height="5" x="3" y="16" rx="1"></rect>
+	</svg>
+}
+
+templ IconFileText() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+		<path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+		<path d="M10 9H8"></path>
+		<path d="M16 13H8"></path>
+		<path d="M16 17H8"></path>
+	</svg>
+}
+
+templ IconCalendar() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+		<line x1="16" x2="16" y1="2" y2="6"></line>
+		<line x1="8" x2="8" y1="2" y2="6"></line>
+		<line x1="3" x2="21" y1="10" y2="10"></line>
+	</svg>
+}
+
+templ IconUsers() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+		<circle cx="9" cy="7" r="4"></circle>
+		<path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+		<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+	</svg>
+}
+
+templ IconUserCog() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<circle cx="18" cy="15" r="3"></circle>
+		<circle cx="9" cy="7" r="4"></circle>
+		<path d="M10 15H6a4 4 0 0 0-4 4v2"></path>
+		<path d="m21.7 16.4-.9-.3"></path>
+		<path d="m15.2 13.9-.9-.3"></path>
+		<path d="m16.6 18.7.3-.9"></path>
+		<path d="m19.1 12.2.3-.9"></path>
+		<path d="m19.6 18.7-.4-1"></path>
+		<path d="m16.8 12.3-.4-1"></path>
+		<path d="m14.3 16.6 1-.4"></path>
+		<path d="m20.7 13.8 1-.4"></path>
+	</svg>
+}
+
+templ IconBarChart() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="12" x2="12" y1="20" y2="10"></line>
+		<line x1="18" x2="18" y1="20" y2="4"></line>
+		<line x1="6" x2="6" y1="20" y2="16"></line>
+	</svg>
+}
+
+templ IconLogout() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+		<polyline points="16 17 21 12 16 7"></polyline>
+		<line x1="21" x2="9" y1="12" y2="12"></line>
+	</svg>
+}

@@ -1,0 +1,60 @@
+package errors
+
+import "github.com/nobuww/simpel-ktp/ui/layouts"
+
+templ NotFoundPage() {
+	@layouts.Base("Halaman Tidak Ditemukan - Simpel KTP", nil) {
+		<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+			<div class="text-center max-w-md">
+				<!-- 404 Illustration -->
+				<div class="relative mb-8">
+					<div class="text-[10rem] font-bold text-slate-200 leading-none select-none">404</div>
+					<div class="absolute inset-0 flex items-center justify-center">
+						<div class="p-6 bg-white rounded-full shadow-lg">
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="10"></circle>
+								<path d="M16 16s-1.5-2-4-2-4 2-4 2"></path>
+								<line x1="9" x2="9.01" y1="9" y2="9"></line>
+								<line x1="15" x2="15.01" y1="9" y2="9"></line>
+							</svg>
+						</div>
+					</div>
+				</div>
+				<!-- Message -->
+				<h1 class="text-2xl font-bold text-slate-900 mb-2">Halaman Tidak Ditemukan</h1>
+				<p class="text-slate-500 mb-8">
+					Maaf, halaman yang Anda cari tidak ada atau telah dipindahkan.
+				</p>
+				<!-- Actions -->
+				<div class="flex flex-col sm:flex-row gap-3 justify-center">
+					<a
+						href="/"
+						class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+							<polyline points="9 22 9 12 15 12 15 22"></polyline>
+						</svg>
+						Kembali ke Beranda
+					</a>
+					<button
+						type="button"
+						onclick="history.back()"
+						class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 font-medium rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m12 19-7-7 7-7"></path>
+							<path d="M19 12H5"></path>
+						</svg>
+						Kembali
+					</button>
+				</div>
+				<!-- Help text -->
+				<p class="mt-8 text-sm text-slate-400">
+					Butuh bantuan? 
+					<a href="#" class="text-primary hover:underline">Hubungi kami</a>
+				</p>
+			</div>
+		</div>
+	}
+}

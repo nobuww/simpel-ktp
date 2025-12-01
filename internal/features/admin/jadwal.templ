@@ -1,0 +1,594 @@
+package admin
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+	"github.com/nobuww/simpel-ktp/ui/templui/label"
+	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
+	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
+)
+
+// Note: intToStr function is defined in permohonan.templ and shared across admin package
+
+type JadwalPageData struct {
+	UserName    string
+	UserRole    string
+	ActivePage  string
+	List        []JadwalItem
+	Kelurahan   []KelurahanOption
+	CurrentWeek string
+}
+
+type JadwalItem struct {
+	ID            string
+	Tanggal       string
+	TanggalFormat string // e.g., "Senin, 2 Des 2025"
+	JamMulai      string
+	JamSelesai    string
+	NamaKelurahan string
+	KuotaTerisi   int
+	KuotaMaksimal int
+	StatusSesi    string
+}
+
+type KelurahanOption struct {
+	ID   int
+	Nama string
+}
+
+templ JadwalPage(data JadwalPageData) {
+	@layouts.Admin("Jadwal Sesi - Simpel KTP", JadwalScripts()) {
+		@sidebar.Layout() {
+			@components.AdminSidebar(components.AdminSidebarData{
+				UserName:   data.UserName,
+				UserRole:   data.UserRole,
+				ActivePage: data.ActivePage,
+			})
+			@sidebar.Inset() {
+				@components.AdminMobileHeader("Jadwal Sesi")
+				<div class="flex-1 p-4 md:p-6 lg:p-8">
+					@components.PageHeader(components.PageHeaderProps{
+						Title:       "Jadwal Sesi Pelayanan",
+						Description: "Kelola jadwal sesi pembuatan KTP",
+					})
+					<!-- Toolbar -->
+					<div class="flex flex-col gap-4 mb-6">
+						<!-- Row 1: Week Navigation + View Toggle -->
+						<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+							<div class="flex flex-wrap items-center gap-2 sm:gap-4">
+								<!-- Week Navigation -->
+								<div class="flex items-center gap-1 sm:gap-2 bg-white rounded-lg border p-1">
+									@button.Button(button.Props{
+										Variant: button.VariantGhost,
+										Size:    button.SizeIcon,
+										Attributes: templ.Attributes{
+											"hx-get":    "/admin/jadwal?week=prev",
+											"hx-target": "#jadwal-content",
+											"hx-swap":   "innerHTML",
+										},
+									}) {
+										@IconChevronLeftNav()
+									}
+									<span class="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium whitespace-nowrap">{ data.CurrentWeek }</span>
+									@button.Button(button.Props{
+										Variant: button.VariantGhost,
+										Size:    button.SizeIcon,
+										Attributes: templ.Attributes{
+											"hx-get":    "/admin/jadwal?week=next",
+											"hx-target": "#jadwal-content",
+											"hx-swap":   "innerHTML",
+										},
+									}) {
+										@IconChevronRightNav()
+									}
+								</div>
+								<!-- View Toggle (hidden on mobile) -->
+								<div
+									class="hidden sm:flex items-center gap-1 bg-white rounded-lg border p-1"
+									x-data="{ view: 'card' }"
+								>
+									<button
+										class="px-3 py-1.5 text-sm rounded-md transition-colors"
+										:class="view === 'card' ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'"
+										@click="view = 'card'"
+									>
+										@IconGrid()
+										<span class="ml-1.5">Kartu</span>
+									</button>
+									<button
+										class="px-3 py-1.5 text-sm rounded-md transition-colors"
+										:class="view === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'"
+										@click="view = 'table'"
+									>
+										@IconList()
+										<span class="ml-1.5">Tabel</span>
+									</button>
+								</div>
+							</div>
+							<!-- Actions -->
+							<div class="flex flex-wrap gap-2 w-full sm:w-auto">
+								@JadwalKelurahanFilter(data.Kelurahan)
+								@dialog.Trigger(dialog.TriggerProps{For: "create-jadwal-dialog"}) {
+									@button.Button(button.Props{Class: "flex-1 sm:flex-none"}) {
+										@components.IconPlus()
+										<span class="hidden sm:inline">Tambah Jadwal</span>
+										<span class="sm:hidden">Tambah</span>
+									}
+								}
+							</div>
+						</div>
+					</div>
+					<!-- Content -->
+					<div id="jadwal-content">
+						@JadwalCardView(data.List)
+					</div>
+				</div>
+			}
+		}
+		<!-- Create Jadwal Dialog -->
+		@CreateJadwalDialog(data.Kelurahan)
+		<!-- Edit Jadwal Dialog -->
+		@EditJadwalDialog()
+	}
+}
+
+templ JadwalKelurahanFilter(kelurahan []KelurahanOption) {
+	@selectbox.SelectBox(selectbox.Props{Class: "w-auto flex-1 sm:flex-none"}) {
+		@selectbox.Trigger(selectbox.TriggerProps{
+			Name:  "kelurahan",
+			Class: "w-full sm:w-44",
+			Attributes: templ.Attributes{
+				"hx-get":     "/admin/jadwal/filter",
+				"hx-trigger": "change",
+				"hx-target":  "#jadwal-content",
+				"hx-swap":    "innerHTML",
+			},
+		}) {
+			@selectbox.Value(selectbox.ValueProps{Placeholder: "Semua Kelurahan"})
+		}
+		@selectbox.Content(selectbox.ContentProps{NoSearch: len(kelurahan) < 10}) {
+			@selectbox.Item(selectbox.ItemProps{Value: ""}) {
+				Semua Kelurahan
+			}
+			for _, k := range kelurahan {
+				@selectbox.Item(selectbox.ItemProps{Value: intToStr(k.ID)}) {
+					{ k.Nama }
+				}
+			}
+		}
+	}
+}
+
+templ JadwalCardView(items []JadwalItem) {
+	if len(items) == 0 {
+		<div class="bg-white rounded-lg border">
+			@components.EmptyState(components.EmptyStateProps{
+				Title:       "Belum ada jadwal",
+				Description: "Tambahkan jadwal sesi pelayanan untuk minggu ini",
+				Icon:        "calendar",
+			})
+		</div>
+	} else {
+		<div
+			class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+			x-data="{ shown: false }"
+			x-init="setTimeout(() => shown = true, 100)"
+		>
+			for i, item := range items {
+				@JadwalCard(item, i)
+			}
+		</div>
+	}
+}
+
+templ JadwalCard(item JadwalItem, index int) {
+	<div
+		x-show="shown"
+		x-transition:enter="transition ease-out duration-300"
+		x-transition:enter-start="opacity-0 scale-95"
+		x-transition:enter-end="opacity-100 scale-100"
+		:style={ "'transition-delay: ' + " + intToStr(index) + " * 50 + 'ms'" }
+	>
+		@card.Card(card.Props{Class: "hover:shadow-md transition-shadow"}) {
+			@card.Header(card.HeaderProps{Class: "pb-3"}) {
+				<div class="flex items-start justify-between">
+					<div>
+						@card.Title(card.TitleProps{Class: "text-base"}) {
+							{ item.TanggalFormat }
+						}
+						@card.Description() {
+							{ item.NamaKelurahan }
+						}
+					</div>
+					@components.StatusBadge(components.StatusBadgeProps{Status: item.StatusSesi})
+				</div>
+			}
+			@card.Content(card.ContentProps{Class: "pb-3"}) {
+				<div class="space-y-3">
+					<!-- Time -->
+					<div class="flex items-center gap-2 text-sm">
+						@components.IconClock()
+						<span class="text-slate-600">{ item.JamMulai } - { item.JamSelesai }</span>
+					</div>
+					<!-- Quota -->
+					<div>
+						<div class="flex items-center justify-between text-sm mb-1.5">
+							<span class="text-slate-500">Kuota Terisi</span>
+							<span class="font-medium">{ intToStr(item.KuotaTerisi) }/{ intToStr(item.KuotaMaksimal) }</span>
+						</div>
+						@components.QuotaBar(components.QuotaBarProps{Current: item.KuotaTerisi, Max: item.KuotaMaksimal})
+					</div>
+				</div>
+			}
+			@card.Footer(card.FooterProps{Class: "pt-3 border-t"}) {
+				<div class="flex gap-2 w-full">
+					@button.Button(button.Props{
+						Variant: button.VariantOutline,
+						Size:    button.SizeSm,
+						Class:   "flex-1",
+						Attributes: templ.Attributes{
+							"hx-get":      "/admin/jadwal/" + item.ID + "/antrian",
+							"hx-target":   "#main-content",
+							"hx-push-url": "true",
+						},
+					}) {
+						@IconUserList()
+						Antrian
+					}
+					@button.Button(button.Props{
+						Variant: button.VariantGhost,
+						Size:    button.SizeIcon,
+						Attributes: templ.Attributes{
+							"hx-get":                  "/admin/jadwal/" + item.ID,
+							"hx-target":               "#edit-jadwal-form",
+							"hx-swap":                 "innerHTML",
+							"data-tui-dialog-trigger": "edit-jadwal-dialog",
+						},
+					}) {
+						@components.IconEdit()
+					}
+				</div>
+			}
+		}
+	</div>
+}
+
+templ JadwalTableView(items []JadwalItem) {
+	<div class="bg-white rounded-lg border overflow-hidden">
+		<div class="overflow-x-auto">
+			<table class="w-full">
+				<thead class="bg-slate-50 border-b">
+					<tr>
+						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Waktu</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kelurahan</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kuota</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+						<th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-slate-100">
+					if len(items) == 0 {
+						<tr>
+							<td colspan="6" class="px-4 py-12">
+								@components.EmptyState(components.EmptyStateProps{
+									Title:       "Belum ada jadwal",
+									Description: "Tambahkan jadwal sesi pelayanan untuk minggu ini",
+									Icon:        "calendar",
+								})
+							</td>
+						</tr>
+					} else {
+						for _, item := range items {
+							@JadwalTableRow(item)
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+}
+
+templ JadwalTableRow(item JadwalItem) {
+	<tr class="hover:bg-slate-50 transition-colors">
+		<td class="px-4 py-3">
+			<p class="text-sm font-medium text-slate-900">{ item.TanggalFormat }</p>
+		</td>
+		<td class="px-4 py-3">
+			<p class="text-sm text-slate-600">{ item.JamMulai } - { item.JamSelesai }</p>
+		</td>
+		<td class="px-4 py-3">
+			<p class="text-sm text-slate-600">{ item.NamaKelurahan }</p>
+		</td>
+		<td class="px-4 py-3 w-48">
+			@components.QuotaBar(components.QuotaBarProps{Current: item.KuotaTerisi, Max: item.KuotaMaksimal})
+		</td>
+		<td class="px-4 py-3">
+			@components.StatusBadge(components.StatusBadgeProps{Status: item.StatusSesi})
+		</td>
+		<td class="px-4 py-3 text-right">
+			<div class="flex items-center justify-end gap-2">
+				@button.Button(button.Props{
+					Variant: button.VariantOutline,
+					Size:    button.SizeSm,
+				}) {
+					Antrian
+				}
+				@button.Button(button.Props{
+					Variant: button.VariantGhost,
+					Size:    button.SizeIcon,
+					Attributes: templ.Attributes{
+						"hx-get":                  "/admin/jadwal/" + item.ID,
+						"hx-target":               "#edit-jadwal-form",
+						"hx-swap":                 "innerHTML",
+						"data-tui-dialog-trigger": "edit-jadwal-dialog",
+					},
+				}) {
+					@components.IconEdit()
+				}
+			</div>
+		</td>
+	</tr>
+}
+
+templ CreateJadwalDialog(kelurahan []KelurahanOption) {
+	@dialog.Dialog(dialog.Props{ID: "create-jadwal-dialog"}) {
+		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Tambah Jadwal Sesi
+				}
+				@dialog.Description() {
+					Buat jadwal sesi pelayanan baru
+				}
+			}
+			<form hx-post="/admin/jadwal" hx-swap="none" class="space-y-4 py-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "tanggal"}) {
+							Tanggal
+						}
+						@input.Input(input.Props{
+							Type: input.TypeDate,
+							Name: "tanggal",
+							ID:   "tanggal",
+						})
+					</div>
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "kelurahan_id"}) {
+							Kelurahan
+						}
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{Name: "kelurahan_id", Class: "w-full"}) {
+								@selectbox.Value(selectbox.ValueProps{Placeholder: "Pilih"})
+							}
+							@selectbox.Content(selectbox.ContentProps{NoSearch: len(kelurahan) < 10}) {
+								for _, k := range kelurahan {
+									@selectbox.Item(selectbox.ItemProps{Value: intToStr(k.ID)}) {
+										{ k.Nama }
+									}
+								}
+							}
+						}
+					</div>
+				</div>
+				<div class="grid grid-cols-2 gap-4">
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "jam_mulai"}) {
+							Jam Mulai
+						}
+						@input.Input(input.Props{
+							Type: input.TypeTime,
+							Name: "jam_mulai",
+							ID:   "jam_mulai",
+						})
+					</div>
+					<div class="space-y-2">
+						@label.Label(label.Props{For: "jam_selesai"}) {
+							Jam Selesai
+						}
+						@input.Input(input.Props{
+							Type: input.TypeTime,
+							Name: "jam_selesai",
+							ID:   "jam_selesai",
+						})
+					</div>
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "kuota"}) {
+						Kuota Maksimal
+					}
+					@input.Input(input.Props{
+						Type:        input.TypeNumber,
+						Name:        "kuota_maksimal",
+						ID:          "kuota",
+						Placeholder: "50",
+						Attributes: templ.Attributes{
+							"min": "1",
+							"max": "200",
+						},
+					})
+				</div>
+				@dialog.Footer() {
+					@dialog.Close() {
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+							Batal
+						}
+					}
+					@button.Button(button.Props{Type: button.TypeSubmit}) {
+						Simpan Jadwal
+					}
+				}
+			</form>
+		}
+	}
+}
+
+templ EditJadwalDialog() {
+	@dialog.Dialog(dialog.Props{ID: "edit-jadwal-dialog"}) {
+		@dialog.Trigger()
+		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Edit Jadwal Sesi
+				}
+				@dialog.Description() {
+					Ubah informasi jadwal sesi
+				}
+			}
+			<form id="edit-jadwal-form" hx-put="/admin/jadwal" hx-swap="none">
+				<!-- Content loaded via HTMX -->
+				<div class="flex items-center justify-center py-8">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+				</div>
+			</form>
+		}
+	}
+}
+
+// Partial: Edit form content
+templ EditJadwalForm(item JadwalItem, kelurahan []KelurahanOption) {
+	<input type="hidden" name="id" value={ item.ID }/>
+	<div class="space-y-4 py-4">
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+			<div class="space-y-2">
+				@label.Label(label.Props{For: "edit-tanggal"}) {
+					Tanggal
+				}
+				@input.Input(input.Props{
+					Type:  input.TypeDate,
+					Name:  "tanggal",
+					ID:    "edit-tanggal",
+					Value: item.Tanggal,
+				})
+			</div>
+			<div class="space-y-2">
+				@label.Label(label.Props{For: "edit-status"}) {
+					Status Sesi
+				}
+				@selectbox.SelectBox() {
+					@selectbox.Trigger(selectbox.TriggerProps{Name: "status_sesi", Class: "w-full"}) {
+						@selectbox.Value(selectbox.ValueProps{Placeholder: "Pilih status"})
+					}
+					@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
+						@selectbox.Item(selectbox.ItemProps{Value: "BUKA", Selected: item.StatusSesi == "BUKA"}) {
+							Buka
+						}
+						@selectbox.Item(selectbox.ItemProps{Value: "ISTIRAHAT", Selected: item.StatusSesi == "ISTIRAHAT"}) {
+							Istirahat
+						}
+						@selectbox.Item(selectbox.ItemProps{Value: "TUTUP", Selected: item.StatusSesi == "TUTUP"}) {
+							Tutup
+						}
+					}
+				}
+			</div>
+		</div>
+		<div class="grid grid-cols-2 gap-4">
+			<div class="space-y-2">
+				@label.Label(label.Props{For: "edit-jam-mulai"}) {
+					Jam Mulai
+				}
+				@input.Input(input.Props{
+					Type:  input.TypeTime,
+					Name:  "jam_mulai",
+					ID:    "edit-jam-mulai",
+					Value: item.JamMulai,
+				})
+			</div>
+			<div class="space-y-2">
+				@label.Label(label.Props{For: "edit-jam-selesai"}) {
+					Jam Selesai
+				}
+				@input.Input(input.Props{
+					Type:  input.TypeTime,
+					Name:  "jam_selesai",
+					ID:    "edit-jam-selesai",
+					Value: item.JamSelesai,
+				})
+			</div>
+		</div>
+		<div class="space-y-2">
+			@label.Label(label.Props{For: "edit-kuota"}) {
+				Kuota Maksimal
+			}
+			@input.Input(input.Props{
+				Type:  input.TypeNumber,
+				Name:  "kuota_maksimal",
+				ID:    "edit-kuota",
+				Value: intToStr(item.KuotaMaksimal),
+				Attributes: templ.Attributes{
+					"min": "1",
+					"max": "200",
+				},
+			})
+		</div>
+		<div class="p-3 bg-slate-50 rounded-lg">
+			<p class="text-sm text-slate-600">
+				Kuota terisi saat ini: <span class="font-semibold">{ intToStr(item.KuotaTerisi) }</span>
+			</p>
+		</div>
+	</div>
+	@dialog.Footer() {
+		@dialog.Close() {
+			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+				Batal
+			}
+		}
+		@button.Button(button.Props{Type: button.TypeSubmit}) {
+			Simpan Perubahan
+		}
+	}
+}
+
+templ JadwalScripts() {
+	@sidebar.Script()
+	@dialog.Script()
+	@selectbox.Script()
+}
+
+// Additional icons for jadwal
+templ IconChevronLeftNav() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="m15 18-6-6 6-6"></path>
+	</svg>
+}
+
+templ IconChevronRightNav() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="m9 18 6-6-6-6"></path>
+	</svg>
+}
+
+templ IconGrid() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect width="7" height="7" x="3" y="3" rx="1"></rect>
+		<rect width="7" height="7" x="14" y="3" rx="1"></rect>
+		<rect width="7" height="7" x="14" y="14" rx="1"></rect>
+		<rect width="7" height="7" x="3" y="14" rx="1"></rect>
+	</svg>
+}
+
+templ IconList() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="8" x2="21" y1="6" y2="6"></line>
+		<line x1="8" x2="21" y1="12" y2="12"></line>
+		<line x1="8" x2="21" y1="18" y2="18"></line>
+		<line x1="3" x2="3.01" y1="6" y2="6"></line>
+		<line x1="3" x2="3.01" y1="12" y2="12"></line>
+		<line x1="3" x2="3.01" y1="18" y2="18"></line>
+	</svg>
+}
+
+templ IconUserList() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+		<circle cx="9" cy="7" r="4"></circle>
+		<line x1="17" x2="22" y1="11" y2="11"></line>
+		<line x1="17" x2="22" y1="15" y2="15"></line>
+	</svg>
+}

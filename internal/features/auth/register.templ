@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
@@ -9,7 +10,12 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/textarea"
 )
 
-templ RegisterPage() {
+type KelurahanOption struct {
+	ID   int16
+	Nama string
+}
+
+templ RegisterPage(kelurahanList []KelurahanOption) {
 	@layouts.Auth("Daftar - Simpel KTP", Scripts()) {
 		<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
 			<h2 class="text-3xl font-bold tracking-tight text-gray-900">Simpel KTP</h2>
@@ -48,9 +54,9 @@ templ RegisterPage() {
 							Name:  "nik",
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
-								"required": "true",
-								"pattern":  "[0-9]{16}",
-								"title":    "NIK harus 16 digit angka",
+								"required":    "true",
+								"pattern":     "[0-9]{16}",
+								"title":       "NIK harus 16 digit angka",
 								"placeholder": "16 digit NIK",
 							},
 						})
@@ -64,7 +70,7 @@ templ RegisterPage() {
 							Name:  "nama_lengkap",
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
-								"required": "true",
+								"required":    "true",
 								"placeholder": "Sesuai KTP",
 							},
 						})
@@ -80,7 +86,7 @@ templ RegisterPage() {
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
 								"autocomplete": "email",
-								"placeholder": "nama@email.com",
+								"placeholder":  "nama@email.com",
 							},
 						})
 					</div>
@@ -94,7 +100,7 @@ templ RegisterPage() {
 							Type:  input.TypePassword,
 							Class: "border-gray-200 focus-visible:ring-gray-400",
 							Attributes: templ.Attributes{
-								"required": "true",
+								"required":    "true",
 								"placeholder": "Minimal 8 karakter",
 							},
 						})
@@ -144,10 +150,10 @@ templ RegisterPage() {
 								})
 							}
 							@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
-								@selectbox.Item(selectbox.ItemProps{Value: "L"}) {
+								@selectbox.Item(selectbox.ItemProps{Value: "LAKI_LAKI"}) {
 									Laki-laki
 								}
-								@selectbox.Item(selectbox.ItemProps{Value: "P"}) {
+								@selectbox.Item(selectbox.ItemProps{Value: "PEREMPUAN"}) {
 									Perempuan
 								}
 							}
@@ -155,18 +161,31 @@ templ RegisterPage() {
 					</div>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-kelurahan"}) {
-							ID Kelurahan
+							Kelurahan
 						}
-						@input.Input(input.Props{
-							ID:    "register-kelurahan",
-							Name:  "kelurahan_id",
-							Type:  input.TypeNumber,
-							Class: "border-gray-200 focus-visible:ring-gray-400",
-							Attributes: templ.Attributes{
-								"required": "true",
-								"placeholder": "Kode Kelurahan",
-							},
-						})
+						@selectbox.SelectBox() {
+							@selectbox.Trigger(selectbox.TriggerProps{
+								ID:    "register-kelurahan",
+								Name:  "kelurahan_id",
+								Class: "border-gray-200 focus-visible:ring-gray-400",
+								Attributes: templ.Attributes{
+									"required": "true",
+								},
+							}) {
+								@selectbox.Value(selectbox.ValueProps{
+									Placeholder: "Pilih Kelurahan",
+								})
+							}
+							@selectbox.Content(selectbox.ContentProps{
+								SearchPlaceholder: "Cari kelurahan...",
+							}) {
+								for _, kel := range kelurahanList {
+									@selectbox.Item(selectbox.ItemProps{Value: fmt.Sprintf("%d", kel.ID)}) {
+										{ kel.Nama }
+									}
+								}
+							}
+						}
 					</div>
 					@button.Button(button.Props{
 						FullWidth: true,
