@@ -1,6 +1,8 @@
 package components
 
 import (
+	"strconv"
+
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
 	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
@@ -157,7 +159,7 @@ templ Pagination(props PaginationProps) {
 
 // Helper to convert int to string
 func toString(i int) string {
-	return templ.EscapeString(string(rune('0' + i)))
+	return strconv.Itoa(i)
 }
 
 // Additional icons for data table
@@ -172,6 +174,3 @@ templ IconChevronRightSmall() {
 		<path d="m9 18 6-6-6-6"></path>
 	</svg>
 }
-
-// Note: IconFilter, IconDownload, IconEye, IconEdit, IconTrash, IconMoreVertical
-// are defined in icons.templ - use those canonical versions

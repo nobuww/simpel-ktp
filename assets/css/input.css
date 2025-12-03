@@ -3,37 +3,71 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-serif: "Tinos", serif;
-  
-  /* templui component colors */
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
+
+  /* templui component colors - Modern SaaS Light Mode */
+
+  /* Background: Off-white / Very light gray */
+  --color-background: oklch(0.985 0 0);
+  /* #FAFBFC or similar */
+  --color-foreground: oklch(0.205 0 0);
+  /* Dark gray/Charcoal */
+
+  /* Card: White */
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.205 0 0);
+
+  /* Popover: White */
   --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.205 0 0);
-  --color-primary-foreground: oklch(0.985 0 0);
+  --color-popover-foreground: oklch(0.205 0 0);
+
+  /* Primary: Professional Blue */
+  --color-primary: oklch(0.55 0.2 260);
+  --color-primary-foreground: oklch(1 0 0);
+
+  /* Secondary: Light Gray */
+  --color-secondary: oklch(0.97 0 0);
+  --color-secondary-foreground: oklch(0.205 0 0);
+
+  /* Muted: Gray */
   --color-muted: oklch(0.97 0 0);
   --color-muted-foreground: oklch(0.556 0 0);
+
+  /* Accent: Subtle highlight */
   --color-accent: oklch(0.97 0 0);
   --color-accent-foreground: oklch(0.205 0 0);
-  --color-border: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0 0);
+
+  /* Destructive: Red */
   --color-destructive: oklch(0.577 0.245 27.325);
-  
+  --color-destructive-foreground: oklch(0.985 0 0);
+
+  /* Border: Very light gray */
+  --color-border: oklch(0.922 0 0);
+  --color-input: oklch(0.922 0 0);
+  --color-ring: oklch(0.55 0.2 260);
+  /* Match Primary */
+
   /* Sidebar colors */
-  --color-sidebar: oklch(0.985 0 0);
-  --color-sidebar-foreground: oklch(0.145 0 0);
-  --color-sidebar-primary: oklch(0.205 0 0);
-  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar: oklch(1 0 0);
+  /* White sidebar for clean look */
+  --color-sidebar-foreground: oklch(0.35 0 0);
+  /* Softer text for sidebar */
+  --color-sidebar-primary: oklch(0.55 0.2 260);
+  --color-sidebar-primary-foreground: oklch(1 0 0);
   --color-sidebar-accent: oklch(0.97 0 0);
   --color-sidebar-accent-foreground: oklch(0.205 0 0);
-  --color-sidebar-border: oklch(0.922 0 0);
-  --color-sidebar-ring: oklch(0.708 0 0);
-  
+  --color-sidebar-border: oklch(0.95 0 0);
+  --color-sidebar-ring: oklch(0.55 0.2 260);
+
   --animate-infinite-scroll: infinite-scroll 40s linear infinite;
-  
+
   @keyframes infinite-scroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-100%); }
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-100%);
+    }
   }
 }
 

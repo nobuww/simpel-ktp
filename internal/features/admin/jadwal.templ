@@ -10,6 +10,7 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/label"
 	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
+	"github.com/nobuww/simpel-ktp/ui/templui/table"
 )
 
 // Note: intToStr function is defined in permohonan.templ and shared across admin package
@@ -61,7 +62,7 @@ templ JadwalPage(data JadwalPageData) {
 						<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 							<div class="flex flex-wrap items-center gap-2 sm:gap-4">
 								<!-- Week Navigation -->
-								<div class="flex items-center gap-1 sm:gap-2 bg-white rounded-lg border p-1">
+								<div class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg border p-1">
 									@button.Button(button.Props{
 										Variant: button.VariantGhost,
 										Size:    button.SizeIcon,
@@ -88,12 +89,12 @@ templ JadwalPage(data JadwalPageData) {
 								</div>
 								<!-- View Toggle (hidden on mobile) -->
 								<div
-									class="hidden sm:flex items-center gap-1 bg-white rounded-lg border p-1"
+									class="hidden sm:flex items-center gap-1 bg-card rounded-lg border p-1"
 									x-data="{ view: 'card' }"
 								>
 									<button
 										class="px-3 py-1.5 text-sm rounded-md transition-colors"
-										:class="view === 'card' ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'"
+										:class="view === 'card' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
 										@click="view = 'card'"
 									>
 										@IconGrid()
@@ -101,7 +102,7 @@ templ JadwalPage(data JadwalPageData) {
 									</button>
 									<button
 										class="px-3 py-1.5 text-sm rounded-md transition-colors"
-										:class="view === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-slate-100'"
+										:class="view === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
 										@click="view = 'table'"
 									>
 										@IconList()
@@ -165,7 +166,7 @@ templ JadwalKelurahanFilter(kelurahan []KelurahanOption) {
 
 templ JadwalCardView(items []JadwalItem) {
 	if len(items) == 0 {
-		<div class="bg-white rounded-lg border">
+		<div class="bg-card rounded-lg border">
 			@components.EmptyState(components.EmptyStateProps{
 				Title:       "Belum ada jadwal",
 				Description: "Tambahkan jadwal sesi pelayanan untuk minggu ini",
@@ -212,12 +213,12 @@ templ JadwalCard(item JadwalItem, index int) {
 					<!-- Time -->
 					<div class="flex items-center gap-2 text-sm">
 						@components.IconClock()
-						<span class="text-slate-600">{ item.JamMulai } - { item.JamSelesai }</span>
+						<span class="text-muted-foreground">{ item.JamMulai } - { item.JamSelesai }</span>
 					</div>
 					<!-- Quota -->
 					<div>
 						<div class="flex items-center justify-between text-sm mb-1.5">
-							<span class="text-slate-500">Kuota Terisi</span>
+							<span class="text-muted-foreground">Kuota Terisi</span>
 							<span class="font-medium">{ intToStr(item.KuotaTerisi) }/{ intToStr(item.KuotaMaksimal) }</span>
 						</div>
 						@components.QuotaBar(components.QuotaBarProps{Current: item.KuotaTerisi, Max: item.KuotaMaksimal})
@@ -258,59 +259,59 @@ templ JadwalCard(item JadwalItem, index int) {
 }
 
 templ JadwalTableView(items []JadwalItem) {
-	<div class="bg-white rounded-lg border overflow-hidden">
+	<div class="bg-card rounded-lg border overflow-hidden">
 		<div class="overflow-x-auto">
-			<table class="w-full">
-				<thead class="bg-slate-50 border-b">
-					<tr>
-						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tanggal</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Waktu</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kelurahan</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kuota</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-						<th class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-slate-100">
+			@table.Table(table.Props{Class: "w-full"}) {
+				@table.Header() {
+					@table.Row() {
+						@table.Head() { Tanggal }
+						@table.Head() { Waktu }
+						@table.Head() { Kelurahan }
+						@table.Head() { Kuota }
+						@table.Head() { Status }
+						@table.Head(table.HeadProps{Class: "text-right"}) { Aksi }
+					}
+				}
+				@table.Body() {
 					if len(items) == 0 {
-						<tr>
-							<td colspan="6" class="px-4 py-12">
+						@table.Row() {
+							@table.Cell(table.CellProps{Attributes: templ.Attributes{"colspan": "6", "class": "px-4 py-12"}}) {
 								@components.EmptyState(components.EmptyStateProps{
 									Title:       "Belum ada jadwal",
 									Description: "Tambahkan jadwal sesi pelayanan untuk minggu ini",
 									Icon:        "calendar",
 								})
-							</td>
-						</tr>
+							}
+						}
 					} else {
 						for _, item := range items {
 							@JadwalTableRow(item)
 						}
 					}
-				</tbody>
-			</table>
+				}
+			}
 		</div>
 	</div>
 }
 
 templ JadwalTableRow(item JadwalItem) {
-	<tr class="hover:bg-slate-50 transition-colors">
-		<td class="px-4 py-3">
-			<p class="text-sm font-medium text-slate-900">{ item.TanggalFormat }</p>
-		</td>
-		<td class="px-4 py-3">
-			<p class="text-sm text-slate-600">{ item.JamMulai } - { item.JamSelesai }</p>
-		</td>
-		<td class="px-4 py-3">
-			<p class="text-sm text-slate-600">{ item.NamaKelurahan }</p>
-		</td>
-		<td class="px-4 py-3 w-48">
+	@table.Row(table.RowProps{Class: "hover:bg-muted/50 transition-colors"}) {
+		@table.Cell() {
+			<p class="text-sm font-medium text-foreground">{ item.TanggalFormat }</p>
+		}
+		@table.Cell() {
+			<p class="text-sm text-muted-foreground">{ item.JamMulai } - { item.JamSelesai }</p>
+		}
+		@table.Cell() {
+			<p class="text-sm text-muted-foreground">{ item.NamaKelurahan }</p>
+		}
+		@table.Cell(table.CellProps{Class: "w-48"}) {
 			@components.QuotaBar(components.QuotaBarProps{Current: item.KuotaTerisi, Max: item.KuotaMaksimal})
-		</td>
-		<td class="px-4 py-3">
+		}
+		@table.Cell() {
 			@components.StatusBadge(components.StatusBadgeProps{Status: item.StatusSesi})
-		</td>
-		<td class="px-4 py-3 text-right">
+		}
+		@table.Cell(table.CellProps{Class: "text-right"}) {
 			<div class="flex items-center justify-end gap-2">
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
@@ -331,8 +332,8 @@ templ JadwalTableRow(item JadwalItem) {
 					@components.IconEdit()
 				}
 			</div>
-		</td>
-	</tr>
+		}
+	}
 }
 
 templ CreateJadwalDialog(kelurahan []KelurahanOption) {
@@ -527,8 +528,8 @@ templ EditJadwalForm(item JadwalItem, kelurahan []KelurahanOption) {
 				},
 			})
 		</div>
-		<div class="p-3 bg-slate-50 rounded-lg">
-			<p class="text-sm text-slate-600">
+		<div class="p-3 bg-muted/50 rounded-lg">
+			<p class="text-sm text-muted-foreground">
 				Kuota terisi saat ini: <span class="font-semibold">{ intToStr(item.KuotaTerisi) }</span>
 			</p>
 		</div>

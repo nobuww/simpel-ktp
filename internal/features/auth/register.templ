@@ -18,8 +18,8 @@ type KelurahanOption struct {
 templ RegisterPage(kelurahanList []KelurahanOption) {
 	@layouts.Auth("Daftar - Simpel KTP", Scripts()) {
 		<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-			<h2 class="text-3xl font-bold tracking-tight text-gray-900">Simpel KTP</h2>
-			<p class="mt-2 text-sm text-gray-500">
+			<h2 class="text-3xl font-bold tracking-tight text-foreground">Simpel KTP</h2>
+			<p class="mt-2 text-sm text-muted-foreground">
 				Buat akun baru untuk mulai menikmati layanan kependudukan.
 			</p>
 		</div>
@@ -31,11 +31,11 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 			x-on:htmx:afterRequest.window="if ($event.target.closest('#auth-panel')) { pending = false }"
 			x-on:htmx:error.window="if ($event.target.closest('#auth-panel')) { pending = false }"
 		>
-			<div class="bg-white/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-gray-900/10 sm:rounded-2xl sm:px-10 border border-white/60 ring-1 ring-gray-900/5">
-				<h3 class="text-xl font-semibold leading-6 text-gray-900 mb-1">Buat akun baru</h3>
-				<div class="mb-6 text-sm text-gray-500">
+			<div class="bg-card/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-primary/5 sm:rounded-2xl sm:px-10 border border-border ring-1 ring-border">
+				<h3 class="text-xl font-semibold leading-6 text-foreground mb-1">Buat akun baru</h3>
+				<div class="mb-6 text-sm text-muted-foreground">
 					Sudah punya akun?
-					<a href="/login" class="font-medium text-gray-900 hover:text-gray-700 underline underline-offset-4 decoration-gray-300 hover:decoration-gray-500 transition-colors">Masuk sekarang</a>
+					<a href="/login" class="font-medium text-primary hover:text-primary/80 underline underline-offset-4 decoration-border hover:decoration-primary/30 transition-colors">Masuk sekarang</a>
 				</div>
 				<form
 					id="register-form"
@@ -52,7 +52,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 						@input.Input(input.Props{
 							ID:    "register-nik",
 							Name:  "nik",
-							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Class: "border-input focus-visible:ring-ring",
 							Attributes: templ.Attributes{
 								"required":    "true",
 								"pattern":     "[0-9]{16}",
@@ -68,7 +68,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 						@input.Input(input.Props{
 							ID:    "register-nama",
 							Name:  "nama_lengkap",
-							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Class: "border-input focus-visible:ring-ring",
 							Attributes: templ.Attributes{
 								"required":    "true",
 								"placeholder": "Sesuai KTP",
@@ -83,7 +83,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							ID:    "register-email",
 							Name:  "email",
 							Type:  input.TypeEmail,
-							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Class: "border-input focus-visible:ring-ring",
 							Attributes: templ.Attributes{
 								"autocomplete": "email",
 								"placeholder":  "nama@email.com",
@@ -98,13 +98,13 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							ID:    "register-password",
 							Name:  "password",
 							Type:  input.TypePassword,
-							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Class: "border-input focus-visible:ring-ring",
 							Attributes: templ.Attributes{
 								"required":    "true",
 								"placeholder": "Minimal 8 karakter",
 							},
 						})
-						<p class="text-xs text-gray-500">Minimal 8 karakter</p>
+						<p class="text-xs text-muted-foreground">Minimal 8 karakter</p>
 					</div>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-alamat"}) {
@@ -115,7 +115,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							Name:        "alamat",
 							Rows:        3,
 							Placeholder: "Alamat lengkap sesuai KTP",
-							Class:       "border-gray-200 focus-visible:ring-gray-400",
+							Class:       "border-input focus-visible:ring-ring",
 						})
 					</div>
 					<div class="space-y-2">
@@ -126,7 +126,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							ID:    "register-nohp",
 							Name:  "no_hp",
 							Type:  input.TypeTel,
-							Class: "border-gray-200 focus-visible:ring-gray-400",
+							Class: "border-input focus-visible:ring-ring",
 							Attributes: templ.Attributes{
 								"placeholder": "08...",
 							},
@@ -140,7 +140,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							@selectbox.Trigger(selectbox.TriggerProps{
 								ID:    "register-jk",
 								Name:  "jenis_kelamin",
-								Class: "border-gray-200 focus-visible:ring-gray-400",
+								Class: "border-input focus-visible:ring-ring",
 								Attributes: templ.Attributes{
 									"required": "true",
 								},
@@ -167,7 +167,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 							@selectbox.Trigger(selectbox.TriggerProps{
 								ID:    "register-kelurahan",
 								Name:  "kelurahan_id",
-								Class: "border-gray-200 focus-visible:ring-gray-400",
+								Class: "border-input focus-visible:ring-ring",
 								Attributes: templ.Attributes{
 									"required": "true",
 								},
@@ -190,7 +190,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 					@button.Button(button.Props{
 						FullWidth: true,
 						Type:      button.TypeSubmit,
-						Class:     "bg-gray-900 text-white hover:bg-gray-800 shadow-lg shadow-gray-900/25 hover:shadow-gray-900/30 transition-all duration-200",
+						Class:     "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/30 transition-all duration-200",
 						Attributes: templ.Attributes{
 							":disabled": "pending",
 						},
@@ -199,8 +199,8 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 					}
 				</form>
 				<div class="mt-6 space-y-3">
-					<div id="auth-message" class="text-sm text-gray-700 space-y-2"></div>
-					<div id="auth-loading" class="text-sm text-gray-500 hidden htmx-indicator flex items-center gap-2">
+					<div id="auth-message" class="text-sm text-foreground space-y-2"></div>
+					<div id="auth-loading" class="text-sm text-muted-foreground hidden htmx-indicator flex items-center gap-2">
 						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -209,8 +209,8 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 					</div>
 				</div>
 				<!-- Divider -->
-				<div class="mt-6 pt-6 border-t border-gray-100">
-					<p class="text-xs text-center text-gray-400">
+				<div class="mt-6 pt-6 border-t border-border">
+					<p class="text-xs text-center text-muted-foreground/60">
 						Data Anda dilindungi sesuai standar keamanan nasional
 					</p>
 				</div>
