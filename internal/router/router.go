@@ -55,6 +55,7 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.RequirePetugas)
 		r.Get("/admin", adminHandler.DashboardHandler)
+		r.Get("/admin/penduduk", adminHandler.PendudukHandler)
 		r.Get("/admin/permohonan", adminHandler.PermohonanHandler)
 		r.Get("/admin/permohonan/{id}", adminHandler.PermohonanDetailHandler)
 		r.Get("/admin/permohonan/{id}/status", adminHandler.PermohonanStatusFormHandler)

@@ -283,6 +283,33 @@ func (h *Handler) JadwalHandler(w http.ResponseWriter, r *http.Request) {
 	JadwalPage(data).Render(r.Context(), w)
 }
 
+func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
+	user := middleware.GetUserFromContext(r.Context())
+	if user == nil {
+		http.Redirect(w, r, "/petugas/login", http.StatusSeeOther)
+		return
+	}
+
+	data := PendudukPageData{
+		UserName:   user.UserName,
+		UserRole:   formatRole(user.UserRole),
+		ActivePage: "penduduk",
+		Stats: PendudukStats{
+			Total:     1200,
+			LakiLaki:  610,
+			Perempuan: 590,
+			WajibKTP:  980,
+		},
+		List: []PendudukItem{
+			{ID: "1", NIK: "3201234567890001", NamaLengkap: "Ahmad Wijaya", JenisKelamin: "LAKI_LAKI", Pekerjaan: "Karyawan Swasta", StatusPerkawinan: "KAWIN", Alamat: "Jl. Menteng Raya No. 45", Kelurahan: "Menteng"},
+			{ID: "2", NIK: "3201234567890002", NamaLengkap: "Siti Nurhaliza", JenisKelamin: "PEREMPUAN", Pekerjaan: "Ibu Rumah Tangga", StatusPerkawinan: "KAWIN", Alamat: "Jl. Cikini Raya No. 88", Kelurahan: "Cikini"},
+			{ID: "3", NIK: "3201234567890003", NamaLengkap: "Budi Santoso", JenisKelamin: "LAKI_LAKI", Pekerjaan: "Wiraswasta", StatusPerkawinan: "KAWIN", Alamat: "Jl. Gondangdia Lama No. 12", Kelurahan: "Gondangdia"},
+		},
+	}
+
+	PendudukPage(data).Render(r.Context(), w)
+}
+
 func formatRole(role string) string {
 	switch role {
 	case session.RoleAdminKecamatan:
