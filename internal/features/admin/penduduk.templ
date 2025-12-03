@@ -21,18 +21,18 @@ type PendudukItem struct {
 	ID               string
 	NIK              string
 	NamaLengkap      string
-	JenisKelamin     string 
+	JenisKelamin     string
 	Pekerjaan        string
-	StatusPerkawinan string 
+	StatusPerkawinan string
 	Alamat           string
 	Kelurahan        string
 }
 
 type PendudukStats struct {
-	Total      int
-	LakiLaki   int
-	Perempuan  int
-	WajibKTP   int
+	Total     int
+	LakiLaki  int
+	Perempuan int
+	WajibKTP  int
 }
 
 // Main Page Component
@@ -51,7 +51,6 @@ templ PendudukPage(data PendudukPageData) {
 						Title:       "Data Penduduk",
 						Description: "Kelola arsip data kependudukan warga kecamatan",
 					})
-					
 					<div
 						class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
 						x-data="{ shown: false }"
@@ -60,20 +59,16 @@ templ PendudukPage(data PendudukPageData) {
 						@PendudukStatCard("Total Penduduk", data.Stats.Total, "bg-white text-blue-600 border-blue-100", "bg-blue-500", 0) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M215.12,171.63A76.08,76.08,0,0,0,168,104.91V80a40,40,0,0,0-80,0v24.91A76.08,76.08,0,0,0,40.88,171.63a8,8,0,0,0,7.2,10.37H207.92A8,8,0,0,0,215.12,171.63Z"></path></svg>
 						}
-						
 						@PendudukStatCard("Laki-laki", data.Stats.LakiLaki, "bg-white text-teal-600 border-teal-100", "bg-teal-500", 1) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,32H168a8,8,0,0,0,0,16h20.69l-34.35,34.34a88,88,0,1,0,11.32,11.32L200,59.31V80a8,8,0,0,0,16,0V40A8,8,0,0,0,208,32ZM80,152a72,72,0,1,1,72-72A72.08,72.08,0,0,1,80,152Z"></path></svg>
 						}
-
 						@PendudukStatCard("Perempuan", data.Stats.Perempuan, "bg-white text-pink-600 border-pink-100", "bg-pink-500", 2) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,80a80,80,0,1,0-88,79.6V184H96a8,8,0,0,0,0,16h24v24a8,8,0,0,0,16,0V200h24a8,8,0,0,0,0-16H136V159.6A80.11,80.11,0,0,0,208,80ZM128,144a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,144Z"></path></svg>
 						}
-
 						@PendudukStatCard("Wajib KTP", data.Stats.WajibKTP, "bg-white text-amber-600 border-amber-100", "bg-amber-500", 3) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,144H32V64H224V192ZM176,100a28,28,0,1,1,28-28A28,28,0,0,1,176,100Zm0-40a12,12,0,1,0,12,12A12,12,0,0,0,176,60ZM96,104a32,32,0,1,1,32-32A32,32,0,0,1,96,104Zm0-48a16,16,0,1,0,16,16A16,16,0,0,0,96,56Z"></path></svg>
 						}
 					</div>
-
 					<div
 						class="bg-white rounded-lg border shadow-sm"
 						x-data="pendudukFilter()"
@@ -91,7 +86,6 @@ templ PendudukPage(data PendudukPageData) {
 										x-model="search"
 									/>
 								</div>
-								
 								<div class="flex flex-wrap gap-2">
 									<select
 										x-model="genderFilter"
@@ -101,7 +95,6 @@ templ PendudukPage(data PendudukPageData) {
 										<option value="LAKI_LAKI">Laki-laki</option>
 										<option value="PEREMPUAN">Perempuan</option>
 									</select>
-									
 									<select
 										x-model="statusFilter"
 										class="flex h-9 w-40 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -111,7 +104,6 @@ templ PendudukPage(data PendudukPageData) {
 										<option value="BELUM_KAWIN">Belum Kawin</option>
 										<option value="CERAI_HIDUP">Cerai Hidup</option>
 									</select>
-
 									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
 										@components.IconDownload()
 										Export
@@ -123,7 +115,6 @@ templ PendudukPage(data PendudukPageData) {
 								</div>
 							</div>
 						</div>
-
 						<div class="hidden md:block overflow-x-auto">
 							<table class="w-full">
 								<thead class="bg-slate-50 border-b">
@@ -150,7 +141,6 @@ templ PendudukPage(data PendudukPageData) {
 											</td>
 										</tr>
 									</template>
-									
 									<template x-for="item in filteredItems" :key="item.id">
 										<tr class="hover:bg-slate-50 transition-colors group">
 											<td class="px-6 py-4">
@@ -192,7 +182,6 @@ templ PendudukPage(data PendudukPageData) {
 								</tbody>
 							</table>
 						</div>
-
 						<div class="md:hidden divide-y divide-slate-100">
 							<template x-for="item in filteredItems" :key="item.id">
 								<div class="p-4 hover:bg-slate-50 transition-colors">
@@ -215,7 +204,6 @@ templ PendudukPage(data PendudukPageData) {
 								</div>
 							</template>
 						</div>
-
 						<div class="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
 							<p class="text-sm text-slate-500">
 								Menampilkan <span class="font-medium text-slate-900" x-text="filteredItems.length"></span> dari <span class="font-medium text-slate-900" x-text="items.length"></span> data penduduk
@@ -234,7 +222,6 @@ templ PendudukPage(data PendudukPageData) {
 				</div>
 			}
 		}
-		
 		@PendudukFilterScript(data.List)
 	}
 }
@@ -252,12 +239,10 @@ templ PendudukStatCard(label string, value int, colorClass string, barColorClass
 		<div class="absolute right-0 top-0 p-4">
 			{ children... }
 		</div>
-		
 		<div class="relative z-10">
 			<h3 class="text-3xl font-bold">{ intToStr(value) }</h3>
 			<p class="text-sm font-medium mt-1 opacity-80">{ label }</p>
 		</div>
-
 		<div class="w-full bg-opacity-20 bg-slate-400 h-1 mt-auto rounded-full overflow-hidden relative z-10">
 			<div class={ "h-full rounded-full w-3/4 " + barColorClass }></div>
 		</div>

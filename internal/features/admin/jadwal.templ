@@ -264,12 +264,24 @@ templ JadwalTableView(items []JadwalItem) {
 			@table.Table(table.Props{Class: "w-full"}) {
 				@table.Header() {
 					@table.Row() {
-						@table.Head() { Tanggal }
-						@table.Head() { Waktu }
-						@table.Head() { Kelurahan }
-						@table.Head() { Kuota }
-						@table.Head() { Status }
-						@table.Head(table.HeadProps{Class: "text-right"}) { Aksi }
+						@table.Head() {
+							Tanggal 
+						}
+						@table.Head() {
+							Waktu 
+						}
+						@table.Head() {
+							Kelurahan 
+						}
+						@table.Head() {
+							Kuota 
+						}
+						@table.Head() {
+							Status 
+						}
+						@table.Head(table.HeadProps{Class: "text-right"}) {
+							Aksi 
+						}
 					}
 				}
 				@table.Body() {

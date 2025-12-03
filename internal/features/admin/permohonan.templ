@@ -162,13 +162,27 @@ templ PermohonanPage(data PermohonanPageData) {
 							@table.Table(table.Props{Class: "w-full"}) {
 								@table.Header() {
 									@table.Row() {
-										@table.Head() { Kode Booking }
-										@table.Head() { Pemohon }
-										@table.Head() { Jenis }
-										@table.Head() { Status }
-										@table.Head(table.HeadProps{Class: "hidden lg:table-cell"}) { Jadwal }
-										@table.Head(table.HeadProps{Class: "hidden lg:table-cell"}) { Antrian }
-										@table.Head(table.HeadProps{Class: "text-right"}) { Aksi }
+										@table.Head() {
+											Kode Booking 
+										}
+										@table.Head() {
+											Pemohon 
+										}
+										@table.Head() {
+											Jenis 
+										}
+										@table.Head() {
+											Status 
+										}
+										@table.Head(table.HeadProps{Class: "hidden lg:table-cell"}) {
+											Jadwal 
+										}
+										@table.Head(table.HeadProps{Class: "hidden lg:table-cell"}) {
+											Antrian 
+										}
+										@table.Head(table.HeadProps{Class: "text-right"}) {
+											Aksi 
+										}
 									}
 								}
 								@table.Body(table.BodyProps{ID: "permohonan-table-body"}) {
