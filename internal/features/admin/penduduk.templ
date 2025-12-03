@@ -56,24 +56,24 @@ templ PendudukPage(data PendudukPageData) {
 						x-data="{ shown: false }"
 						x-init="setTimeout(() => shown = true, 100)"
 					>
-						@PendudukStatCard("Total Penduduk", data.Stats.Total, "bg-white text-blue-600 border-blue-100", "bg-blue-500", 0) {
+						@PendudukStatCard("Total Penduduk", data.Stats.Total, "bg-white text-blue-600", "bg-blue-500", 0) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M215.12,171.63A76.08,76.08,0,0,0,168,104.91V80a40,40,0,0,0-80,0v24.91A76.08,76.08,0,0,0,40.88,171.63a8,8,0,0,0,7.2,10.37H207.92A8,8,0,0,0,215.12,171.63Z"></path></svg>
 						}
-						@PendudukStatCard("Laki-laki", data.Stats.LakiLaki, "bg-white text-teal-600 border-teal-100", "bg-teal-500", 1) {
+						@PendudukStatCard("Laki-laki", data.Stats.LakiLaki, "bg-white text-teal-600", "bg-teal-500", 1) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,32H168a8,8,0,0,0,0,16h20.69l-34.35,34.34a88,88,0,1,0,11.32,11.32L200,59.31V80a8,8,0,0,0,16,0V40A8,8,0,0,0,208,32ZM80,152a72,72,0,1,1,72-72A72.08,72.08,0,0,1,80,152Z"></path></svg>
 						}
-						@PendudukStatCard("Perempuan", data.Stats.Perempuan, "bg-white text-pink-600 border-pink-100", "bg-pink-500", 2) {
+						@PendudukStatCard("Perempuan", data.Stats.Perempuan, "bg-white text-pink-600", "bg-pink-500", 2) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,80a80,80,0,1,0-88,79.6V184H96a8,8,0,0,0,0,16h24v24a8,8,0,0,0,16,0V200h24a8,8,0,0,0,0-16H136V159.6A80.11,80.11,0,0,0,208,80ZM128,144a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,144Z"></path></svg>
 						}
-						@PendudukStatCard("Wajib KTP", data.Stats.WajibKTP, "bg-white text-amber-600 border-amber-100", "bg-amber-500", 3) {
+						@PendudukStatCard("Wajib KTP", data.Stats.WajibKTP, "bg-white text-amber-600", "bg-amber-500", 3) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,144H32V64H224V192ZM176,100a28,28,0,1,1,28-28A28,28,0,0,1,176,100Zm0-40a12,12,0,1,0,12,12A12,12,0,0,0,176,60ZM96,104a32,32,0,1,1,32-32A32,32,0,0,1,96,104Zm0-48a16,16,0,1,0,16,16A16,16,0,0,0,96,56Z"></path></svg>
 						}
 					</div>
 					<div
-						class="bg-white rounded-lg border shadow-sm"
+						class="bg-white rounded-lg shadow-sm"
 						x-data="pendudukFilter()"
 					>
-						<div class="p-4 border-b">
+						<div class="p-4">
 							<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
 								<div class="relative w-full sm:w-80">
 									<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -117,7 +117,7 @@ templ PendudukPage(data PendudukPageData) {
 						</div>
 						<div class="hidden md:block overflow-x-auto">
 							<table class="w-full">
-								<thead class="bg-slate-50 border-b">
+								<thead class="bg-slate-50">
 									<tr>
 										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Penduduk</th>
 										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis Kelamin</th>
@@ -127,7 +127,7 @@ templ PendudukPage(data PendudukPageData) {
 										<th class="px-6 py-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
 									</tr>
 								</thead>
-								<tbody id="penduduk-table-body" class="divide-y divide-slate-100">
+								<tbody id="penduduk-table-body">
 									<template x-if="filteredItems.length === 0">
 										<tr>
 											<td colspan="6" class="px-6 py-12 text-center">
@@ -151,7 +151,7 @@ templ PendudukPage(data PendudukPageData) {
 											</td>
 											<td class="px-6 py-4">
 												<span
-													class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border"
+													class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
 													:class="getGenderBadgeClass(item.jenisKelamin)"
 													x-text="formatGender(item.jenisKelamin)"
 												></span>
@@ -182,7 +182,7 @@ templ PendudukPage(data PendudukPageData) {
 								</tbody>
 							</table>
 						</div>
-						<div class="md:hidden divide-y divide-slate-100">
+						<div class="md:hidden">
 							<template x-for="item in filteredItems" :key="item.id">
 								<div class="p-4 hover:bg-slate-50 transition-colors">
 									<div class="flex items-start justify-between mb-3">
@@ -196,7 +196,7 @@ templ PendudukPage(data PendudukPageData) {
 									</div>
 									<div class="space-y-2">
 										<div class="flex items-center gap-2">
-											<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border" :class="getGenderBadgeClass(item.jenisKelamin)" x-text="formatGender(item.jenisKelamin)"></span>
+											<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium" :class="getGenderBadgeClass(item.jenisKelamin)" x-text="formatGender(item.jenisKelamin)"></span>
 											<span class="text-xs text-slate-600 px-2 py-0.5 bg-slate-100 rounded" x-text="item.pekerjaan"></span>
 										</div>
 										<p class="text-sm text-slate-600" x-text="item.alamat + ', Kel. ' + item.kelurahan"></p>
@@ -204,7 +204,7 @@ templ PendudukPage(data PendudukPageData) {
 								</div>
 							</template>
 						</div>
-						<div class="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+						<div class="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
 							<p class="text-sm text-slate-500">
 								Menampilkan <span class="font-medium text-slate-900" x-text="filteredItems.length"></span> dari <span class="font-medium text-slate-900" x-text="items.length"></span> data penduduk
 							</p>
@@ -229,7 +229,7 @@ templ PendudukPage(data PendudukPageData) {
 // Stat Card Component specific for Penduduk Page (UI matches image)
 templ PendudukStatCard(label string, value int, colorClass string, barColorClass string, index int) {
 	<div
-		class={ "rounded-xl p-5 shadow-sm border flex flex-col justify-between h-28 relative overflow-hidden group hover:shadow-md transition-all " + colorClass }
+		class={ "rounded-xl p-5 shadow-sm flex flex-col justify-between h-28 relative overflow-hidden group hover:shadow-md transition-all " + colorClass }
 		x-show="shown"
 		x-transition:enter="transition ease-out duration-300"
 		x-transition:enter-start="opacity-0 translate-y-2"
@@ -293,8 +293,8 @@ templ PendudukFilterScript(items []PendudukItem) {
 				getGenderBadgeClass(gender) {
 					// Matches the UI: Teal for Male, Pink for Female
 					return gender === 'LAKI_LAKI' 
-						? 'bg-teal-50 text-teal-700 border-teal-100' 
-						: 'bg-pink-50 text-pink-700 border-pink-100';
+						? 'bg-teal-50 text-teal-700' 
+						: 'bg-pink-50 text-pink-700';
 				},
 				formatGender(gender) {
 					return gender === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan';

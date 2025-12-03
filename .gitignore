@@ -40,11 +40,12 @@ coverage.out
 .vscode/
 .idea/
 .github/*.md
+.agent/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?  # vim/nvim swap
+*.sw?
 *.swo
 *.swn
 *.bak

@@ -73,7 +73,7 @@ templ AdminScripts() {
 }
 
 templ StatCard(title, value, description, textColor, bgColor string) {
-	@card.Card(card.Props{Class: "hover:shadow-md transition-shadow"}) {
+	@card.Card(card.Props{Class: "hover:shadow-md transition-shadow border-0 shadow-sm"}) {
 		@card.Content(card.ContentProps{Class: "p-6"}) {
 			<div class="flex items-center justify-between">
 				<div>
@@ -97,7 +97,7 @@ templ StatCard(title, value, description, textColor, bgColor string) {
 }
 
 templ RecentPermohonanCard() {
-	@card.Card() {
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
 				Permohonan Terbaru
@@ -114,7 +114,7 @@ templ RecentPermohonanCard() {
 				@DashboardPermohonanItem("Dewi Lestari", "3201234567890004", "RUSAK", "1 jam lalu", badge.VariantSecondary)
 			</div>
 		}
-		@card.Footer(card.FooterProps{Class: "justify-center border-t pt-4"}) {
+		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
 			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
 				Lihat Semua Permohonan
 				@components.IconArrowRight()
@@ -124,7 +124,7 @@ templ RecentPermohonanCard() {
 }
 
 templ DashboardPermohonanItem(nama, nik, jenis, waktu string, badgeVariant badge.Variant) {
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-border last:border-0">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-gray-100 last:border-0">
 		<div class="flex-1 min-w-0">
 			<p class="text-sm font-medium text-foreground truncate">{ nama }</p>
 			<p class="text-xs text-muted-foreground font-mono truncate">{ nik }</p>
@@ -139,7 +139,7 @@ templ DashboardPermohonanItem(nama, nik, jenis, waktu string, badgeVariant badge
 }
 
 templ UpcomingScheduleCard() {
-	@card.Card() {
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
 				Jadwal Hari Ini
@@ -155,7 +155,7 @@ templ UpcomingScheduleCard() {
 				@ScheduleItem("Sesi Sore", "15:00 - 17:00", "15/50", "bg-yellow-500")
 			</div>
 		}
-		@card.Footer(card.FooterProps{Class: "justify-center border-t pt-4"}) {
+		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
 			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
 				Kelola Jadwal
 				@components.IconArrowRight()
@@ -165,7 +165,7 @@ templ UpcomingScheduleCard() {
 }
 
 templ ScheduleItem(sessionName, time, quota, indicatorColor string) {
-	<div class="flex items-center gap-3 sm:gap-4 py-2 border-b border-border last:border-0">
+	<div class="flex items-center gap-3 sm:gap-4 py-2 border-b border-gray-100 last:border-0">
 		<div class={ "size-2 shrink-0 rounded-full " + indicatorColor }></div>
 		<div class="flex-1 min-w-0">
 			<p class="text-sm font-medium text-foreground truncate">{ sessionName }</p>

@@ -88,7 +88,7 @@ templ UserScripts() {
 }
 
 templ UserNavbar(userName string) {
-	<nav class="sticky top-0 z-50 border-b border-border bg-card">
+	<nav class="sticky top-0 z-50 border-b border-gray-200 bg-card">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
 				<div class="flex items-center gap-3">
@@ -119,7 +119,7 @@ templ UserNavbar(userName string) {
 }
 
 templ UserStatCard(title, value, bgColor, textColor string) {
-	@card.Card(card.Props{Class: "hover:shadow-md transition-shadow"}) {
+	@card.Card(card.Props{Class: "hover:shadow-md transition-shadow border-0 shadow-sm"}) {
 		@card.Content(card.ContentProps{Class: "p-4 text-center"}) {
 			<p class="text-xs font-medium text-muted-foreground">{ title }</p>
 			<p class={ "mt-1 text-2xl font-bold " + textColor }>{ value }</p>
@@ -128,7 +128,7 @@ templ UserStatCard(title, value, bgColor, textColor string) {
 }
 
 templ RecentPermohonanCard(items []PermohonanItem) {
-	@card.Card() {
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
 				Permohonan Saya
@@ -156,7 +156,7 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 				</div>
 			}
 		}
-		@card.Footer(card.FooterProps{Class: "justify-center border-t pt-4"}) {
+		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
 			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
 				Lihat Semua
 				@components.IconArrowRight()
@@ -166,7 +166,7 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 }
 
 templ PermohonanListItem(item PermohonanItem) {
-	<div class="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+	<div class="flex flex-col gap-2 rounded-lg bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
 		<div class="flex-1 min-w-0">
 			<div class="flex items-center gap-2">
 				<span class="text-sm font-semibold text-foreground">{ item.KodeBooking }</span>
@@ -224,7 +224,7 @@ templ StatusBadge(status string) {
 }
 
 templ InfoCard() {
-	@card.Card() {
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
 				Informasi Penting

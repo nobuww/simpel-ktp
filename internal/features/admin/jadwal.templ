@@ -62,7 +62,7 @@ templ JadwalPage(data JadwalPageData) {
 						<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 							<div class="flex flex-wrap items-center gap-2 sm:gap-4">
 								<!-- Week Navigation -->
-								<div class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg border p-1">
+								<div class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg shadow-sm p-1">
 									@button.Button(button.Props{
 										Variant: button.VariantGhost,
 										Size:    button.SizeIcon,
@@ -89,7 +89,7 @@ templ JadwalPage(data JadwalPageData) {
 								</div>
 								<!-- View Toggle (hidden on mobile) -->
 								<div
-									class="hidden sm:flex items-center gap-1 bg-card rounded-lg border p-1"
+									class="hidden sm:flex items-center gap-1 bg-card rounded-lg shadow-sm p-1"
 									x-data="{ view: 'card' }"
 								>
 									<button
@@ -166,7 +166,7 @@ templ JadwalKelurahanFilter(kelurahan []KelurahanOption) {
 
 templ JadwalCardView(items []JadwalItem) {
 	if len(items) == 0 {
-		<div class="bg-card rounded-lg border">
+		<div class="bg-card rounded-lg shadow-sm">
 			@components.EmptyState(components.EmptyStateProps{
 				Title:       "Belum ada jadwal",
 				Description: "Tambahkan jadwal sesi pelayanan untuk minggu ini",
@@ -194,7 +194,7 @@ templ JadwalCard(item JadwalItem, index int) {
 		x-transition:enter-end="opacity-100 scale-100"
 		:style={ "'transition-delay: ' + " + intToStr(index) + " * 50 + 'ms'" }
 	>
-		@card.Card(card.Props{Class: "hover:shadow-md transition-shadow"}) {
+		@card.Card(card.Props{Class: "hover:shadow-md transition-shadow border-0 shadow-sm"}) {
 			@card.Header(card.HeaderProps{Class: "pb-3"}) {
 				<div class="flex items-start justify-between">
 					<div>
@@ -225,7 +225,7 @@ templ JadwalCard(item JadwalItem, index int) {
 					</div>
 				</div>
 			}
-			@card.Footer(card.FooterProps{Class: "pt-3 border-t"}) {
+			@card.Footer(card.FooterProps{Class: "pt-3 border-t border-gray-100"}) {
 				<div class="flex gap-2 w-full">
 					@button.Button(button.Props{
 						Variant: button.VariantOutline,
@@ -259,7 +259,7 @@ templ JadwalCard(item JadwalItem, index int) {
 }
 
 templ JadwalTableView(items []JadwalItem) {
-	<div class="bg-card rounded-lg border overflow-hidden">
+	<div class="bg-card rounded-lg shadow-sm overflow-hidden">
 		<div class="overflow-x-auto">
 			@table.Table(table.Props{Class: "w-full"}) {
 				@table.Header() {
@@ -307,7 +307,7 @@ templ JadwalTableView(items []JadwalItem) {
 }
 
 templ JadwalTableRow(item JadwalItem) {
-	@table.Row(table.RowProps{Class: "hover:bg-muted/50 transition-colors"}) {
+	@table.Row(table.RowProps{Class: "hover:bg-muted/50 transition-colors border-gray-100"}) {
 		@table.Cell() {
 			<p class="text-sm font-medium text-foreground">{ item.TanggalFormat }</p>
 		}
