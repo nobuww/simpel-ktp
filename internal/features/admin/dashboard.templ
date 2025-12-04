@@ -34,10 +34,38 @@ templ DashboardPage(data DashboardData) {
 					</div>
 					<!-- Stats Cards -->
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-						@StatCard("Permohonan Baru", "12", "Menunggu verifikasi", "text-blue-600", "bg-blue-50")
-						@StatCard("Dalam Proses", "28", "Sedang diproses", "text-yellow-600", "bg-yellow-50")
-						@StatCard("Siap Diambil", "8", "Menunggu pengambilan", "text-green-600", "bg-green-50")
-						@StatCard("Selesai Hari Ini", "15", "Total selesai", "text-muted-foreground", "bg-secondary")
+						@components.StatCard(components.StatCardProps{
+							Title:       "Permohonan Baru",
+							Value:       "12",
+							Description: "Menunggu verifikasi",
+							TextColor:   "text-blue-600",
+							BgColor:     "bg-blue-50",
+							Icon:        components.IconUsers(),
+						})
+						@components.StatCard(components.StatCardProps{
+							Title:       "Dalam Proses",
+							Value:       "28",
+							Description: "Sedang diproses",
+							TextColor:   "text-yellow-600",
+							BgColor:     "bg-yellow-50",
+							Icon:        components.IconUsers(),
+						})
+						@components.StatCard(components.StatCardProps{
+							Title:       "Siap Diambil",
+							Value:       "8",
+							Description: "Menunggu pengambilan",
+							TextColor:   "text-green-600",
+							BgColor:     "bg-green-50",
+							Icon:        components.IconUsers(),
+						})
+						@components.StatCard(components.StatCardProps{
+							Title:       "Selesai Hari Ini",
+							Value:       "15",
+							Description: "Total selesai",
+							TextColor:   "text-muted-foreground",
+							BgColor:     "bg-secondary",
+							Icon:        components.IconUsers(),
+						})
 					</div>
 					<!-- Quick Actions -->
 					<div class="mb-8">
@@ -52,7 +80,7 @@ templ DashboardPage(data DashboardData) {
 								Cari Permohonan
 							}
 							@button.Button(button.Props{Variant: button.VariantOutline}) {
-								@components.IconCalendarIcon()
+								@components.IconCalendar()
 								Kelola Jadwal
 							}
 						</div>
@@ -70,30 +98,6 @@ templ DashboardPage(data DashboardData) {
 
 templ AdminScripts() {
 	@sidebar.Script()
-}
-
-templ StatCard(title, value, description, textColor, bgColor string) {
-	@card.Card(card.Props{Class: "hover:shadow-md transition-shadow border-0 shadow-sm"}) {
-		@card.Content(card.ContentProps{Class: "p-6"}) {
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-muted-foreground">{ title }</p>
-					<p class={ "text-3xl font-bold mt-1 " + textColor }>{ value }</p>
-					<p class="text-xs text-muted-foreground/80 mt-1">{ description }</p>
-				</div>
-				<div class={ "p-3 rounded-full " + bgColor }>
-					<div class={ "size-6 " + textColor }>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-							<circle cx="9" cy="7" r="4"></circle>
-							<path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-							<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-						</svg>
-					</div>
-				</div>
-			</div>
-		}
-	}
 }
 
 templ RecentPermohonanCard() {

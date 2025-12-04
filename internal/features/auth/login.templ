@@ -1,6 +1,7 @@
 package auth
 
 import (
+	authComponents "github.com/nobuww/simpel-ktp/ui/components/auth"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/checkbox"
@@ -10,100 +11,87 @@ import (
 
 templ LoginPage() {
 	@layouts.Auth("Masuk - Simpel KTP", Scripts()) {
-		<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-			<h2 class="text-3xl font-bold tracking-tight text-foreground">Simpel KTP</h2>
-			<p class="mt-2 text-sm text-muted-foreground">
-				Nikmati layanan kependudukan secara mudah dan cepat.
-			</p>
-		</div>
-		<div
-			id="auth-panel"
-			class="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
-			x-data="{ pending: false }"
-			x-on:htmx:beforeRequest.window="if ($event.target.closest('#auth-panel')) { pending = true }"
-			x-on:htmx:afterRequest.window="if ($event.target.closest('#auth-panel')) { pending = false }"
-			x-on:htmx:error.window="if ($event.target.closest('#auth-panel')) { pending = false }"
-		>
-			<div class="bg-card/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-primary/5 sm:rounded-2xl sm:px-10 border border-border ring-1 ring-border">
-				<h3 class="text-xl font-semibold leading-6 text-foreground mb-1">Masuk ke akun Anda</h3>
-				<div class="mb-6 text-sm text-muted-foreground">
-					Belum punya akun?
-					<a href="/register" class="font-medium text-primary hover:text-primary/80 underline underline-offset-4 decoration-border hover:decoration-primary/30 transition-colors">Buat akun</a>
-				</div>
-				<form
-					id="login-form"
-					class="space-y-6"
-					hx-post="/auth/login"
-					hx-target="#auth-message"
-					hx-swap="innerHTML"
-					hx-indicator="#auth-loading"
-				>
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "login-nik"}) {
-							NIK
-						}
-						@input.Input(input.Props{
-							ID:    "login-nik",
-							Name:  "nik",
-							Class: "border-input focus-visible:ring-ring",
-							Attributes: templ.Attributes{
-								"required": "true",
-								"pattern":  "[0-9]+",
-							},
-						})
-					</div>
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "login-password"}) {
-							Password
-						}
-						@input.Input(input.Props{
-							ID:    "login-password",
-							Name:  "password",
-							Type:  input.TypePassword,
-							Class: "border-input focus-visible:ring-ring",
-							Attributes: templ.Attributes{
-								"autocomplete": "current-password",
-								"required":     "true",
-							},
-						})
-					</div>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2">
-							@checkbox.Checkbox(checkbox.Props{ID: "remember-me", Name: "remember"})
-							@label.Label(label.Props{For: "remember-me", Class: "text-muted-foreground text-sm"}) {
-								Ingat saya
-							}
-						</div>
-						<a href="#" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Lupa password?</a>
-					</div>
-					@button.Button(button.Props{
-						FullWidth: true,
-						Type:      button.TypeSubmit,
-						Class:     "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/30 transition-all duration-200",
-						Attributes: templ.Attributes{
-							":disabled": "pending",
-						},
-					}) {
-						Masuk
+		@authComponents.Panel(authComponents.PanelProps{
+			Title:     "Masuk ke akun Anda",
+			IsPetugas: false,
+		}) {
+			<div class="mb-6 text-sm text-muted-foreground">
+				Belum punya akun?
+				<a href="/register" class="font-medium text-primary hover:text-primary/80 underline underline-offset-4 decoration-border hover:decoration-primary/30 transition-colors">Buat akun</a>
+			</div>
+			<form
+				id="login-form"
+				class="space-y-6"
+				hx-post="/auth/login"
+				hx-target="#auth-message"
+				hx-swap="innerHTML"
+				hx-indicator="#auth-loading"
+			>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "login-nik"}) {
+						NIK
 					}
-				</form>
-				<div class="mt-6 space-y-3">
-					<div id="auth-message" class="text-sm text-foreground space-y-2"></div>
-					<div id="auth-loading" class="text-sm text-muted-foreground hidden htmx-indicator flex items-center gap-2">
-						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
-						Memproses...
-					</div>
+					@input.Input(input.Props{
+						ID:    "login-nik",
+						Name:  "nik",
+						Class: "border-input focus-visible:ring-ring",
+						Attributes: templ.Attributes{
+							"required": "true",
+							"pattern":  "[0-9]+",
+						},
+					})
 				</div>
-				<!-- Divider -->
-				<div class="mt-6 pt-6 border-t border-border">
-					<p class="text-xs text-center text-muted-foreground/60">
-						Dilindungi oleh enkripsi tingkat enterprise
-					</p>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "login-password"}) {
+						Password
+					}
+					@input.Input(input.Props{
+						ID:    "login-password",
+						Name:  "password",
+						Type:  input.TypePassword,
+						Class: "border-input focus-visible:ring-ring",
+						Attributes: templ.Attributes{
+							"autocomplete": "current-password",
+							"required":     "true",
+						},
+					})
+				</div>
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						@checkbox.Checkbox(checkbox.Props{ID: "remember-me", Name: "remember"})
+						@label.Label(label.Props{For: "remember-me", Class: "text-muted-foreground text-sm"}) {
+							Ingat saya
+						}
+					</div>
+					<a href="#" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Lupa password?</a>
+				</div>
+				@button.Button(button.Props{
+					FullWidth: true,
+					Type:      button.TypeSubmit,
+					Class:     "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/30 transition-all duration-200",
+					Attributes: templ.Attributes{
+						":disabled": "pending",
+					},
+				}) {
+					Masuk
+				}
+			</form>
+			<div class="mt-6 space-y-3">
+				<div id="auth-message" class="text-sm text-foreground space-y-2"></div>
+				<div id="auth-loading" class="text-sm text-muted-foreground hidden htmx-indicator flex items-center gap-2">
+					<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Memproses...
 				</div>
 			</div>
-		</div>
+			<!-- Divider -->
+			<div class="mt-6 pt-6 border-t border-border">
+				<p class="text-xs text-center text-muted-foreground/60">
+					Dilindungi oleh enkripsi tingkat enterprise
+				</p>
+			</div>
+		}
 	}
 }

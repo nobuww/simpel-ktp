@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/nobuww/simpel-ktp/internal/middleware"
+	"github.com/nobuww/simpel-ktp/internal/features/common"
 	"github.com/nobuww/simpel-ktp/internal/store"
 	"github.com/nobuww/simpel-ktp/internal/store/pg_store"
 )
@@ -23,12 +23,11 @@ func New(s *store.Store) *Handler {
 }
 
 func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	user := middleware.GetUserFromContext(ctx)
-	if user == nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	user, ok := common.GetUserOrRedirect(w, r, "/login")
+	if !ok {
 		return
 	}
+	ctx := r.Context()
 
 	// Convert NIK to pgtype.Text
 	nikText := pgtype.Text{String: user.UserID, Valid: true}

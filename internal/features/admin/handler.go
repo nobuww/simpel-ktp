@@ -4,8 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/nobuww/simpel-ktp/internal/middleware"
-	"github.com/nobuww/simpel-ktp/internal/session"
+	"github.com/nobuww/simpel-ktp/internal/features/common"
 	"github.com/nobuww/simpel-ktp/internal/store"
 )
 
@@ -22,15 +21,14 @@ func New(s *store.Store) *Handler {
 }
 
 func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUserFromContext(r.Context())
-	if user == nil {
-		http.Redirect(w, r, "/petugas/login", http.StatusSeeOther)
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
 		return
 	}
 
 	data := DashboardData{
 		UserName:   user.UserName,
-		UserRole:   formatRole(user.UserRole),
+		UserRole:   common.FormatRole(user.UserRole),
 		ActivePage: "dashboard",
 	}
 
@@ -38,16 +36,15 @@ func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PermohonanHandler(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUserFromContext(r.Context())
-	if user == nil {
-		http.Redirect(w, r, "/petugas/login", http.StatusSeeOther)
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
 		return
 	}
 
 	// Mock data for now - will be replaced with actual DB queries
 	data := PermohonanPageData{
 		UserName:   user.UserName,
-		UserRole:   formatRole(user.UserRole),
+		UserRole:   common.FormatRole(user.UserRole),
 		ActivePage: "permohonan",
 		Stats: PermohonanStats{
 			Total:      63,
@@ -254,16 +251,15 @@ func (h *Handler) PermohonanDetailHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) JadwalHandler(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUserFromContext(r.Context())
-	if user == nil {
-		http.Redirect(w, r, "/petugas/login", http.StatusSeeOther)
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
 		return
 	}
 
 	// Mock data for now - will be replaced with actual DB queries
 	data := JadwalPageData{
 		UserName:    user.UserName,
-		UserRole:    formatRole(user.UserRole),
+		UserRole:    common.FormatRole(user.UserRole),
 		ActivePage:  "jadwal",
 		CurrentWeek: "2 - 8 Des 2025",
 		Kelurahan: []KelurahanOption{
@@ -284,15 +280,14 @@ func (h *Handler) JadwalHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUserFromContext(r.Context())
-	if user == nil {
-		http.Redirect(w, r, "/petugas/login", http.StatusSeeOther)
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
 		return
 	}
 
 	data := PendudukPageData{
 		UserName:   user.UserName,
-		UserRole:   formatRole(user.UserRole),
+		UserRole:   common.FormatRole(user.UserRole),
 		ActivePage: "penduduk",
 		Stats: PendudukStats{
 			Total:     1200,
@@ -308,17 +303,6 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	PendudukPage(data).Render(r.Context(), w)
-}
-
-func formatRole(role string) string {
-	switch role {
-	case session.RoleAdminKecamatan:
-		return "Admin Kecamatan"
-	case session.RoleAdminKelurahan:
-		return "Admin Kelurahan"
-	default:
-		return role
-	}
 }
 
 // PermohonanStatusFormHandler returns the status update form partial

@@ -1,8 +1,8 @@
 package auth
 
 import (
+	authComponents "github.com/nobuww/simpel-ktp/ui/components/auth"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
-	"github.com/nobuww/simpel-ktp/ui/templui/badge"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/checkbox"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
@@ -11,100 +11,85 @@ import (
 
 templ LoginPetugasPage() {
 	@layouts.Auth("Masuk Petugas - Simpel KTP", Scripts()) {
-		<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-			<h2 class="text-3xl font-bold tracking-tight text-foreground">Simpel KTP</h2>
-			<div class="mt-2 flex justify-center">
-				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-secondary text-secondary-foreground font-mono"}) {
-					PORTAL PETUGAS
-				}
-			</div>
-		</div>
-		<div
-			id="auth-panel"
-			class="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
-			x-data="{ pending: false }"
-			x-on:htmx:beforeRequest.window="if ($event.target.closest('#auth-panel')) { pending = true }"
-			x-on:htmx:afterRequest.window="if ($event.target.closest('#auth-panel')) { pending = false }"
-			x-on:htmx:error.window="if ($event.target.closest('#auth-panel')) { pending = false }"
-		>
-			<div class="bg-card/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-primary/5 sm:rounded-2xl sm:px-10 border border-border ring-1 ring-border">
-				<h3 class="text-xl font-semibold leading-6 text-foreground mb-6">Masuk ke Dashboard</h3>
-				<form
-					id="login-petugas-form"
-					class="space-y-6"
-					hx-post="/auth/login/petugas"
-					hx-target="#auth-message"
-					hx-swap="innerHTML"
-					hx-indicator="#auth-loading"
-				>
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "login-nip"}) {
-							NIP
-						}
-						@input.Input(input.Props{
-							ID:    "login-nip",
-							Name:  "nip",
-							Class: "border-input focus-visible:ring-ring font-mono placeholder:font-sans",
-							Attributes: templ.Attributes{
-								"required":    "true",
-								"pattern":     "[0-9]{18}",
-								"title":       "NIP harus 18 digit angka",
-								"placeholder": "18 digit Nomor Induk Pegawai",
-							},
-						})
-					</div>
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "login-password"}) {
-							Password
-						}
-						@input.Input(input.Props{
-							ID:    "login-password",
-							Name:  "password",
-							Type:  input.TypePassword,
-							Class: "border-input focus-visible:ring-ring",
-							Attributes: templ.Attributes{
-								"autocomplete": "current-password",
-								"required":     "true",
-							},
-						})
-					</div>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2">
-							@checkbox.Checkbox(checkbox.Props{ID: "remember-me", Name: "remember"})
-							@label.Label(label.Props{For: "remember-me", Class: "text-muted-foreground text-sm"}) {
-								Ingat saya
-							}
-						</div>
-					</div>
-					@button.Button(button.Props{
-						FullWidth: true,
-						Type:      button.TypeSubmit,
-						Class:     "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200",
-						Attributes: templ.Attributes{
-							":disabled": "pending",
-						},
-					}) {
-						Masuk Sistem
+		@authComponents.Panel(authComponents.PanelProps{
+			Title:     "Masuk ke Dashboard",
+			IsPetugas: true,
+		}) {
+			<form
+				id="login-petugas-form"
+				class="space-y-6"
+				hx-post="/auth/login/petugas"
+				hx-target="#auth-message"
+				hx-swap="innerHTML"
+				hx-indicator="#auth-loading"
+			>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "login-nip"}) {
+						NIP
 					}
-				</form>
-				<div class="mt-6 space-y-3">
-					<div id="auth-message" class="text-sm text-foreground space-y-2"></div>
-					<div id="auth-loading" class="text-sm text-muted-foreground hidden htmx-indicator flex items-center gap-2">
-						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
-						Verifikasi kredensial...
+					@input.Input(input.Props{
+						ID:    "login-nip",
+						Name:  "nip",
+						Class: "border-input focus-visible:ring-ring font-mono placeholder:font-sans",
+						Attributes: templ.Attributes{
+							"required":    "true",
+							"pattern":     "[0-9]{18}",
+							"title":       "NIP harus 18 digit angka",
+							"placeholder": "18 digit Nomor Induk Pegawai",
+						},
+					})
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "login-password"}) {
+						Password
+					}
+					@input.Input(input.Props{
+						ID:    "login-password",
+						Name:  "password",
+						Type:  input.TypePassword,
+						Class: "border-input focus-visible:ring-ring",
+						Attributes: templ.Attributes{
+							"autocomplete": "current-password",
+							"required":     "true",
+						},
+					})
+				</div>
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						@checkbox.Checkbox(checkbox.Props{ID: "remember-me", Name: "remember"})
+						@label.Label(label.Props{For: "remember-me", Class: "text-muted-foreground text-sm"}) {
+							Ingat saya
+						}
 					</div>
 				</div>
-				<!-- Back to citizen login link -->
-				<div class="mt-6 pt-6 border-t border-border text-center text-sm text-muted-foreground">
-					Bukan petugas? 
-					<a href="/login" class="underline hover:text-foreground transition-colors">
-						Masuk sebagai Warga
-					</a>
+				@button.Button(button.Props{
+					FullWidth: true,
+					Type:      button.TypeSubmit,
+					Class:     "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200",
+					Attributes: templ.Attributes{
+						":disabled": "pending",
+					},
+				}) {
+					Masuk Sistem
+				}
+			</form>
+			<div class="mt-6 space-y-3">
+				<div id="auth-message" class="text-sm text-foreground space-y-2"></div>
+				<div id="auth-loading" class="text-sm text-muted-foreground hidden htmx-indicator flex items-center gap-2">
+					<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+					Verifikasi kredensial...
 				</div>
 			</div>
-		</div>
+			<!-- Back to citizen login link -->
+			<div class="mt-6 pt-6 border-t border-border text-center text-sm text-muted-foreground">
+				Bukan petugas?
+				<a href="/login" class="underline hover:text-foreground transition-colors">
+					Masuk sebagai Warga
+				</a>
+			</div>
+		}
 	}
 }

@@ -1,0 +1,44 @@
+package auth
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/templui/badge"
+)
+
+type PanelProps struct {
+	Title     string
+	IsPetugas bool
+}
+
+templ Panel(props PanelProps) {
+	<div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+		<h2 class="text-3xl font-bold tracking-tight text-foreground">Simpel KTP</h2>
+		if props.IsPetugas {
+			<div class="mt-2 flex justify-center">
+				@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-secondary text-secondary-foreground font-mono"}) {
+					PORTAL PETUGAS
+				}
+			</div>
+		} else {
+			<p class="mt-2 text-sm text-muted-foreground">
+				Nikmati layanan kependudukan secara mudah dan cepat.
+			</p>
+		}
+	</div>
+	<div
+		id="auth-panel"
+		class="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+		x-data="{ pending: false }"
+		x-on:htmx:beforeRequest.window="if ($event.target.closest('#auth-panel')) { pending = true }"
+		x-on:htmx:afterRequest.window="if ($event.target.closest('#auth-panel')) { pending = false }"
+		x-on:htmx:error.window="if ($event.target.closest('#auth-panel')) { pending = false }"
+	>
+		<div class="bg-card/80 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-primary/5 sm:rounded-2xl sm:px-10 border border-border ring-1 ring-border">
+			if props.IsPetugas {
+				<h3 class="text-xl font-semibold leading-6 text-foreground mb-6">{ props.Title }</h3>
+			} else {
+				<h3 class="text-xl font-semibold leading-6 text-foreground mb-1">{ props.Title }</h3>
+			}
+			{ children... }
+		</div>
+	</div>
+}
