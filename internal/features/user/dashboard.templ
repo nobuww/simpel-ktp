@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
-	"github.com/nobuww/simpel-ktp/ui/templui/badge"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/card"
 	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
@@ -39,7 +38,7 @@ type PermohonanItem struct {
 }
 
 templ DashboardPage(data DashboardData) {
-	@layouts.Base("Dashboard - Simpel KTP", UserScripts()) {
+	@layouts.Base("Dashboard - Simpel KTP", nil) {
 		<!-- Navigation -->
 		@UserNavbar(data.UserName)
 		<div class="min-h-screen bg-background">
@@ -109,12 +108,6 @@ templ DashboardPage(data DashboardData) {
 	}
 }
 
-templ UserScripts() {
-	<script>
-		// User dashboard scripts
-	</script>
-}
-
 templ UserNavbar(userName string) {
 	<nav class="sticky top-0 z-50 border-b border-gray-200 bg-card">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -170,7 +163,18 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 			} else {
 				<div class="space-y-3">
 					for _, item := range items {
-						@PermohonanListItem(item)
+						@components.PermohonanListItem(components.PermohonanItemProps{
+							ID:              item.ID,
+							KodeBooking:     item.KodeBooking,
+							JenisPermohonan: item.JenisPermohonan,
+							StatusTerkini:   item.StatusTerkini,
+							TanggalDaftar:   item.TanggalDaftar,
+							JadwalTanggal:   item.JadwalTanggal,
+							JadwalJam:       item.JadwalJam,
+							LokasiKelurahan: item.LokasiKelurahan,
+							NomorAntrian:    item.NomorAntrian,
+							IsAdmin:         false,
+						})
 					}
 				</div>
 			}
@@ -182,109 +186,6 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 			}
 		}
 	}
-}
-
-templ PermohonanListItem(item PermohonanItem) {
-	<div class="flex flex-col gap-2 rounded-lg bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
-		<div class="flex-1 min-w-0">
-			<div class="flex items-center gap-2">
-				<span class="text-sm font-semibold text-foreground">{ item.KodeBooking }</span>
-				@StatusBadge(item.StatusTerkini)
-			</div>
-			<p class="mt-1 text-xs text-muted-foreground">
-				{ item.JenisPermohonan } • Daftar: { item.TanggalDaftar }
-			</p>
-			if item.JadwalTanggal != "" {
-				<p class="text-xs text-muted-foreground/80">
-					Jadwal: { item.JadwalTanggal } { item.JadwalJam }
-					if item.LokasiKelurahan != "" {
-						• { item.LokasiKelurahan }
-					}
-				</p>
-			}
-		</div>
-		<div class="flex items-center gap-2 shrink-0">
-			if item.NomorAntrian > 0 {
-				<span class="rounded bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-					No. { fmt.Sprintf("%d", item.NomorAntrian) }
-				</span>
-			}
-		</div>
-	</div>
-}
-
-templ StatusBadge(status string) {
-	switch status {
-		case "VERIFIKASI":
-			@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
-				Verifikasi
-			}
-		case "PROSES":
-			@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
-				Proses
-			}
-		case "SIAP_AMBIL":
-			@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-green-100 text-green-700"}) {
-				Siap Ambil
-			}
-		case "SELESAI":
-			@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-emerald-100 text-emerald-700"}) {
-				Selesai
-			}
-		case "DITOLAK":
-			@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) {
-				Ditolak
-			}
-		default:
-			@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
-				{ status }
-			}
-	}
-}
-
-templ InfoCard() {
-	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
-		@card.Header() {
-			@card.Title() {
-				Informasi Penting
-			}
-			@card.Description() {
-				Panduan dan informasi layanan KTP
-			}
-		}
-		@card.Content() {
-			<div class="space-y-4">
-				@InfoItem("Jam Layanan", "Senin - Jumat: 08:00 - 16:00 WIB", "clock")
-				@InfoItem("Dokumen", "Siapkan KK asli & fotokopi untuk pengambilan", "document")
-				@InfoItem("Bantuan", "Hubungi call center: 1500-123", "phone")
-			</div>
-		}
-	}
-}
-
-templ InfoItem(title, description, iconType string) {
-	<div class="flex items-start gap-3">
-		<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-			switch iconType {
-				case "clock":
-					<svg class="size-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-					</svg>
-				case "document":
-					<svg class="size-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-					</svg>
-				case "phone":
-					<svg class="size-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-					</svg>
-			}
-		</div>
-		<div>
-			<p class="text-sm font-medium text-foreground">{ title }</p>
-			<p class="text-xs text-muted-foreground">{ description }</p>
-		</div>
-	</div>
 }
 
 templ PermohonanModal() {
@@ -305,9 +206,10 @@ templ PermohonanModal() {
 				}
 			}
 			<div class="grid gap-3 py-4">
-				@PermohonanOption("Buat KTP Baru", "Untuk pemula yang belum pernah punya KTP", "/permohonan/baru", "plus")
-				@PermohonanOption("Buat Ulang KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang", "search")
-				@PermohonanOption("Perbaharuan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah", "edit")
+				@PermohonanOption("KTP Baru", "Untuk yang belum pernah punya KTP", "/permohonan/baru", components.IconPlus())
+				@PermohonanOption("KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang", components.IconSearch())
+				@PermohonanOption("Perubahan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah", components.IconEdit())
+				@PermohonanOption("KTP Rusak", "Pengajuan cetak ulang karena KTP rusak", "/permohonan/rusak", components.IconEdit())
 			</div>
 			@dialog.Footer() {
 				@dialog.Close() {
@@ -320,17 +222,11 @@ templ PermohonanModal() {
 	}
 }
 
-templ PermohonanOption(title, description, href, iconType string) {
+templ PermohonanOption(title, description, href string, icon templ.Component) {
 	<a href={ templ.SafeURL(href) } class="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm hover:bg-zinc-50 transition-colors text-left group">
 		<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-			if iconType == "plus" {
-				@components.IconPlus()
-			} else if iconType == "search" {
-				@components.IconSearch()
-			} else {
-				<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-				</svg>
+			if icon != nil {
+				@icon
 			}
 		</div>
 		<div>
@@ -338,4 +234,24 @@ templ PermohonanOption(title, description, href, iconType string) {
 			<p class="text-sm text-zinc-500">{ description }</p>
 		</div>
 	</a>
+}
+
+templ InfoCard() {
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+		@card.Header() {
+			@card.Title() {
+				Informasi Penting
+			}
+			@card.Description() {
+				Panduan dan informasi layanan KTP
+			}
+		}
+		@card.Content() {
+			<div class="space-y-4">
+				@components.ListItem("Jam Layanan", "Senin - Jumat: 08:00 - 16:00 WIB", components.IconClock())
+				@components.ListItem("Dokumen", "Siapkan KK asli & fotokopi untuk pengambilan", components.IconDocument())
+				@components.ListItem("Bantuan", "Hubungi call center: 1500-123", components.IconPhone())
+			</div>
+		}
+	}
 }

@@ -242,9 +242,9 @@ func (h *Handler) PermohonanDetailHandler(w http.ResponseWriter, r *http.Request
 	detail, exists := detailMap[permohonanID]
 	if !exists {
 		// Return a not found message
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`<div class="text-center py-8 text-slate-500"><p>Permohonan tidak ditemukan</p></div>`))
+		common.WriteNotFound(w, "Permohonan tidak ditemukan")
 		return
+
 	}
 
 	PermohonanDetailContent(detail).Render(r.Context(), w)
@@ -312,9 +312,9 @@ func (h *Handler) PermohonanStatusFormHandler(w http.ResponseWriter, r *http.Req
 	// Get current status from mock data (will be replaced with DB query)
 	currentStatus, exists := mockPermohonanStatus[permohonanID]
 	if !exists {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`<div class="text-center py-8 text-red-500"><p>Permohonan tidak ditemukan</p></div>`))
+		common.WriteError(w, http.StatusNotFound, "Permohonan tidak ditemukan")
 		return
+
 	}
 
 	StatusUpdateForm(permohonanID, currentStatus).Render(r.Context(), w)
@@ -340,16 +340,16 @@ func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		"DITOLAK":    true,
 	}
 	if !validStatuses[newStatus] {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`<div class="text-red-500">Status tidak valid</div>`))
+		common.WriteError(w, http.StatusBadRequest, "Status tidak valid")
 		return
+
 	}
 
 	// Update mock data (will be replaced with DB update)
 	if _, exists := mockPermohonanStatus[permohonanID]; !exists {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`<div class="text-red-500">Permohonan tidak ditemukan</div>`))
+		common.WriteError(w, http.StatusNotFound, "Permohonan tidak ditemukan")
 		return
+
 	}
 	mockPermohonanStatus[permohonanID] = newStatus
 
@@ -357,7 +357,8 @@ func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	_ = catatan
 
 	// Return success response with HX-Trigger to close dialog and refresh data
-	w.Header().Set("HX-Trigger", `{"closeDialog": "status-dialog", "refreshPermohonan": true}`)
-	w.Header().Set("HX-Reswap", "none")
+	common.HXTrigger(w, `{"closeDialog": "status-dialog", "refreshPermohonan": true}`)
+	common.HXReswap(w, "none")
+
 	w.WriteHeader(http.StatusOK)
 }

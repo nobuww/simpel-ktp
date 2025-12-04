@@ -46,6 +46,47 @@ func (q *Queries) CountPermohonanByStatus(ctx context.Context) (CountPermohonanB
 	return i, err
 }
 
+const createDokumenSyarat = `-- name: CreateDokumenSyarat :exec
+INSERT INTO dokumen_syarat (
+    permohonan_id,
+    file_path,
+    jenis_dokumen
+) VALUES ($1, $2, $3)
+`
+
+type CreateDokumenSyaratParams struct {
+	PermohonanID pgtype.UUID `json:"permohonanId"`
+	FilePath     string      `json:"filePath"`
+	JenisDokumen string      `json:"jenisDokumen"`
+}
+
+func (q *Queries) CreateDokumenSyarat(ctx context.Context, arg CreateDokumenSyaratParams) error {
+	_, err := q.db.Exec(ctx, createDokumenSyarat, arg.PermohonanID, arg.FilePath, arg.JenisDokumen)
+	return err
+}
+
+const createPermohonan = `-- name: CreatePermohonan :one
+INSERT INTO permohonan (
+    nik,
+    jadwal_sesi_id,
+    jenis_permohonan
+) VALUES ($1, $2, $3)
+RETURNING id
+`
+
+type CreatePermohonanParams struct {
+	Nik             pgtype.Text `json:"nik"`
+	JadwalSesiID    pgtype.UUID `json:"jadwalSesiId"`
+	JenisPermohonan string      `json:"jenisPermohonan"`
+}
+
+func (q *Queries) CreatePermohonan(ctx context.Context, arg CreatePermohonanParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createPermohonan, arg.Nik, arg.JadwalSesiID, arg.JenisPermohonan)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getPermohonanDetail = `-- name: GetPermohonanDetail :one
 SELECT 
     p.id,

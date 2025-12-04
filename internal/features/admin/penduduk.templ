@@ -4,7 +4,7 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
-	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
 )
 
@@ -37,7 +37,7 @@ type PendudukStats struct {
 
 // Main Page Component
 templ PendudukPage(data PendudukPageData) {
-	@layouts.Admin("Data Penduduk - Simpel KTP", PendudukScripts()) {
+	@layouts.Admin("Data Penduduk - Simpel KTP", nil) {
 		@sidebar.Layout() {
 			@components.AdminSidebar(components.AdminSidebarData{
 				UserName:   data.UserName,
@@ -247,12 +247,6 @@ templ PendudukStatCard(label string, value int, colorClass string, barColorClass
 			<div class={ "h-full rounded-full w-3/4 " + barColorClass }></div>
 		</div>
 	</div>
-}
-
-// Client-Side Logic
-templ PendudukScripts() {
-	@sidebar.Script()
-	@dialog.Script()
 }
 
 templ PendudukFilterScript(items []PendudukItem) {

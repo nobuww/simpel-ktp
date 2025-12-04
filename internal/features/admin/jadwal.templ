@@ -13,8 +13,6 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/table"
 )
 
-// Note: intToStr function is defined in permohonan.templ and shared across admin package
-
 type JadwalPageData struct {
 	UserName    string
 	UserRole    string
@@ -42,7 +40,7 @@ type KelurahanOption struct {
 }
 
 templ JadwalPage(data JadwalPageData) {
-	@layouts.Admin("Jadwal Sesi - Simpel KTP", JadwalScripts()) {
+	@layouts.Admin("Jadwal Sesi - Simpel KTP", nil) {
 		@sidebar.Layout() {
 			@components.AdminSidebar(components.AdminSidebarData{
 				UserName:   data.UserName,
@@ -205,7 +203,7 @@ templ JadwalCard(item JadwalItem, index int) {
 							{ item.NamaKelurahan }
 						}
 					</div>
-					@components.StatusBadge(components.StatusBadgeProps{Status: item.StatusSesi})
+					@components.StatusBadge(item.StatusSesi)
 				</div>
 			}
 			@card.Content(card.ContentProps{Class: "pb-3"}) {
@@ -321,7 +319,7 @@ templ JadwalTableRow(item JadwalItem) {
 			@components.QuotaBar(components.QuotaBarProps{Current: item.KuotaTerisi, Max: item.KuotaMaksimal})
 		}
 		@table.Cell() {
-			@components.StatusBadge(components.StatusBadgeProps{Status: item.StatusSesi})
+			@components.StatusBadge(item.StatusSesi)
 		}
 		@table.Cell(table.CellProps{Class: "text-right"}) {
 			<div class="flex items-center justify-end gap-2">
@@ -556,12 +554,6 @@ templ EditJadwalForm(item JadwalItem, kelurahan []KelurahanOption) {
 			Simpan Perubahan
 		}
 	}
-}
-
-templ JadwalScripts() {
-	@sidebar.Script()
-	@dialog.Script()
-	@selectbox.Script()
 }
 
 // Additional icons for jadwal

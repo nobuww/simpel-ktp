@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/nobuww/simpel-ktp/internal/features/common"
 	"github.com/nobuww/simpel-ktp/internal/session"
 	"github.com/nobuww/simpel-ktp/internal/store"
 )
@@ -99,7 +100,8 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", "/dashboard")
+	common.HXRedirect(w, "/dashboard")
+
 	AuthSuccess("Login berhasil! Mengalihkan...").Render(ctx, w)
 }
 
@@ -147,7 +149,8 @@ func (h *Handler) HandleLoginPetugas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Redirect", "/admin")
+	common.HXRedirect(w, "/admin")
+
 	AuthSuccess("Login berhasil! Mengalihkan ke dashboard...").Render(ctx, w)
 }
 
@@ -231,12 +234,13 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 
 	// Auto-login after registration
 	if err := h.session.SetWargaSession(w, r, result.NIK, result.NamaLengkap, false); err != nil {
-		w.Header().Set("HX-Redirect", "/login")
+		common.HXRedirect(w, "/login")
 		AuthSuccess("Pendaftaran berhasil! Silakan login.").Render(ctx, w)
 		return
 	}
 
-	w.Header().Set("HX-Redirect", "/dashboard")
+	common.HXRedirect(w, "/dashboard")
+
 	AuthSuccess("Pendaftaran berhasil! Mengalihkan...").Render(ctx, w)
 }
 
@@ -248,7 +252,7 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", "/")
+		common.HXRedirect(w, "/")
 		w.WriteHeader(http.StatusOK)
 		return
 	}

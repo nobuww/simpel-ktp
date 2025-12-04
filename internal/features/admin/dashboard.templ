@@ -3,7 +3,7 @@ package admin
 import (
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
-	"github.com/nobuww/simpel-ktp/ui/templui/badge"
+
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/card"
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
@@ -16,7 +16,7 @@ type DashboardData struct {
 }
 
 templ DashboardPage(data DashboardData) {
-	@layouts.Admin("Dashboard Admin - Simpel KTP", AdminScripts()) {
+	@layouts.Admin("Dashboard Admin - Simpel KTP", nil) {
 		@sidebar.Layout() {
 			@components.AdminSidebar(components.AdminSidebarData{
 				UserName:   data.UserName,
@@ -96,10 +96,6 @@ templ DashboardPage(data DashboardData) {
 	}
 }
 
-templ AdminScripts() {
-	@sidebar.Script()
-}
-
 templ RecentPermohonanCard() {
 	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
@@ -112,10 +108,10 @@ templ RecentPermohonanCard() {
 		}
 		@card.Content() {
 			<div class="space-y-4">
-				@DashboardPermohonanItem("Ahmad Wijaya", "3201234567890001", "BARU", "5 menit lalu", badge.VariantDefault)
-				@DashboardPermohonanItem("Siti Nurhaliza", "3201234567890002", "HILANG", "12 menit lalu", badge.VariantSecondary)
-				@DashboardPermohonanItem("Budi Santoso", "3201234567890003", "UPDATE", "25 menit lalu", badge.VariantOutline)
-				@DashboardPermohonanItem("Dewi Lestari", "3201234567890004", "RUSAK", "1 jam lalu", badge.VariantSecondary)
+				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Ahmad Wijaya", NIK: "3201234567890001", StatusTerkini: "BARU", Waktu: "5 menit lalu", IsAdmin: true})
+				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Siti Nurhaliza", NIK: "3201234567890002", StatusTerkini: "HILANG", Waktu: "12 menit lalu", IsAdmin: true})
+				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Budi Santoso", NIK: "3201234567890003", StatusTerkini: "UPDATE", Waktu: "25 menit lalu", IsAdmin: true})
+				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Dewi Lestari", NIK: "3201234567890004", StatusTerkini: "RUSAK", Waktu: "1 jam lalu", IsAdmin: true})
 			</div>
 		}
 		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
@@ -125,21 +121,6 @@ templ RecentPermohonanCard() {
 			}
 		}
 	}
-}
-
-templ DashboardPermohonanItem(nama, nik, jenis, waktu string, badgeVariant badge.Variant) {
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-gray-100 last:border-0">
-		<div class="flex-1 min-w-0">
-			<p class="text-sm font-medium text-foreground truncate">{ nama }</p>
-			<p class="text-xs text-muted-foreground font-mono truncate">{ nik }</p>
-		</div>
-		<div class="flex items-center gap-2 sm:gap-3">
-			@badge.Badge(badge.Props{Variant: badgeVariant}) {
-				{ jenis }
-			}
-			<span class="text-xs text-muted-foreground whitespace-nowrap">{ waktu }</span>
-		</div>
-	</div>
 }
 
 templ UpcomingScheduleCard() {

@@ -17,9 +17,11 @@ type Querier interface {
 	CheckPendudukExists(ctx context.Context, nik string) (bool, error)
 	CountPermohonanByNIK(ctx context.Context, nik pgtype.Text) (CountPermohonanByNIKRow, error)
 	CountPermohonanByStatus(ctx context.Context) (CountPermohonanByStatusRow, error)
+	CreateDokumenSyarat(ctx context.Context, arg CreateDokumenSyaratParams) error
 	CreateJadwalSesi(ctx context.Context, arg CreateJadwalSesiParams) (uuid.UUID, error)
 	CreateKelurahan(ctx context.Context, arg CreateKelurahanParams) (RefKelurahan, error)
 	CreatePenduduk(ctx context.Context, arg CreatePendudukParams) (Penduduk, error)
+	CreatePermohonan(ctx context.Context, arg CreatePermohonanParams) (uuid.UUID, error)
 	CreatePetugas(ctx context.Context, arg CreatePetugasParams) (Petugas, error)
 	GetJadwalSesiById(ctx context.Context, id uuid.UUID) (GetJadwalSesiByIdRow, error)
 	GetKelurahanByKodeArea(ctx context.Context, kodeArea string) (RefKelurahan, error)

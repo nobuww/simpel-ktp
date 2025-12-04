@@ -8,6 +8,7 @@ import (
 	"github.com/nobuww/simpel-ktp/internal/features/auth"
 	"github.com/nobuww/simpel-ktp/internal/features/errors"
 	"github.com/nobuww/simpel-ktp/internal/features/home"
+	"github.com/nobuww/simpel-ktp/internal/features/permohonan"
 	"github.com/nobuww/simpel-ktp/internal/features/user"
 	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/internal/session"
@@ -65,9 +66,21 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 
 	// User routes (protected - warga only)
 	userHandler := user.New(s)
+	permohonanHandler := permohonan.New(s)
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.RequireWarga)
 		r.Get("/dashboard", userHandler.DashboardHandler)
+
+		// Permohonan routes
+		r.Get("/permohonan/baru", permohonanHandler.HandleKTPBaruForm)
+		r.Post("/permohonan/baru", permohonanHandler.HandleKTPBaruForm)
+		r.Get("/permohonan/hilang", permohonanHandler.HandleKTPHilangForm)
+		r.Post("/permohonan/hilang", permohonanHandler.HandleKTPHilangForm)
+		r.Get("/permohonan/rusak", permohonanHandler.HandleKTPRusakForm)
+		r.Post("/permohonan/rusak", permohonanHandler.HandleKTPRusakForm)
+		r.Get("/permohonan/ubah", permohonanHandler.HandleKTPUbahForm)
+		r.Post("/permohonan/ubah", permohonanHandler.HandleKTPUbahForm)
+		r.Get("/permohonan/sukses", permohonanHandler.HandleSuccessPage)
 	})
 
 	return r

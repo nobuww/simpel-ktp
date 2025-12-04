@@ -1,0 +1,66 @@
+package components
+
+import "github.com/nobuww/simpel-ktp/ui/templui/badge"
+
+templ StatusBadge(status string) {
+	switch status {
+		case "VERIFIKASI":
+			@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+				Verifikasi
+			}
+		case "PROSES":
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+				Proses
+			}
+		case "SIAP_AMBIL":
+			@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-green-100 text-green-700"}) {
+				Siap Ambil
+			}
+		case "SELESAI":
+			@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-emerald-100 text-emerald-700"}) {
+				Selesai
+			}
+		case "DITOLAK":
+			@badge.Badge(badge.Props{Variant: badge.VariantDestructive}) {
+				Ditolak
+			}
+			// Application Types
+		case "BARU":
+			@badge.Badge(badge.Props{Variant: badge.VariantDefault}) {
+				Baru
+			}
+		case "HILANG":
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+				Hilang
+			}
+		case "RUSAK":
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+				Rusak
+			}
+		case "UPDATE":
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+				Update
+			}
+			// Session Statuses
+		case "BUKA":
+			@badge.Badge(badge.Props{Variant: badge.VariantDefault, Class: "bg-green-100 text-green-700"}) {
+				Buka
+			}
+		case "PENUH":
+			@badge.Badge(badge.Props{Variant: badge.VariantDestructive, Class: "bg-red-100 text-red-700"}) {
+				Penuh
+			}
+		case "ISTIRAHAT":
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-yellow-100 text-yellow-700"}) {
+				Istirahat
+			}
+		case "TUTUP":
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "bg-slate-100 text-slate-700"}) {
+				Tutup
+			}
+		default:
+			@badge.Badge(badge.Props{Variant: badge.VariantOutline}) {
+				{ status }
+			}
+	}
+}

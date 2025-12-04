@@ -79,7 +79,7 @@ type PermohonanStats struct {
 }
 
 templ PermohonanPage(data PermohonanPageData) {
-	@layouts.Admin("Permohonan - Simpel KTP", PermohonanScripts()) {
+	@layouts.Admin("Permohonan - Simpel KTP", PermohonanFilterScript(data.List)) {
 		@sidebar.Layout() {
 			@components.AdminSidebar(components.AdminSidebarData{
 				UserName:   data.UserName,
@@ -315,8 +315,6 @@ templ PermohonanPage(data PermohonanPageData) {
 		@PermohonanDetailDialog()
 		<!-- Update Status Dialog -->
 		@UpdateStatusDialog()
-		<!-- Alpine.js Data Script -->
-		@PermohonanFilterScript(data.List)
 	}
 }
 
@@ -448,7 +446,7 @@ templ PermohonanDetailContent(detail PermohonanDetail) {
 			</div>
 			<div class="flex items-center gap-3">
 				@components.JenisBadge(detail.JenisPermohonan)
-				@components.StatusBadge(components.StatusBadgeProps{Status: detail.StatusTerkini})
+				@components.StatusBadge(detail.StatusTerkini)
 			</div>
 		</div>
 		<!-- Tab Navigation -->
@@ -573,7 +571,7 @@ templ RiwayatStatusItemTemplate(item RiwayatStatusItem, isLatest bool) {
 		</div>
 		<div class={ "p-3 rounded-lg", templ.KV("bg-primary/5", isLatest), templ.KV("bg-secondary", !isLatest) }>
 			<div class="flex items-center justify-between mb-1">
-				@components.StatusBadge(components.StatusBadgeProps{Status: item.Status})
+				@components.StatusBadge(item.Status)
 				<span class="text-xs text-muted-foreground">{ item.Waktu }</span>
 			</div>
 			<p class="text-sm text-muted-foreground">Diproses oleh <span class="font-medium text-foreground">{ item.Petugas }</span></p>
@@ -588,12 +586,6 @@ templ IconCheckSmall() {
 	<svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
 		<polyline points="20 6 9 17 4 12"></polyline>
 	</svg>
-}
-
-templ PermohonanScripts() {
-	@sidebar.Script()
-	@dialog.Script()
-	@selectbox.Script()
 }
 
 // PermohonanFilterScript generates the Alpine.js data for client-side filtering

@@ -1,0 +1,66 @@
+package components
+
+import "fmt"
+
+type PermohonanItemProps struct {
+	ID              string
+	KodeBooking     string // Optional, if empty, might not show
+	Nama            string // For admin view
+	NIK             string // For admin view
+	JenisPermohonan string
+	StatusTerkini   string
+	Waktu           string // For admin view (e.g. "5 menit lalu")
+
+	// For user view details
+	TanggalDaftar   string
+	JadwalTanggal   string
+	JadwalJam       string
+	LokasiKelurahan string
+	NomorAntrian    int
+
+	IsAdmin bool
+}
+
+templ PermohonanListItem(props PermohonanItemProps) {
+	<div class="flex flex-col gap-2 border-b border-gray-100 last:border-0 py-2 sm:flex-row sm:items-center sm:justify-between">
+		<div class="flex-1 min-w-0">
+			if props.IsAdmin {
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-medium text-foreground truncate">{ props.Nama }</p>
+						<p class="text-xs text-muted-foreground font-mono truncate">{ props.NIK }</p>
+					</div>
+					<div class="flex items-center gap-2 sm:gap-3">
+						@StatusBadge(props.StatusTerkini)
+						<span class="text-xs text-muted-foreground whitespace-nowrap">{ props.Waktu }</span>
+					</div>
+				</div>
+			} else {
+				<div class="flex items-center gap-2">
+					<span class="text-sm font-semibold text-foreground">{ props.KodeBooking }</span>
+					@StatusBadge(props.StatusTerkini)
+				</div>
+				<p class="mt-1 text-xs text-muted-foreground">
+					{ props.JenisPermohonan } • Daftar: { props.TanggalDaftar }
+				</p>
+				if props.JadwalTanggal != "" {
+					<p class="text-xs text-muted-foreground/80">
+						Jadwal: { props.JadwalTanggal } { props.JadwalJam }
+						if props.LokasiKelurahan != "" {
+							• { props.LokasiKelurahan }
+						}
+					</p>
+				}
+			}
+		</div>
+		if !props.IsAdmin {
+			<div class="flex items-center gap-2 shrink-0">
+				if props.NomorAntrian > 0 {
+					<span class="rounded bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+						No. { fmt.Sprintf("%d", props.NomorAntrian) }
+					</span>
+				}
+			</div>
+		}
+	</div>
+}

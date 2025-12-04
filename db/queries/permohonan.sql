@@ -81,3 +81,18 @@ FROM riwayat_status rs
 LEFT JOIN petugas pt ON rs.petugas_id = pt.id
 WHERE rs.permohonan_id = $1
 ORDER BY rs.waktu_proses DESC;
+
+-- name: CreatePermohonan :one
+INSERT INTO permohonan (
+    nik,
+    jadwal_sesi_id,
+    jenis_permohonan
+) VALUES ($1, $2, $3)
+RETURNING id;
+
+-- name: CreateDokumenSyarat :exec
+INSERT INTO dokumen_syarat (
+    permohonan_id,
+    file_path,
+    jenis_dokumen
+) VALUES ($1, $2, $3);

@@ -1,0 +1,825 @@
+package permohonan
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+	"github.com/nobuww/simpel-ktp/ui/templui/label"
+	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
+	"github.com/nobuww/simpel-ktp/ui/templui/textarea"
+)
+
+// SuccessData contains data for the success page
+type SuccessData struct {
+	PermohonanID    string
+	KodeBooking     string
+	ApplicationType string
+	JadwalTanggal   string
+	JadwalJam       string
+	NamaKelurahan   string
+}
+
+templ FormPageLayout(title, description string) {
+	@layouts.Base(title+" - Simpel KTP", nil) {
+		<nav class="sticky top-0 z-50 border-b border-zinc-200/50 bg-card/80 backdrop-blur-sm">
+			<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+				<div class="flex h-16 items-center justify-between">
+					<div class="flex items-center gap-3">
+						<a href="/dashboard" class="flex items-center gap-2">
+							<div class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+								</svg>
+							</div>
+							<span class="text-lg font-bold text-foreground">Simpel KTP</span>
+						</a>
+					</div>
+					<a href="/dashboard" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+						← Kembali ke Dashboard
+					</a>
+				</div>
+			</div>
+		</nav>
+		<div class="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+			<div class="mx-auto max-w-2xl">
+				<!-- Header -->
+				<div class="mb-8">
+					<h1 class="text-2xl font-bold text-foreground">{ title }</h1>
+					<p class="mt-1 text-sm text-muted-foreground">{ description }</p>
+				</div>
+				{ children... }
+			</div>
+		</div>
+	}
+}
+
+templ FormErrorAlert(errors map[string]string) {
+	if errors["general"] != "" {
+		<div class="mb-6 rounded-xl bg-red-50 p-4">
+			<div class="flex items-center gap-3">
+				<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+					<svg class="size-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+					</svg>
+				</div>
+				<p class="text-sm text-red-700">{ errors["general"] }</p>
+			</div>
+		</div>
+	}
+}
+
+templ AlpineFormWrapper(formType string) {
+	<form
+		method="POST"
+		enctype="multipart/form-data"
+		class="space-y-6"
+		x-data={ "formValidator('" + formType + "')" }
+		@submit="handleSubmit"
+	>
+		{ children... }
+	</form>
+}
+
+// Alpine.js validation script
+templ FormValidationScript() {
+	<script>
+		document.addEventListener('alpine:init', () => {
+			Alpine.data('formValidator', (formType) => ({
+				errors: {},
+				touched: {},
+				isSubmitting: false,
+				files: {},
+				
+				init() {
+					// Watch for file changes
+					this.$watch('files', () => this.validateFiles());
+				},
+				
+				// Mark field as touched
+				touch(field) {
+					this.touched[field] = true;
+					this.validateField(field);
+				},
+				
+				// Validate a single field
+				validateField(field) {
+					const el = this.$el.querySelector(`[name="${field}"]`);
+					if (!el) return;
+					
+					const value = el.value?.trim() || '';
+					delete this.errors[field];
+					
+					// Required validation
+					if (el.hasAttribute('required') || el.dataset.required === 'true') {
+						if (!value && el.type !== 'file') {
+							this.errors[field] = 'Field ini wajib diisi';
+							return;
+						}
+					}
+					
+					// File validation
+					if (el.type === 'file') {
+						const file = el.files?.[0];
+						if (el.dataset.required === 'true' && !file) {
+							this.errors[field] = 'File wajib diunggah';
+							return;
+						}
+						if (file) {
+							const maxSize = 10 * 1024 * 1024; // 10MB
+							if (file.size > maxSize) {
+								this.errors[field] = 'Ukuran file maksimal 10MB';
+								return;
+							}
+							const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+							if (!allowedTypes.includes(file.type)) {
+								this.errors[field] = 'Format file tidak didukung';
+								return;
+							}
+						}
+					}
+				},
+				
+				validateFiles() {
+					Object.keys(this.files).forEach(field => {
+						this.validateField(field);
+					});
+				},
+				
+				// Validate all fields
+				validateAll() {
+					this.errors = {};
+					const requiredFields = this.$el.querySelectorAll('[required], [data-required="true"]');
+					requiredFields.forEach(el => {
+						const field = el.name;
+						if (field) {
+							this.touched[field] = true;
+							this.validateField(field);
+						}
+					});
+					return Object.keys(this.errors).length === 0;
+				},
+				
+				// Handle file input change
+				handleFileChange(event, field) {
+					this.files[field] = event.target.files?.[0] || null;
+					this.touched[field] = true;
+					this.validateField(field);
+				},
+				
+				// Get file name for display
+				getFileName(field) {
+					return this.files[field]?.name || '';
+				},
+				
+				// Handle form submission
+				handleSubmit(event) {
+					if (!this.validateAll()) {
+						event.preventDefault();
+						// Scroll to first error
+						const firstError = this.$el.querySelector('[data-has-error="true"]');
+						if (firstError) {
+							firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						}
+						return false;
+					}
+					this.isSubmitting = true;
+					return true;
+				},
+				
+				// Check if field has error
+				hasError(field) {
+					return this.touched[field] && this.errors[field];
+				},
+				
+				// Get error message
+				getError(field) {
+					return this.errors[field] || '';
+				}
+			}));
+		});
+	</script>
+}
+
+templ FormFieldAlpine(labelText, fieldName, fieldType, value, placeholder string, required bool, serverError string) {
+	<div class="mb-4" :data-has-error={ "hasError('" + fieldName + "') || " + boolStr(serverError != "") }>
+		@label.Label(label.Props{For: fieldName}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@input.Input(input.Props{
+				ID:          fieldName,
+				Name:        fieldName,
+				Type:        input.Type(fieldType),
+				Value:       value,
+				Placeholder: placeholder,
+				Attributes: templ.Attributes{
+					"@blur":          "touch('" + fieldName + "')",
+					"@input":         "touch('" + fieldName + "')",
+					":class":         "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
+					"data-required":  boolStr(required),
+				},
+			})
+		</div>
+		if serverError != "" {
+			<p class="mt-1 text-sm text-destructive">{ serverError }</p>
+		}
+		<p
+			class="mt-1 text-sm text-destructive"
+			x-show={ "hasError('" + fieldName + "')" }
+			x-text={ "getError('" + fieldName + "')" }
+		></p>
+	</div>
+}
+
+templ FormField(labelText, fieldName, fieldType, value, placeholder string, required bool, errorMsg string) {
+	<div class="mb-4">
+		@label.Label(label.Props{For: fieldName, Error: errorMsg}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@input.Input(input.Props{
+				ID:          fieldName,
+				Name:        fieldName,
+				Type:        input.Type(fieldType),
+				Value:       value,
+				Placeholder: placeholder,
+				HasError:    errorMsg != "",
+			})
+		</div>
+		if errorMsg != "" {
+			<p class="mt-1 text-sm text-destructive">{ errorMsg }</p>
+		}
+	</div>
+}
+
+templ FormFieldReadonly(labelText, value string) {
+	<div class="mb-4">
+		@label.Label() {
+			{ labelText }
+		}
+		<div class="mt-1.5">
+			<div class="flex h-9 w-full items-center rounded-md bg-muted/50 px-3 text-sm text-muted-foreground">
+				{ value }
+			</div>
+		</div>
+	</div>
+}
+
+templ FormTextareaAlpine(labelText, fieldName, value, placeholder string, required bool, serverError string) {
+	<div class="mb-4" :data-has-error={ "hasError('" + fieldName + "') || " + boolStr(serverError != "") }>
+		@label.Label(label.Props{For: fieldName}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@textarea.Textarea(textarea.Props{
+				ID:          fieldName,
+				Name:        fieldName,
+				Placeholder: placeholder,
+				Attributes: templ.Attributes{
+					"@blur":          "touch('" + fieldName + "')",
+					"@input":         "touch('" + fieldName + "')",
+					":class":         "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
+					"data-required":  boolStr(required),
+				},
+			}) {
+				{ value }
+			}
+		</div>
+		if serverError != "" {
+			<p class="mt-1 text-sm text-destructive">{ serverError }</p>
+		}
+		<p
+			class="mt-1 text-sm text-destructive"
+			x-show={ "hasError('" + fieldName + "')" }
+			x-text={ "getError('" + fieldName + "')" }
+		></p>
+	</div>
+}
+
+templ FormTextarea(labelText, fieldName, value, placeholder string, required bool, errorMsg string) {
+	<div class="mb-4">
+		@label.Label(label.Props{For: fieldName, Error: errorMsg}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@textarea.Textarea(textarea.Props{
+				ID:          fieldName,
+				Name:        fieldName,
+				Placeholder: placeholder,
+				HasError:    errorMsg != "",
+			}) {
+				{ value }
+			}
+		</div>
+		if errorMsg != "" {
+			<p class="mt-1 text-sm text-destructive">{ errorMsg }</p>
+		}
+	</div>
+}
+
+templ FormSelect(labelText, fieldName, placeholder string, options []JadwalOption, required bool, errorMsg string) {
+	<div class="mb-4">
+		@label.Label(label.Props{For: fieldName, Error: errorMsg}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{Name: fieldName, HasError: errorMsg != ""}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: placeholder})
+				}
+				@selectbox.Content(selectbox.ContentProps{SearchPlaceholder: "Cari jadwal..."}) {
+					@selectbox.Group() {
+						for _, opt := range options {
+							@selectbox.Item(selectbox.ItemProps{Value: opt.ID}) {
+								{ opt.Label }
+							}
+						}
+					}
+				}
+			}
+		</div>
+		if errorMsg != "" {
+			<p class="mt-1 text-sm text-destructive">{ errorMsg }</p>
+		}
+	</div>
+}
+
+templ FormFileUploadAlpine(labelText, fieldName, accept, helpText string, required bool, serverError string) {
+	<div class="mb-6" :data-has-error={ "hasError('" + fieldName + "') || " + boolStr(serverError != "") }>
+		@label.Label(label.Props{For: fieldName}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-2">
+			<label
+				for={ fieldName }
+				class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-200"
+				:class={ "hasError('" + fieldName + "') ? 'border-destructive bg-destructive/5' : (getFileName('" + fieldName + "') ? 'border-primary bg-primary/5' : 'border-zinc-200 bg-zinc-50/50 hover:border-primary hover:bg-primary/5')" }
+			>
+				<input
+					id={ fieldName }
+					type="file"
+					name={ fieldName }
+					accept={ accept }
+					class="sr-only"
+					data-required={ boolStr(required) }
+					@change={ "handleFileChange($event, '" + fieldName + "')" }
+				/>
+				<div class="pointer-events-none text-center" x-show={ "!getFileName('" + fieldName + "')" }>
+					<svg class="mx-auto size-10 text-zinc-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+						<path d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-12-8v12m0 0l4-4m-4 4l-4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+					</svg>
+					<p class="mt-2 text-sm text-zinc-600">
+						<span class="font-medium text-primary">Klik untuk upload</span> atau drag & drop
+					</p>
+					<p class="mt-1 text-xs text-zinc-500">{ helpText }</p>
+				</div>
+				<div class="pointer-events-none text-center" x-show={ "getFileName('" + fieldName + "')" }>
+					<svg class="mx-auto size-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					<p class="mt-2 text-sm font-medium text-primary" x-text={ "getFileName('" + fieldName + "')" }></p>
+					<p class="mt-1 text-xs text-zinc-500">Klik untuk mengganti file</p>
+				</div>
+			</label>
+		</div>
+		if serverError != "" {
+			<p class="mt-2 text-sm text-destructive">{ serverError }</p>
+		}
+		<p
+			class="mt-2 text-sm text-destructive"
+			x-show={ "hasError('" + fieldName + "')" }
+			x-text={ "getError('" + fieldName + "')" }
+		></p>
+	</div>
+}
+
+templ FormFileUpload(labelText, fieldName, accept, helpText string, required bool, errorMsg string) {
+	<div class="mb-6">
+		@label.Label(label.Props{For: fieldName, Error: errorMsg}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-2">
+			<label
+				for={ fieldName }
+				class={ "group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-200",
+					templ.KV("border-destructive bg-destructive/5", errorMsg != ""),
+					templ.KV("border-zinc-200 bg-zinc-50/50 hover:border-primary hover:bg-primary/5", errorMsg == "") }
+			>
+				<input
+					id={ fieldName }
+					type="file"
+					name={ fieldName }
+					accept={ accept }
+					class="sr-only"
+				/>
+				<div class="pointer-events-none text-center">
+					<svg class="mx-auto size-10 text-zinc-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+						<path d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-12-8v12m0 0l4-4m-4 4l-4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+					</svg>
+					<p class="mt-2 text-sm text-zinc-600">
+						<span class="font-medium text-primary">Klik untuk upload</span> atau drag & drop
+					</p>
+					<p class="mt-1 text-xs text-zinc-500">{ helpText }</p>
+				</div>
+			</label>
+		</div>
+		if errorMsg != "" {
+			<p class="mt-2 text-sm text-destructive">{ errorMsg }</p>
+		}
+	</div>
+}
+
+templ PersonalDataSection(data FormData) {
+	@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+		@card.Header() {
+			@card.Title() {
+				Data Pribadi
+			}
+			@card.Description() {
+				Data ini diambil dari akun Anda dan akan digunakan untuk permohonan KTP
+			}
+		}
+		@card.Content() {
+			<div class="grid gap-4 sm:grid-cols-2">
+				@FormFieldReadonly("NIK", data.NIK)
+				@FormFieldReadonly("Nama Lengkap", data.NamaLengkap)
+				@FormFieldReadonly("Jenis Kelamin", formatJenisKelamin(data.JenisKelamin))
+				@FormFieldReadonly("Kelurahan", data.NamaKelurahan)
+			</div>
+			if data.Alamat != "" {
+				@FormFieldReadonly("Alamat", data.Alamat)
+			}
+			<div class="grid gap-4 sm:grid-cols-2">
+				if data.NoHP != "" {
+					@FormFieldReadonly("No. HP", data.NoHP)
+				}
+				if data.Email != "" {
+					@FormFieldReadonly("Email", data.Email)
+				}
+			</div>
+		}
+	}
+}
+
+templ JadwalSection(jadwalList []JadwalOption, errors map[string]string) {
+	@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+		@card.Header() {
+			@card.Title() {
+				Jadwal Kedatangan
+			}
+			@card.Description() {
+				Pilih jadwal untuk datang ke kantor kelurahan
+			}
+		}
+		@card.Content() {
+			@FormSelect("Jadwal", "jadwal_sesi_id", "Pilih jadwal kedatangan...", jadwalList, true, errors["jadwal_sesi_id"])
+			if len(jadwalList) == 0 {
+				<div class="rounded-xl bg-yellow-50 p-4">
+					<p class="text-sm text-yellow-700">
+						Tidak ada jadwal yang tersedia saat ini. Silakan hubungi petugas untuk informasi lebih lanjut.
+					</p>
+				</div>
+			}
+		}
+	}
+}
+
+templ FormSubmitSection() {
+	<div class="flex gap-3 pt-4">
+		@button.Button(button.Props{Type: "submit", Class: "flex-1 sm:flex-none"}) {
+			<span x-show="!isSubmitting" class="flex items-center gap-2">
+				@components.IconCheck()
+				Ajukan Permohonan
+			</span>
+			<span x-show="isSubmitting" class="flex items-center gap-2">
+				<svg class="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+				</svg>
+				Memproses...
+			</span>
+		}
+		<a href="/dashboard">
+			@button.Button(button.Props{Variant: button.VariantOutline, Type: "button"}) {
+				Batal
+			}
+		</a>
+	</div>
+}
+
+templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
+	@FormPageLayout("Permohonan KTP Baru", "Untuk warga yang belum pernah memiliki KTP") {
+		@FormErrorAlert(data.Errors)
+		
+		@AlpineFormWrapper("baru") {
+			@PersonalDataSection(data)
+			@JadwalSection(jadwalList, data.Errors)
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Dokumen Persyaratan
+					}
+					@card.Description() {
+						Upload dokumen yang diperlukan untuk permohonan KTP baru
+					}
+				}
+				@card.Content() {
+					@FormFileUploadAlpine(
+						"Kartu Keluarga (KK)",
+						"kartu_keluarga",
+						".pdf,.jpg,.jpeg,.png",
+						"PDF, JPG, atau PNG maksimal 10MB",
+						true,
+						data.Errors["kartu_keluarga"],
+					)
+				}
+			}
+			
+			@FormSubmitSection()
+		}
+		@FormValidationScript()
+	}
+}
+
+templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
+	@FormPageLayout("Permohonan KTP Hilang", "Pengajuan cetak ulang karena KTP hilang") {
+		@FormErrorAlert(data.Errors)
+		
+		@AlpineFormWrapper("hilang") {
+			@PersonalDataSection(data)
+			@JadwalSection(jadwalList, data.Errors)
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Informasi Kehilangan
+					}
+					@card.Description() {
+						Isi informasi terkait kehilangan KTP Anda
+					}
+				}
+				@card.Content() {
+					<div class="grid gap-4 sm:grid-cols-2">
+						@FormFieldAlpine("Nomor Laporan Polisi", "nomor_laporan", "text", "", "Contoh: LP/B/xxx/xx/2024/POLSEK", true, data.Errors["nomor_laporan"])
+						@FormFieldAlpine("Tanggal Kejadian", "tanggal_kejadian", "date", "", "", true, data.Errors["tanggal_kejadian"])
+					</div>
+				}
+			}
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Dokumen Persyaratan
+					}
+					@card.Description() {
+						Upload Surat Keterangan dari Kepolisian
+					}
+				}
+				@card.Content() {
+					@FormFileUploadAlpine(
+						"Surat Keterangan Polisi",
+						"surat_polisi",
+						".pdf,.jpg,.jpeg,.png",
+						"PDF, JPG, atau PNG maksimal 10MB",
+						true,
+						data.Errors["surat_polisi"],
+					)
+				}
+			}
+			
+			@FormSubmitSection()
+		}
+		@FormValidationScript()
+	}
+}
+
+templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
+	@FormPageLayout("Permohonan KTP Rusak", "Pengajuan cetak ulang karena KTP rusak") {
+		@FormErrorAlert(data.Errors)
+		
+		@AlpineFormWrapper("rusak") {
+			@PersonalDataSection(data)
+			@JadwalSection(jadwalList, data.Errors)
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Deskripsi Kerusakan
+					}
+					@card.Description() {
+						Jelaskan kondisi kerusakan KTP Anda
+					}
+				}
+				@card.Content() {
+					@FormTextareaAlpine("Deskripsi Kerusakan", "deskripsi_kerusakan", "", "Jelaskan kondisi kerusakan KTP Anda (misal: patah, pudar, sobek, dll)", true, data.Errors["deskripsi_kerusakan"])
+				}
+			}
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Dokumen Persyaratan
+					}
+					@card.Description() {
+						Upload dokumen yang diperlukan
+					}
+				}
+				@card.Content() {
+					@FormFileUploadAlpine(
+						"Foto KTP Rusak",
+						"ktp_rusak",
+						".jpg,.jpeg,.png",
+						"JPG atau PNG maksimal 10MB",
+						true,
+						data.Errors["ktp_rusak"],
+					)
+					@FormFileUploadAlpine(
+						"Kartu Keluarga (KK)",
+						"kartu_keluarga",
+						".pdf,.jpg,.jpeg,.png",
+						"PDF, JPG, atau PNG maksimal 10MB",
+						true,
+						data.Errors["kartu_keluarga"],
+					)
+				}
+			}
+			
+			@FormSubmitSection()
+		}
+		@FormValidationScript()
+	}
+}
+
+templ KTPUbahFormPage(data FormData, jadwalList []JadwalOption) {
+	@FormPageLayout("Perubahan Data KTP", "Pengajuan perubahan data identitas pada KTP") {
+		@FormErrorAlert(data.Errors)
+		
+		@AlpineFormWrapper("ubah") {
+			@PersonalDataSection(data)
+			@JadwalSection(jadwalList, data.Errors)
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Alasan Perubahan
+					}
+					@card.Description() {
+						Jelaskan data apa yang ingin diubah dan alasannya
+					}
+				}
+				@card.Content() {
+					@FormTextareaAlpine("Alasan Perubahan Data", "alasan_perubahan", "", "Jelaskan data apa yang ingin diubah (misal: nama, alamat, status perkawinan, dll) dan alasannya", true, data.Errors["alasan_perubahan"])
+				}
+			}
+			
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+				@card.Header() {
+					@card.Title() {
+						Dokumen Persyaratan
+					}
+					@card.Description() {
+						Upload dokumen yang diperlukan
+					}
+				}
+				@card.Content() {
+					@FormFileUploadAlpine(
+						"Foto KTP Lama",
+						"ktp_lama",
+						".jpg,.jpeg,.png",
+						"JPG atau PNG maksimal 10MB",
+						true,
+						data.Errors["ktp_lama"],
+					)
+					@FormFileUploadAlpine(
+						"Kartu Keluarga (KK)",
+						"kartu_keluarga",
+						".pdf,.jpg,.jpeg,.png",
+						"PDF, JPG, atau PNG maksimal 10MB",
+						true,
+						data.Errors["kartu_keluarga"],
+					)
+				}
+			}
+			
+			@FormSubmitSection()
+		}
+		@FormValidationScript()
+	}
+}
+
+templ SuccessPage(data SuccessData) {
+	@layouts.Base("Permohonan Berhasil - Simpel KTP", nil) {
+		<div class="min-h-screen bg-background py-12 px-4">
+			<div class="mx-auto max-w-lg">
+				@card.Card(card.Props{Class: "text-center border-0 shadow-lg"}) {
+					@card.Content(card.ContentProps{Class: "pt-8"}) {
+						<!-- Success Icon -->
+						<div class="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-green-100">
+							<svg class="size-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+							</svg>
+						</div>
+						
+						<h1 class="text-2xl font-bold text-foreground mb-2">Permohonan Berhasil!</h1>
+						<p class="text-muted-foreground mb-6">Permohonan { data.ApplicationType } Anda telah berhasil dibuat</p>
+						
+						<!-- Booking Details -->
+						<div class="mb-6 rounded-xl bg-primary/5 p-4">
+							<p class="text-sm text-muted-foreground mb-1">Kode Booking</p>
+							<p class="text-2xl font-bold text-primary tracking-wider">{ data.KodeBooking }</p>
+						</div>
+						
+						<!-- Schedule Info -->
+						<div class="mb-6 space-y-3 text-left">
+							<div class="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
+								@components.IconCalendar()
+								<div>
+									<p class="text-xs text-muted-foreground">Tanggal</p>
+									<p class="font-medium">{ data.JadwalTanggal }</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
+								@components.IconClock()
+								<div>
+									<p class="text-xs text-muted-foreground">Jam</p>
+									<p class="font-medium">{ data.JadwalJam }</p>
+								</div>
+							</div>
+							<div class="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
+								<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+								</svg>
+								<div>
+									<p class="text-xs text-muted-foreground">Lokasi</p>
+									<p class="font-medium">Kelurahan { data.NamaKelurahan }</p>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Important Notice -->
+						<div class="mb-6 rounded-xl bg-yellow-50 p-4 text-left">
+							<p class="text-sm font-medium text-yellow-800 mb-2">Penting!</p>
+							<ul class="text-sm text-yellow-700 space-y-1">
+								<li>• Simpan kode booking Anda</li>
+								<li>• Datang tepat waktu sesuai jadwal</li>
+								<li>• Bawa dokumen asli yang diperlukan</li>
+							</ul>
+						</div>
+						
+						<div class="flex gap-3">
+							<a href="/dashboard" class="flex-1">
+								@button.Button(button.Props{Class: "w-full"}) {
+									Kembali ke Dashboard
+								}
+							</a>
+						</div>
+					}
+				}
+			</div>
+		</div>
+	}
+}
+
+// Helper functions
+func formatJenisKelamin(jk string) string {
+	switch jk {
+	case "LAKI_LAKI":
+		return "Laki-laki"
+	case "PEREMPUAN":
+		return "Perempuan"
+	default:
+		return jk
+	}
+}
+
+func boolStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}

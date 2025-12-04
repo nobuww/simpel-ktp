@@ -84,7 +84,7 @@ CREATE TABLE dokumen_syarat (
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     jenis_dokumen TEXT NOT NULL,
-    CONSTRAINT chk_jenis_dokumen CHECK (jenis_dokumen IN ('KK', 'SURAT_POLISI', 'KTP_RUSAK', 'PENGANTAR'))
+    CONSTRAINT chk_jenis_dokumen CHECK (jenis_dokumen IN ('KTP', 'KK', 'SURAT_POLISI', 'KTP_RUSAK'))
 );
 
 -- Table: riwayat_status
