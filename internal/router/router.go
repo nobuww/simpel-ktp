@@ -70,6 +70,7 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.RequireWarga)
 		r.Get("/dashboard", userHandler.DashboardHandler)
+		r.Get("/lacak-status", userHandler.StatusDetailHandler)
 
 		// Permohonan routes
 		r.Get("/permohonan/baru", permohonanHandler.HandleKTPBaruForm)

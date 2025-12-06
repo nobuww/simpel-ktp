@@ -1,0 +1,245 @@
+package user
+
+import (
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/tabs"
+)
+
+// StatusDetailData contains all data for the status tracking page
+type StatusDetailData struct {
+	UserName        string
+	KodeBooking     string
+	JenisPermohonan string
+	TanggalDaftar   string
+	Stages          []components.TrackerStage
+	CurrentStageIdx int
+	NextSteps       []NextStep
+}
+
+// NextStep represents a next step action for the user
+type NextStep struct {
+	Title       string
+	Description string
+	ActionURL   string
+	Icon        templ.Component
+	IsPrimary   bool
+}
+
+// StatusDetailPage renders the full status tracking page
+templ StatusDetailPage(data StatusDetailData) {
+	@layouts.Base("Lacak Status - Simpel KTP", nil) {
+		@UserNavbar(data.UserName)
+		<div class="min-h-screen bg-background">
+			<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+				<!-- Header -->
+				<div class="mb-8">
+					<a 
+						href="/dashboard" 
+						class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+					>
+						@components.IconChevronLeft()
+						Kembali ke Dashboard
+					</a>
+					<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<div class="flex items-center gap-3">
+								<h1 class="text-2xl font-bold text-foreground">{ data.KodeBooking }</h1>
+								@components.StatusBadge(getCurrentStatus(data.Stages, data.CurrentStageIdx))
+							</div>
+							<p class="mt-1 text-sm text-muted-foreground">
+								{ data.JenisPermohonan } • Diajukan { data.TanggalDaftar }
+							</p>
+						</div>
+						<div class="flex items-center gap-2">
+							@components.MiniStatusTracker(data.Stages, data.CurrentStageIdx)
+						</div>
+					</div>
+				</div>
+
+				<!-- Layout Selection Tabs -->
+				@tabs.Tabs(tabs.Props{ID: "tracker-layout"}) {
+					<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						@tabs.List(tabs.ListProps{Class: "grid w-full grid-cols-2 sm:w-auto"}) {
+							@tabs.Trigger(tabs.TriggerProps{Value: "vertical", IsActive: true}) {
+								<span class="hidden sm:inline">Timeline</span>
+								<span class="sm:hidden">
+									@IconList()
+								</span>
+							}
+							@tabs.Trigger(tabs.TriggerProps{Value: "card"}) {
+								<span class="hidden sm:inline">Kartu</span>
+								<span class="sm:hidden">
+									@IconGrid()
+								</span>
+							}
+						}
+					</div>
+
+					<!-- Vertical Layout -->
+					@tabs.Content(tabs.ContentProps{Value: "vertical", IsActive: true}) {
+						@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+							@card.Header() {
+								@card.Title() {
+									Progress Permohonan
+								}
+								@card.Description() {
+									Lacak setiap tahap proses pengajuan KTP Anda
+								}
+							}
+							@card.Content() {
+								@components.StatusTracker(components.StatusTrackerProps{
+									Stages:          data.Stages,
+									CurrentStageIdx: data.CurrentStageIdx,
+									Layout:          "vertical",
+									ShowTimestamps:  true,
+									ShowProgress:    true,
+									Compact:         false,
+								})
+							}
+						}
+					}
+
+					<!-- Card Layout -->
+					@tabs.Content(tabs.ContentProps{Value: "card"}) {
+						<div class="mb-6">
+							@components.TrackerProgressBar(data.Stages, data.CurrentStageIdx)
+						</div>
+						@components.StatusTracker(components.StatusTrackerProps{
+							Stages:          data.Stages,
+							CurrentStageIdx: data.CurrentStageIdx,
+							Layout:          "card",
+							ShowTimestamps:  true,
+							ShowProgress:    false,
+							Compact:         false,
+						})
+					}
+				}
+
+				<!-- Next Steps Section -->
+				if len(data.NextSteps) > 0 {
+					<div class="mt-8">
+						@card.Card(card.Props{Class: "border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10"}) {
+							@card.Header() {
+								@card.Title() {
+									<span class="flex items-center gap-2">
+										@components.IconBell()
+										Langkah Selanjutnya
+									</span>
+								}
+								@card.Description() {
+									Aksi yang perlu Anda lakukan
+								}
+							}
+							@card.Content() {
+								<div class="grid gap-3 sm:grid-cols-2">
+									for _, step := range data.NextSteps {
+										<a 
+											href={ templ.SafeURL(step.ActionURL) }
+											class={
+												"flex items-start gap-3 p-4 rounded-lg border transition-all hover:shadow-md",
+												templ.KV("bg-primary text-primary-foreground border-primary hover:bg-primary/90", step.IsPrimary),
+												templ.KV("bg-card border-gray-200 hover:border-primary/50", !step.IsPrimary),
+											}
+										>
+											<div class={ "shrink-0", templ.KV("text-primary-foreground", step.IsPrimary), templ.KV("text-primary", !step.IsPrimary) }>
+												if step.Icon != nil {
+													@step.Icon
+												}
+											</div>
+											<div>
+												<p class={ "font-medium", templ.KV("text-primary-foreground", step.IsPrimary), templ.KV("text-foreground", !step.IsPrimary) }>
+													{ step.Title }
+												</p>
+												<p class={ "text-sm mt-0.5", templ.KV("text-primary-foreground/80", step.IsPrimary), templ.KV("text-muted-foreground", !step.IsPrimary) }>
+													{ step.Description }
+												</p>
+											</div>
+										</a>
+									}
+								</div>
+							}
+						}
+					</div>
+				}
+
+				<!-- Help Section -->
+				<div class="mt-8">
+					@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+						@card.Content(card.ContentProps{Class: "p-4"}) {
+							<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+								<div class="flex items-center gap-3">
+									<div class="flex size-10 items-center justify-center rounded-full bg-muted">
+										@components.IconPhone()
+									</div>
+									<div>
+										<p class="font-medium text-foreground">Butuh Bantuan?</p>
+										<p class="text-sm text-muted-foreground">Tim kami siap membantu Anda</p>
+									</div>
+								</div>
+								<div class="flex gap-2">
+									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
+										@components.IconPhone()
+										1500-123
+									}
+									@button.Button(button.Props{Variant: button.VariantDefault, Size: button.SizeSm}) {
+										Chat Support
+									}
+								</div>
+							</div>
+						}
+					}
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// Helper to get current status string from stages
+func getCurrentStatus(stages []components.TrackerStage, currentIdx int) string {
+	if currentIdx >= 0 && currentIdx < len(stages) {
+		switch stages[currentIdx].Status {
+		case components.StatusCompleted:
+			return "SELESAI"
+		case components.StatusInProgress:
+			return "PROSES"
+		case components.StatusBlocked:
+			return "DITOLAK"
+		default:
+			return "VERIFIKASI"
+		}
+	}
+	return "VERIFIKASI"
+}
+
+// Icons for layout switcher
+templ IconList() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="8" x2="21" y1="6" y2="6"></line>
+		<line x1="8" x2="21" y1="12" y2="12"></line>
+		<line x1="8" x2="21" y1="18" y2="18"></line>
+		<line x1="3" x2="3.01" y1="6" y2="6"></line>
+		<line x1="3" x2="3.01" y1="12" y2="12"></line>
+		<line x1="3" x2="3.01" y1="18" y2="18"></line>
+	</svg>
+}
+
+templ IconStepper() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<line x1="3" x2="21" y1="12" y2="12"></line>
+		<circle cx="5" cy="12" r="2"></circle>
+		<circle cx="12" cy="12" r="2"></circle>
+		<circle cx="19" cy="12" r="2"></circle>
+	</svg>
+}
+
+templ IconGrid() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect width="7" height="7" x="3" y="3" rx="1"></rect>
+		<rect width="7" height="7" x="14" y="3" rx="1"></rect>
+		<rect width="7" height="7" x="14" y="14" rx="1"></rect>
+		<rect width="7" height="7" x="3" y="14" rx="1"></rect>
+	</svg>
+}

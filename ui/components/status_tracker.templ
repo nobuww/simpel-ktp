@@ -1,0 +1,468 @@
+package components
+
+import (
+	"fmt"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/tooltip"
+)
+
+// StageStatus represents the status of a single stage
+type StageStatus string
+
+const (
+	StatusPending    StageStatus = "pending"
+	StatusInProgress StageStatus = "in-progress"
+	StatusCompleted  StageStatus = "completed"
+	StatusBlocked    StageStatus = "blocked"
+)
+
+// TrackerStage represents a single stage in the application process
+type TrackerStage struct {
+	ID                   string
+	Name                 string
+	Description          string
+	Status               StageStatus
+	StartDate            string
+	CompletedDate        string
+	EstimatedCompletion  string
+	ActionRequired       string
+	ActionURL            string
+	ResponsibleParty     string
+	Notes                string
+	DocumentsRequired    []string
+}
+
+// StatusTrackerProps contains all props for the StatusTracker component
+type StatusTrackerProps struct {
+	Stages           []TrackerStage
+	CurrentStageIdx  int
+	Layout           string // "vertical", "horizontal", "card"
+	ShowTimestamps   bool
+	ShowProgress     bool
+	Compact          bool
+	Class            string
+}
+
+// StatusTracker renders a complete status tracking interface
+templ StatusTracker(props StatusTrackerProps) {
+	<div 
+		class={ "status-tracker " + props.Class }
+		role="region"
+		aria-label="Status Permohonan"
+	>
+		if props.ShowProgress {
+			@TrackerProgressBar(props.Stages, props.CurrentStageIdx)
+		}
+		
+		switch props.Layout {
+			case "horizontal":
+				@HorizontalTimeline(props)
+			case "card":
+				@CardLayout(props)
+			default:
+				@VerticalTimeline(props)
+		}
+	</div>
+}
+
+// TrackerProgressBar shows overall progress
+templ TrackerProgressBar(stages []TrackerStage, currentIdx int) {
+	{{ 
+		completed := 0
+		for _, s := range stages {
+			if s.Status == StatusCompleted {
+				completed++
+			}
+		}
+		percentage := 0
+		if len(stages) > 0 {
+			percentage = (completed * 100) / len(stages)
+		}
+	}}
+	<div class="mb-6">
+		<div class="flex items-center justify-between mb-2">
+			<span class="text-sm font-medium text-foreground">Progress Permohonan</span>
+			<span class="text-sm font-bold text-blue-700 dark:text-blue-400">{ fmt.Sprintf("%d%%", percentage) }</span>
+		</div>
+		<div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+			<div 
+				class="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500 ease-out"
+				style={ fmt.Sprintf("width: %d%%", percentage) }
+				role="progressbar"
+				aria-valuenow={ fmt.Sprintf("%d", percentage) }
+				aria-valuemin="0"
+				aria-valuemax="100"
+			></div>
+		</div>
+		<p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+			{ fmt.Sprintf("%d dari %d tahap selesai", completed, len(stages)) }
+		</p>
+	</div>
+}
+
+// VerticalTimeline renders a vertical timeline (mobile-first)
+templ VerticalTimeline(props StatusTrackerProps) {
+	<div class="space-y-0">
+		for i, stage := range props.Stages {
+			<div 
+				class={ "relative flex gap-4", templ.KV("pb-8", i != len(props.Stages)-1) }
+				id={ fmt.Sprintf("stage-%s", stage.ID) }
+			>
+				<!-- Connector Line -->
+				if i != len(props.Stages)-1 {
+					<div 
+						class={
+							"absolute left-[19px] top-10 w-0.5 h-[calc(100%-2.5rem)]",
+							templ.KV("bg-emerald-500", stage.Status == StatusCompleted),
+							// Use gray for all other statuses including blocked/in-progress/pending
+							templ.KV("bg-slate-300", stage.Status != StatusCompleted),
+						}
+						aria-hidden="true"
+					></div>
+				}
+				
+				<!-- Status Icon -->
+				<div class="relative z-10 shrink-0 flex flex-col items-center gap-2">
+					@StageIcon(stage.Status, i == props.CurrentStageIdx, i+1)
+					<!-- Mobile/Vertical Layout Badge (Optional placement or stick to standard) -->
+					<!-- The prompt says "Badges must appear directly below their corresponding step circles".
+					     In Vertical Timeline, this is the left column. -->
+					<div class="md:hidden">
+						@StageStatusBadge(stage.Status)
+					</div>
+				</div>
+				
+				<!-- Stage Content -->
+				<div class="flex-1 min-w-0 pt-0.5">
+					@StageContent(stage, props.ShowTimestamps, props.Compact, false) 
+				</div>
+			</div>
+		}
+	</div>
+}
+
+// HorizontalTimeline renders a horizontal timeline (desktop)
+templ HorizontalTimeline(props StatusTrackerProps) {
+	<div class="hidden md:block">
+		<div class="flex items-start justify-between relative px-2">
+			<!-- Background Line Layer -->
+			<div class="absolute top-5 left-0 right-0 px-12 h-0.5 z-0" aria-hidden="true">
+				<div class="w-full h-full bg-slate-200 dark:bg-slate-700"></div>
+			</div>
+
+			for i, stage := range props.Stages {
+				<div class="flex-1 relative z-10 flex flex-col items-center">
+					
+					<!-- Colored Connector Line (To the left of current, if previous was completed) -->
+					<!-- Actually, dealing with spacing in flex is tricky for connecting lines exactly.
+					     Better approach: Use the loop to draw lines to the RIGHT.
+					-->
+					
+					if i != len(props.Stages)-1 {
+						<!-- Line to the right -->
+						<div 
+							class={
+								"absolute top-5 left-[50%] right-[-50%] h-0.5 -z-10",
+								templ.KV("bg-emerald-500", stage.Status == StatusCompleted),
+								templ.KV("bg-slate-300 dark:bg-slate-700", stage.Status != StatusCompleted),
+							}
+						></div>
+					}
+
+					<div class="flex flex-col items-center text-center px-2">
+						@StageIcon(stage.Status, i == props.CurrentStageIdx, i+1)
+						<!-- Badge directly below step circle -->
+						<div class="mt-2">
+							@StageStatusBadge(stage.Status)
+						</div>
+
+						<h4 class="mt-3 text-sm font-semibold text-foreground">{ stage.Name }</h4>
+						
+						if props.ShowTimestamps && stage.CompletedDate != "" {
+							<p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{ stage.CompletedDate }</p>
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+	
+	<!-- Mobile fallback -->
+	<div class="md:hidden">
+		@VerticalTimeline(props)
+	</div>
+}
+
+// CardLayout renders stages as cards
+templ CardLayout(props StatusTrackerProps) {
+	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+		for i, stage := range props.Stages {
+			@card.Card(card.Props{
+				Class: getCardBorderClass(stage.Status, i == props.CurrentStageIdx),
+			}) {
+				@card.Content(card.ContentProps{Class: "p-4"}) {
+					<div class="flex items-start gap-3">
+						@StageIcon(stage.Status, i == props.CurrentStageIdx, i+1)
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2">
+								<span class="text-xs font-medium text-slate-500">
+									Tahap { fmt.Sprintf("%d", i+1) }
+								</span>
+								@StageStatusBadge(stage.Status)
+							</div>
+							<h4 class="mt-1 font-medium text-foreground truncate">{ stage.Name }</h4>
+							<p class="mt-1 text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{ stage.Description }</p>
+							
+							if props.ShowTimestamps {
+								<div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+									if stage.CompletedDate != "" {
+										<p class="text-xs text-slate-600 dark:text-slate-400">
+											<span class="font-medium">Selesai:</span> { stage.CompletedDate }
+										</p>
+									} else if stage.EstimatedCompletion != "" {
+										<p class="text-xs text-slate-600 dark:text-slate-400">
+											<span class="font-medium">Estimasi:</span> { stage.EstimatedCompletion }
+										</p>
+									}
+								</div>
+							}
+						</div>
+					</div>
+				}
+			}
+		}
+	</div>
+}
+
+// StageIcon renders the numbered circle for a stage
+templ StageIcon(status StageStatus, isCurrent bool, stepNumber int) {
+	<div 
+		class={
+			"flex items-center justify-center size-10 rounded-full transition-all duration-300 z-10 text-sm font-bold",
+			getIconContainerClass(status, isCurrent),
+		}
+		aria-label={ getStatusLabel(status) }
+		if isCurrent {
+			aria-current="step"
+		}
+	>
+		{ fmt.Sprintf("%d", stepNumber) }
+	</div>
+}
+
+// StageContent renders the content for a stage
+templ StageContent(stage TrackerStage, showTimestamps bool, compact bool, showBadge bool) {
+	<div class="group">
+		<div class="flex items-center gap-2 flex-wrap">
+			<h4 class="font-semibold text-foreground">{ stage.Name }</h4>
+			if showBadge {
+				@StageStatusBadge(stage.Status)
+			}
+		</div>
+		
+		if !compact && stage.Description != "" {
+			<p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{ stage.Description }</p>
+		}
+		
+		<!-- Timestamps -->
+		if showTimestamps {
+			<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+				if stage.StartDate != "" {
+					<span>
+						<span class="font-medium">Mulai:</span> { stage.StartDate }
+					</span>
+				}
+				if stage.CompletedDate != "" {
+					<span>
+						<span class="font-medium">Selesai:</span> { stage.CompletedDate }
+					</span>
+				}
+				if stage.Status == StatusPending && stage.EstimatedCompletion != "" {
+					<span>
+						<span class="font-medium">Estimasi:</span> { stage.EstimatedCompletion }
+					</span>
+				}
+			</div>
+		}
+		
+		<!-- Blocked Warning -->
+		if stage.Status == StatusBlocked {
+			<div class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+				<div class="flex items-start gap-2">
+					<span class="mt-0.5 text-red-600">⚠️</span>
+					<div class="flex-1">
+						<p class="text-sm font-medium text-red-800 dark:text-red-300">Terhambat</p>
+						if stage.Notes != "" {
+							<p class="mt-0.5 text-sm text-red-700/80 dark:text-red-400/80">{ stage.Notes }</p>
+						}
+					</div>
+				</div>
+			</div>
+		}
+		
+		<!-- Documents Required -->
+		if len(stage.DocumentsRequired) > 0 && (stage.Status == StatusInProgress || stage.Status == StatusPending) {
+			<div class="mt-3">
+				@tooltip.Tooltip() {
+					@tooltip.Trigger(tooltip.TriggerProps{For: fmt.Sprintf("docs-%s", stage.ID)}) {
+						<button class="text-xs text-slate-500 hover:text-foreground flex items-center gap-1 transition-colors">
+							@IconDocument()
+							<span>{ fmt.Sprintf("%d dokumen diperlukan", len(stage.DocumentsRequired)) }</span>
+						</button>
+					}
+					@tooltip.Content(tooltip.ContentProps{
+						ID:        fmt.Sprintf("docs-%s", stage.ID),
+						Position:  tooltip.PositionBottom,
+						ShowArrow: true,
+					}) {
+						<div class="py-1">
+							for _, doc := range stage.DocumentsRequired {
+								<p class="text-xs">• { doc }</p>
+							}
+						</div>
+					}
+				}
+			</div>
+		}
+		
+		<!-- Responsible Party -->
+		if stage.ResponsibleParty != "" && !compact {
+			<p class="mt-2 text-xs text-slate-500">
+				<span class="font-medium">Ditangani:</span> { stage.ResponsibleParty }
+			</p>
+		}
+	</div>
+}
+
+// StageStatusBadge renders a small badge for the stage status
+templ StageStatusBadge(status StageStatus) {
+	<span 
+		class={
+			"inline-flex items-center justify-center px-3 py-1 rounded-[4px] text-xs font-medium min-w-[80px]",
+			templ.KV("bg-[#4CAF50] text-white", status == StatusCompleted),
+			templ.KV("bg-[#2196F3] text-white animate-pulse", status == StatusInProgress),
+			// Prompt said: Menunggu: Grey #E0E0E0, Dark grey #424242
+			templ.KV("bg-[#E0E0E0] text-[#424242]", status == StatusPending),
+			// Keeping red for Blocked as it wasn't explicitly forbidden but might fall under 'Menunggu' style if not handled. 
+			// Assuming standard red for blocked/error states is still desired, using material red
+			templ.KV("bg-[#F44336] text-white", status == StatusBlocked),
+		}
+	>
+		switch status {
+			case StatusCompleted:
+				Selesai
+			case StatusInProgress:
+				Berjalan
+			case StatusBlocked:
+				Terhambat
+			default:
+				Menunggu
+		}
+	</span>
+}
+
+// Helper functions
+func getIconContainerClass(status StageStatus, isCurrent bool) string {
+	base := ""
+	switch status {
+	case StatusCompleted:
+		// Solid green #4CAF50, White text
+		base = "bg-[#4CAF50] text-white"
+	case StatusInProgress:
+		// Solid blue #2196F3, White text
+		base = "bg-[#2196F3] text-white"
+		// "Slightly larger size" - we handle this via class KV below or just scale?
+	case StatusBlocked:
+		base = "bg-[#F44336] text-white"
+	default:
+		// Solid grey #9E9E9E, White text, reduced opacity (70% = opacity-70)
+		base = "bg-[#9E9E9E] text-white opacity-70"
+	}
+	
+	if isCurrent && status != StatusCompleted {
+		// "Berjalan (Active) ... Slightly larger size (if possible)"
+		base += " scale-110"
+	}
+	return base
+}
+
+func getCardBorderClass(status StageStatus, isCurrent bool) string {
+	base := "transition-all duration-300 "
+	switch status {
+	case StatusCompleted:
+		base += "border-emerald-100 dark:border-emerald-800/30"
+	case StatusInProgress:
+		base += "border-blue-200 shadow-sm ring-1 ring-blue-100 dark:border-blue-800 dark:ring-blue-900"
+	case StatusBlocked:
+		base += "border-red-100 dark:border-red-800/30"
+	default:
+		base += "border-slate-100 dark:border-slate-800 opacity-80"
+	}
+	return base
+}
+
+func getStatusLabel(status StageStatus) string {
+	switch status {
+	case StatusCompleted:
+		return "Selesai"
+	case StatusInProgress:
+		return "Sedang berjalan"
+	case StatusBlocked:
+		return "Terhambat"
+	default:
+		return "Menunggu"
+	}
+}
+
+// Additional Icons for status tracker (with Tracker prefix to avoid conflicts)
+templ TrackerIconCheck() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+		<polyline points="20 6 9 17 4 12"></polyline>
+	</svg>
+}
+
+templ TrackerIconWarning() {
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+		<path d="M12 9v4"></path>
+		<path d="M12 17h.01"></path>
+	</svg>
+}
+
+// Compact Mini Tracker for inline/summary display
+templ MiniStatusTracker(stages []TrackerStage, currentIdx int) {
+	{{ 
+		completed := 0
+		for _, s := range stages {
+			if s.Status == StatusCompleted {
+				completed++
+			}
+		}
+	}}
+	<div class="flex items-center gap-1">
+		for i, stage := range stages {
+			<div 
+				class={
+					"size-2.5 rounded-full transition-all",
+					templ.KV("bg-emerald-500", stage.Status == StatusCompleted),
+					templ.KV("bg-blue-500 animate-pulse ring-2 ring-blue-200", stage.Status == StatusInProgress),
+					templ.KV("bg-red-500", stage.Status == StatusBlocked),
+					templ.KV("bg-slate-300 dark:bg-slate-600", stage.Status == StatusPending),
+				}
+				title={ stage.Name }
+			></div>
+			if i < len(stages)-1 {
+				<div 
+					class={
+						"w-3 h-0.5",
+						templ.KV("bg-emerald-500", stage.Status == StatusCompleted),
+						templ.KV("bg-slate-300", stage.Status != StatusCompleted),
+					}
+				></div>
+			}
+		}
+		<span class="ml-2 text-xs text-slate-500">
+			{ fmt.Sprintf("%d/%d", completed, len(stages)) }
+		</span>
+	</div>
+}

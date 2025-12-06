@@ -218,10 +218,10 @@ templ FormFieldAlpine(labelText, fieldName, fieldType, value, placeholder string
 				Value:       value,
 				Placeholder: placeholder,
 				Attributes: templ.Attributes{
-					"@blur":          "touch('" + fieldName + "')",
-					"@input":         "touch('" + fieldName + "')",
-					":class":         "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
-					"data-required":  boolStr(required),
+					"@blur":         "touch('" + fieldName + "')",
+					"@input":        "touch('" + fieldName + "')",
+					":class":        "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
+					"data-required": boolStr(required),
 				},
 			})
 		</div>
@@ -287,10 +287,10 @@ templ FormTextareaAlpine(labelText, fieldName, value, placeholder string, requir
 				Name:        fieldName,
 				Placeholder: placeholder,
 				Attributes: templ.Attributes{
-					"@blur":          "touch('" + fieldName + "')",
-					"@input":         "touch('" + fieldName + "')",
-					":class":         "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
-					"data-required":  boolStr(required),
+					"@blur":         "touch('" + fieldName + "')",
+					"@input":        "touch('" + fieldName + "')",
+					":class":        "hasError('" + fieldName + "') ? 'border-destructive ring-destructive/20' : ''",
+					"data-required": boolStr(required),
 				},
 			}) {
 				{ value }
@@ -533,11 +533,9 @@ templ FormSubmitSection() {
 templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Baru", "Untuk warga yang belum pernah memiliki KTP") {
 		@FormErrorAlert(data.Errors)
-		
 		@AlpineFormWrapper("baru") {
 			@PersonalDataSection(data)
 			@JadwalSection(jadwalList, data.Errors)
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -558,7 +556,6 @@ templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
 					)
 				}
 			}
-			
 			@FormSubmitSection()
 		}
 		@FormValidationScript()
@@ -568,11 +565,9 @@ templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
 templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Hilang", "Pengajuan cetak ulang karena KTP hilang") {
 		@FormErrorAlert(data.Errors)
-		
 		@AlpineFormWrapper("hilang") {
 			@PersonalDataSection(data)
 			@JadwalSection(jadwalList, data.Errors)
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -589,7 +584,6 @@ templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
 					</div>
 				}
 			}
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -610,7 +604,6 @@ templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
 					)
 				}
 			}
-			
 			@FormSubmitSection()
 		}
 		@FormValidationScript()
@@ -620,11 +613,9 @@ templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
 templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Rusak", "Pengajuan cetak ulang karena KTP rusak") {
 		@FormErrorAlert(data.Errors)
-		
 		@AlpineFormWrapper("rusak") {
 			@PersonalDataSection(data)
 			@JadwalSection(jadwalList, data.Errors)
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -638,7 +629,6 @@ templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
 					@FormTextareaAlpine("Deskripsi Kerusakan", "deskripsi_kerusakan", "", "Jelaskan kondisi kerusakan KTP Anda (misal: patah, pudar, sobek, dll)", true, data.Errors["deskripsi_kerusakan"])
 				}
 			}
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -667,7 +657,6 @@ templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
 					)
 				}
 			}
-			
 			@FormSubmitSection()
 		}
 		@FormValidationScript()
@@ -677,11 +666,9 @@ templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
 templ KTPUbahFormPage(data FormData, jadwalList []JadwalOption) {
 	@FormPageLayout("Perubahan Data KTP", "Pengajuan perubahan data identitas pada KTP") {
 		@FormErrorAlert(data.Errors)
-		
 		@AlpineFormWrapper("ubah") {
 			@PersonalDataSection(data)
 			@JadwalSection(jadwalList, data.Errors)
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -695,7 +682,6 @@ templ KTPUbahFormPage(data FormData, jadwalList []JadwalOption) {
 					@FormTextareaAlpine("Alasan Perubahan Data", "alasan_perubahan", "", "Jelaskan data apa yang ingin diubah (misal: nama, alamat, status perkawinan, dll) dan alasannya", true, data.Errors["alasan_perubahan"])
 				}
 			}
-			
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -724,7 +710,6 @@ templ KTPUbahFormPage(data FormData, jadwalList []JadwalOption) {
 					)
 				}
 			}
-			
 			@FormSubmitSection()
 		}
 		@FormValidationScript()
@@ -743,16 +728,13 @@ templ SuccessPage(data SuccessData) {
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 							</svg>
 						</div>
-						
 						<h1 class="text-2xl font-bold text-foreground mb-2">Permohonan Berhasil!</h1>
 						<p class="text-muted-foreground mb-6">Permohonan { data.ApplicationType } Anda telah berhasil dibuat</p>
-						
 						<!-- Booking Details -->
 						<div class="mb-6 rounded-xl bg-primary/5 p-4">
 							<p class="text-sm text-muted-foreground mb-1">Kode Booking</p>
 							<p class="text-2xl font-bold text-primary tracking-wider">{ data.KodeBooking }</p>
 						</div>
-						
 						<!-- Schedule Info -->
 						<div class="mb-6 space-y-3 text-left">
 							<div class="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
@@ -780,7 +762,6 @@ templ SuccessPage(data SuccessData) {
 								</div>
 							</div>
 						</div>
-						
 						<!-- Important Notice -->
 						<div class="mb-6 rounded-xl bg-yellow-50 p-4 text-left">
 							<p class="text-sm font-medium text-yellow-800 mb-2">Penting!</p>
@@ -790,7 +771,6 @@ templ SuccessPage(data SuccessData) {
 								<li>• Bawa dokumen asli yang diperlukan</li>
 							</ul>
 						</div>
-						
 						<div class="flex gap-3">
 							<a href="/dashboard" class="flex-1">
 								@button.Button(button.Props{Class: "w-full"}) {

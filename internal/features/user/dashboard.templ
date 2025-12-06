@@ -92,10 +92,12 @@ templ DashboardPage(data DashboardData) {
 					<h2 class="mb-4 text-lg font-semibold text-foreground">Aksi Cepat</h2>
 					<div class="flex flex-wrap gap-3">
 						@PermohonanModal()
-						@button.Button(button.Props{Variant: button.VariantOutline}) {
-							@components.IconSearch()
-							Lacak Status
-						}
+						<a href="/lacak-status">
+							@button.Button(button.Props{Variant: button.VariantOutline}) {
+								@components.IconSearch()
+								Lacak Status
+							}
+						</a>
 					</div>
 				</div>
 				<!-- Recent Permohonan -->

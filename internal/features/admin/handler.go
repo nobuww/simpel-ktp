@@ -296,9 +296,9 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 			WajibKTP:  980,
 		},
 		List: []PendudukItem{
-			{ID: "1", NIK: "3201234567890001", NamaLengkap: "Ahmad Wijaya", JenisKelamin: "LAKI_LAKI", Pekerjaan: "Karyawan Swasta", StatusPerkawinan: "KAWIN", Alamat: "Jl. Menteng Raya No. 45", Kelurahan: "Menteng"},
-			{ID: "2", NIK: "3201234567890002", NamaLengkap: "Siti Nurhaliza", JenisKelamin: "PEREMPUAN", Pekerjaan: "Ibu Rumah Tangga", StatusPerkawinan: "KAWIN", Alamat: "Jl. Cikini Raya No. 88", Kelurahan: "Cikini"},
-			{ID: "3", NIK: "3201234567890003", NamaLengkap: "Budi Santoso", JenisKelamin: "LAKI_LAKI", Pekerjaan: "Wiraswasta", StatusPerkawinan: "KAWIN", Alamat: "Jl. Gondangdia Lama No. 12", Kelurahan: "Gondangdia"},
+			{ID: "1", NIK: "3201234567890001", NamaLengkap: "Ahmad Wijaya", JenisKelamin: "LAKI_LAKI", Email: "ahmad.w@example.com", NoHP: "081234567890", Alamat: "Jl. Menteng Raya No. 45", Kelurahan: "Menteng"},
+			{ID: "2", NIK: "3201234567890002", NamaLengkap: "Siti Nurhaliza", JenisKelamin: "PEREMPUAN", Email: "siti.nur@example.com", NoHP: "085678901234", Alamat: "Jl. Cikini Raya No. 88", Kelurahan: "Cikini"},
+			{ID: "3", NIK: "3201234567890003", NamaLengkap: "Budi Santoso", JenisKelamin: "LAKI_LAKI", Email: "budi.s@example.com", NoHP: "081298765432", Alamat: "Jl. Gondangdia Lama No. 12", Kelurahan: "Gondangdia"},
 		},
 	}
 

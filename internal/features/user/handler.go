@@ -102,3 +102,39 @@ func convertPermohonanList(list []pg_store.GetPermohonanByNIKRow) []PermohonanIt
 	}
 	return items
 }
+
+// StatusDetailHandler handles the status tracking detail page
+func (h *Handler) StatusDetailHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := common.GetUserOrRedirect(w, r, "/login")
+	if !ok {
+		return
+	}
+
+	// Example stages for the status tracker (replace with actual data in production)
+	stages := GetExampleStages()
+
+	data := StatusDetailData{
+		UserName:        user.UserName,
+		KodeBooking:     "KTP-2024-001234",
+		JenisPermohonan: "KTP Baru",
+		TanggalDaftar:   "05 Desember 2024",
+		Stages:          stages,
+		CurrentStageIdx: 2, // Currently at Proses stage
+		NextSteps: []NextStep{
+			{
+				Title:       "Upload Dokumen Tambahan",
+				Description: "Lengkapi dokumen yang diperlukan",
+				ActionURL:   "/permohonan/upload",
+				IsPrimary:   true,
+			},
+			{
+				Title:       "Lihat Jadwal Pengambilan",
+				Description: "Cek ketersediaan jadwal",
+				ActionURL:   "/jadwal",
+				IsPrimary:   false,
+			},
+		},
+	}
+
+	StatusDetailPage(data).Render(r.Context(), w)
+}
