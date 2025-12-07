@@ -17,17 +17,18 @@ type Chunk struct {
 var isDev bool
 
 func Init(environment string) error {
-	isDev = environment != "production"
-
-	if isDev {
+	// Check if manifest exists to determine mode
+	// If manifest.json exists, we assume we want to use the built assets (Production-like)
+	// If it doesn't exist, we assume we are in Dev mode using the Vite server
+	content, err := os.ReadFile("static/.vite/manifest.json")
+	if err != nil {
+		// Manifest not found, assume dev mode
+		isDev = true
 		return nil
 	}
 
-	content, err := os.ReadFile("static/.vite/manifest.json")
-	if err != nil {
-		return fmt.Errorf("could not read vite manifest: %w", err)
-	}
-
+	// Manifest found, load it
+	isDev = false
 	if err := json.Unmarshal(content, &manifest); err != nil {
 		return fmt.Errorf("could not parse vite manifest: %w", err)
 	}

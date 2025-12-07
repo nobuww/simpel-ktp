@@ -46,11 +46,17 @@ func New(secret string) *Manager {
 	}
 
 	store := sessions.NewCookieStore([]byte(secret))
+	// Determine if we should enforce secure cookies
+	isSecure := os.Getenv("GO_ENV") == "production"
+	if secureEnv := os.Getenv("HTTP_SECURE"); secureEnv != "" {
+		isSecure = secureEnv == "true"
+	}
+
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400, // 24 hours default
 		HttpOnly: true,
-		Secure:   os.Getenv("GO_ENV") == "production",
+		Secure:   isSecure,
 		SameSite: http.SameSiteLaxMode,
 	}
 

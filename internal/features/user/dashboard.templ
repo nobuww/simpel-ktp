@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
@@ -127,6 +128,7 @@ templ UserNavbar(userName string) {
 				<div class="flex items-center gap-4">
 					<span class="text-sm text-muted-foreground">{ userName }</span>
 					<form action="/auth/logout" method="POST">
+						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 						@button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Size:    button.SizeSm,

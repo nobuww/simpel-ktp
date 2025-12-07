@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
 )
@@ -149,16 +150,17 @@ templ AdminSidebar(data AdminSidebarData) {
 				}
 				@sidebar.MenuItem() {
 					<form hx-post="/auth/logout" hx-swap="none" class="w-full">
-						@button.Button(button.Props{
-							Variant: button.VariantGhost,
-							Size:    button.SizeSm,
-							Type:    button.TypeSubmit,
-							Class:   "w-full justify-start gap-2",
-						}) {
-							@IconLogout()
-							<span class="group-data-[tui-sidebar-state=collapsed]:hidden">Keluar</span>
-						}
-					</form>
+					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+					@button.Button(button.Props{
+						Variant: button.VariantGhost,
+						Size:    button.SizeSm,
+						Type:    button.TypeSubmit,
+						Class:   "w-full justify-start gap-2",
+					}) {
+						@IconLogout()
+						<span class="group-data-[tui-sidebar-state=collapsed]:hidden">Keluar</span>
+					}
+				</form>
 				}
 			}
 		}

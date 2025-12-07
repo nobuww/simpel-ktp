@@ -18,6 +18,10 @@ import (
 func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 	r := chi.NewRouter()
 
+	// Security middlewares
+	r.Use(middleware.SecurityHeaders)
+	r.Use(middleware.CSRF)
+
 	authMiddleware := middleware.NewAuth(sessionMgr)
 	r.Use(authMiddleware.InjectUser)
 
