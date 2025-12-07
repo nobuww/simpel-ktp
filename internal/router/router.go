@@ -66,7 +66,8 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 
 	// User routes (protected - warga only)
 	userHandler := user.New(s)
-	permohonanHandler := permohonan.New(s)
+	permohonanService := permohonan.NewService(s)
+	permohonanHandler := permohonan.New(permohonanService)
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.RequireWarga)
 		r.Get("/dashboard", userHandler.DashboardHandler)
