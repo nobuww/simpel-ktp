@@ -9,6 +9,7 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/label"
 	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
 	"github.com/nobuww/simpel-ktp/ui/templui/textarea"
+	"fmt"
 )
 
 // SuccessData contains data for the success page
@@ -85,73 +86,79 @@ templ AlpineFormWrapper(formType string) {
 // Alpine.js validation script
 templ FormValidationScript() {
 	<script>
-		document.addEventListener('alpine:init', () => {
-			Alpine.data('formValidator', (formType) => ({
+		document.addEventListener("alpine:init", () => {
+			Alpine.data("formValidator", (formType) => ({
 				errors: {},
 				touched: {},
 				isSubmitting: false,
 				files: {},
-				
+
 				init() {
 					// Watch for file changes
-					this.$watch('files', () => this.validateFiles());
+					this.$watch("files", () => this.validateFiles());
 				},
-				
+
 				// Mark field as touched
 				touch(field) {
 					this.touched[field] = true;
 					this.validateField(field);
 				},
-				
+
 				// Validate a single field
 				validateField(field) {
 					const el = this.$el.querySelector(`[name="${field}"]`);
 					if (!el) return;
-					
-					const value = el.value?.trim() || '';
+
+					const value = el.value?.trim() || "";
 					delete this.errors[field];
-					
+
 					// Required validation
-					if (el.hasAttribute('required') || el.dataset.required === 'true') {
-						if (!value && el.type !== 'file') {
-							this.errors[field] = 'Field ini wajib diisi';
+					if (el.hasAttribute("required") || el.dataset.required === "true") {
+						if (!value && el.type !== "file") {
+							this.errors[field] = "Field ini wajib diisi";
 							return;
 						}
 					}
-					
+
 					// File validation
-					if (el.type === 'file') {
+					if (el.type === "file") {
 						const file = el.files?.[0];
-						if (el.dataset.required === 'true' && !file) {
-							this.errors[field] = 'File wajib diunggah';
+						if (el.dataset.required === "true" && !file) {
+							this.errors[field] = "File wajib diunggah";
 							return;
 						}
 						if (file) {
 							const maxSize = 10 * 1024 * 1024; // 10MB
 							if (file.size > maxSize) {
-								this.errors[field] = 'Ukuran file maksimal 10MB';
+								this.errors[field] = "Ukuran file maksimal 10MB";
 								return;
 							}
-							const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+							const allowedTypes = [
+								"image/jpeg",
+								"image/png",
+								"application/pdf",
+							];
 							if (!allowedTypes.includes(file.type)) {
-								this.errors[field] = 'Format file tidak didukung';
+								this.errors[field] = "Format file tidak didukung";
 								return;
 							}
 						}
 					}
 				},
-				
+
 				validateFiles() {
-					Object.keys(this.files).forEach(field => {
+					Object.keys(this.files).forEach((field) => {
 						this.validateField(field);
 					});
 				},
-				
+
 				// Validate all fields
 				validateAll() {
 					this.errors = {};
-					const requiredFields = this.$el.querySelectorAll('[required], [data-required="true"]');
-					requiredFields.forEach(el => {
+					const requiredFields = this.$el.querySelectorAll(
+						'[required], [data-required="true"]',
+					);
+					requiredFields.forEach((el) => {
 						const field = el.name;
 						if (field) {
 							this.touched[field] = true;
@@ -160,43 +167,48 @@ templ FormValidationScript() {
 					});
 					return Object.keys(this.errors).length === 0;
 				},
-				
+
 				// Handle file input change
 				handleFileChange(event, field) {
 					this.files[field] = event.target.files?.[0] || null;
 					this.touched[field] = true;
 					this.validateField(field);
 				},
-				
+
 				// Get file name for display
 				getFileName(field) {
-					return this.files[field]?.name || '';
+					return this.files[field]?.name || "";
 				},
-				
+
 				// Handle form submission
 				handleSubmit(event) {
 					if (!this.validateAll()) {
 						event.preventDefault();
 						// Scroll to first error
-						const firstError = this.$el.querySelector('[data-has-error="true"]');
+						const firstError = this.$el.querySelector(
+							'[data-has-error="true"]',
+						);
 						if (firstError) {
-							firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							firstError.scrollIntoView({
+								behavior: "smooth",
+								block: "center",
+							});
 						}
 						return false;
 					}
 					this.isSubmitting = true;
 					return true;
 				},
-				
+
 				// Check if field has error
 				hasError(field) {
 					return this.touched[field] && this.errors[field];
 				},
-				
+
 				// Get error message
 				getError(field) {
-					return this.errors[field] || '';
-				}
+					return this.errors[field] || "";
+				},
 			}));
 		});
 	</script>
@@ -361,6 +373,54 @@ templ FormSelect(labelText, fieldName, placeholder string, options []JadwalOptio
 	</div>
 }
 
+templ FormSelectLocation(labelText, fieldName, placeholder string, options []LocationOption, required bool, errorMsg string) {
+	<div class="mb-4">
+		@label.Label(label.Props{For: fieldName, Error: errorMsg}) {
+			{ labelText }
+			if required {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		}
+		<div class="mt-1.5">
+			@selectbox.SelectBox() {
+				@selectbox.Trigger(selectbox.TriggerProps{Name: fieldName, HasError: errorMsg != ""}) {
+					@selectbox.Value(selectbox.ValueProps{Placeholder: placeholder})
+				}
+				@selectbox.Content(selectbox.ContentProps{SearchPlaceholder: "Cari lokasi..."}) {
+					@selectbox.Group() {
+						for _, opt := range options {
+							@selectbox.Item(selectbox.ItemProps{
+								Value: fmt.Sprint(opt.ID),
+								Attributes: templ.Attributes{
+									"hx-get": fmt.Sprintf("/permohonan/jadwal-options?lokasi_id=%d", opt.ID),
+									"hx-target": "#jadwal-container",
+									"hx-swap": "innerHTML",
+								},
+							}) {
+								{ opt.Label }
+							}
+						}
+					}
+				}
+			}
+		</div>
+		if errorMsg != "" {
+			<p class="mt-1 text-sm text-destructive">{ errorMsg }</p>
+		}
+	</div>
+}
+
+templ JadwalSelectPartial(jadwalList []JadwalOption, errorMsg string) {
+	@FormSelect("Jadwal", "jadwal_sesi_id", "Pilih jadwal kedatangan...", jadwalList, true, errorMsg)
+	if len(jadwalList) == 0 {
+		<div class="rounded-xl bg-yellow-50 p-4">
+			<p class="text-sm text-yellow-700">
+				Silakan pilih lokasi terlebih dahulu untuk melihat jadwal yang tersedia.
+			</p>
+		</div>
+	}
+}
+
 templ FormFileUploadAlpine(labelText, fieldName, accept, helpText string, required bool, serverError string) {
 	<div class="mb-6" :data-has-error={ "hasError('" + fieldName + "') || " + boolStr(serverError != "") }>
 		@label.Label(label.Props{For: fieldName}) {
@@ -484,25 +544,21 @@ templ PersonalDataSection(data FormData) {
 	}
 }
 
-templ JadwalSection(jadwalList []JadwalOption, errors map[string]string) {
+templ JadwalSection(locations []LocationOption, jadwalList []JadwalOption, errors map[string]string) {
 	@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
 				Jadwal Kedatangan
 			}
 			@card.Description() {
-				Pilih jadwal untuk datang ke kantor kelurahan
+				Pilih lokasi dan jadwal untuk datang ke kantor kelurahan atau kecamatan
 			}
 		}
 		@card.Content() {
-			@FormSelect("Jadwal", "jadwal_sesi_id", "Pilih jadwal kedatangan...", jadwalList, true, errors["jadwal_sesi_id"])
-			if len(jadwalList) == 0 {
-				<div class="rounded-xl bg-yellow-50 p-4">
-					<p class="text-sm text-yellow-700">
-						Tidak ada jadwal yang tersedia saat ini. Silakan hubungi petugas untuk informasi lebih lanjut.
-					</p>
-				</div>
-			}
+			@FormSelectLocation("Lokasi Kantor", "lokasi_id", "Pilih lokasi...", locations, true, errors["lokasi_id"])
+			<div id="jadwal-container">
+				@JadwalSelectPartial(jadwalList, errors["jadwal_sesi_id"])
+			</div>
 		}
 	}
 }
@@ -530,12 +586,12 @@ templ FormSubmitSection() {
 	</div>
 }
 
-templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
+templ KTPBaruFormPage(data FormData, locations []LocationOption, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Baru", "Untuk warga yang belum pernah memiliki KTP") {
 		@FormErrorAlert(data.Errors)
 		@AlpineFormWrapper("baru") {
 			@PersonalDataSection(data)
-			@JadwalSection(jadwalList, data.Errors)
+			@JadwalSection(locations, jadwalList, data.Errors)
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -562,12 +618,12 @@ templ KTPBaruFormPage(data FormData, jadwalList []JadwalOption) {
 	}
 }
 
-templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
+templ KTPHilangFormPage(data FormData, locations []LocationOption, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Hilang", "Pengajuan cetak ulang karena KTP hilang") {
 		@FormErrorAlert(data.Errors)
 		@AlpineFormWrapper("hilang") {
 			@PersonalDataSection(data)
-			@JadwalSection(jadwalList, data.Errors)
+			@JadwalSection(locations, jadwalList, data.Errors)
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -610,12 +666,12 @@ templ KTPHilangFormPage(data FormData, jadwalList []JadwalOption) {
 	}
 }
 
-templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
+templ KTPRusakFormPage(data FormData, locations []LocationOption, jadwalList []JadwalOption) {
 	@FormPageLayout("Permohonan KTP Rusak", "Pengajuan cetak ulang karena KTP rusak") {
 		@FormErrorAlert(data.Errors)
 		@AlpineFormWrapper("rusak") {
 			@PersonalDataSection(data)
-			@JadwalSection(jadwalList, data.Errors)
+			@JadwalSection(locations, jadwalList, data.Errors)
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {
@@ -663,12 +719,12 @@ templ KTPRusakFormPage(data FormData, jadwalList []JadwalOption) {
 	}
 }
 
-templ KTPUbahFormPage(data FormData, jadwalList []JadwalOption) {
+templ KTPUbahFormPage(data FormData, locations []LocationOption, jadwalList []JadwalOption) {
 	@FormPageLayout("Perubahan Data KTP", "Pengajuan perubahan data identitas pada KTP") {
 		@FormErrorAlert(data.Errors)
 		@AlpineFormWrapper("ubah") {
 			@PersonalDataSection(data)
-			@JadwalSection(jadwalList, data.Errors)
+			@JadwalSection(locations, jadwalList, data.Errors)
 			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
 				@card.Header() {
 					@card.Title() {

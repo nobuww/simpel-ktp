@@ -3,17 +3,30 @@ package admin
 import (
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
-
+	"fmt"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/card"
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
 )
 
 type DashboardData struct {
-	UserName   string
-	UserRole   string
-	ActivePage string
+	UserName    string
+	UserRole    string
+	ActivePage  string
+	Stats       PermohonanStats
+	Recent      []PermohonanItem
+	TodayJadwal []TodayJadwalItem
 }
+
+type TodayJadwalItem struct {
+	ID            string
+	SessionName   string
+	Time          string
+	KuotaTerisi   int
+	KuotaMaksimal int
+	StatusSesi    string
+}
+
 
 templ DashboardPage(data DashboardData) {
 	@layouts.Admin("Dashboard Admin - Simpel KTP", nil) {
@@ -32,54 +45,19 @@ templ DashboardPage(data DashboardData) {
 						<h1 class="text-2xl font-bold text-foreground">Dashboard</h1>
 						<p class="text-sm text-muted-foreground mt-1">Selamat datang kembali, { data.UserName }</p>
 					</div>
-					<!-- Stats Cards -->
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-						@components.StatCard(components.StatCardProps{
-							Title:       "Permohonan Baru",
-							Value:       "12",
-							Description: "Menunggu verifikasi",
-							TextColor:   "text-blue-600",
-							BgColor:     "bg-blue-50",
-							Icon:        components.IconUsers(),
-						})
-						@components.StatCard(components.StatCardProps{
-							Title:       "Dalam Proses",
-							Value:       "28",
-							Description: "Sedang diproses",
-							TextColor:   "text-yellow-600",
-							BgColor:     "bg-yellow-50",
-							Icon:        components.IconUsers(),
-						})
-						@components.StatCard(components.StatCardProps{
-							Title:       "Siap Diambil",
-							Value:       "8",
-							Description: "Menunggu pengambilan",
-							TextColor:   "text-green-600",
-							BgColor:     "bg-green-50",
-							Icon:        components.IconUsers(),
-						})
-						@components.StatCard(components.StatCardProps{
-							Title:       "Selesai Hari Ini",
-							Value:       "15",
-							Description: "Total selesai",
-							TextColor:   "text-muted-foreground",
-							BgColor:     "bg-secondary",
-							Icon:        components.IconUsers(),
-						})
-					</div>
 					<!-- Quick Actions -->
 					<div class="mb-8">
 						<h2 class="text-lg font-semibold text-foreground mb-4">Aksi Cepat</h2>
 						<div class="flex flex-wrap gap-3">
-							@button.Button(button.Props{Variant: button.VariantDefault}) {
+							@button.Button(button.Props{Variant: button.VariantDefault, Href: "/admin/permohonan?status=VERIFIKASI"}) {
 								@components.IconPlus()
 								Permohonan Baru
 							}
-							@button.Button(button.Props{Variant: button.VariantOutline}) {
+							@button.Button(button.Props{Variant: button.VariantOutline, Href: "/admin/permohonan"}) {
 								@components.IconSearch()
 								Cari Permohonan
 							}
-							@button.Button(button.Props{Variant: button.VariantOutline}) {
+							@button.Button(button.Props{Variant: button.VariantOutline, Href: "/admin/jadwal"}) {
 								@components.IconCalendar()
 								Kelola Jadwal
 							}
@@ -87,8 +65,8 @@ templ DashboardPage(data DashboardData) {
 					</div>
 					<!-- Recent Activity -->
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-						@RecentPermohonanCard()
-						@UpcomingScheduleCard()
+						@RecentPermohonanCard(data.Recent)
+						@UpcomingScheduleCard(data.TodayJadwal)
 					</div>
 				</div>
 			}
@@ -96,7 +74,7 @@ templ DashboardPage(data DashboardData) {
 	}
 }
 
-templ RecentPermohonanCard() {
+templ RecentPermohonanCard(items []PermohonanItem) {
 	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
@@ -108,14 +86,22 @@ templ RecentPermohonanCard() {
 		}
 		@card.Content() {
 			<div class="space-y-4">
-				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Ahmad Wijaya", NIK: "3201234567890001", StatusTerkini: "BARU", Waktu: "5 menit lalu", IsAdmin: true})
-				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Siti Nurhaliza", NIK: "3201234567890002", StatusTerkini: "HILANG", Waktu: "12 menit lalu", IsAdmin: true})
-				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Budi Santoso", NIK: "3201234567890003", StatusTerkini: "UPDATE", Waktu: "25 menit lalu", IsAdmin: true})
-				@components.PermohonanListItem(components.PermohonanItemProps{Nama: "Dewi Lestari", NIK: "3201234567890004", StatusTerkini: "RUSAK", Waktu: "1 jam lalu", IsAdmin: true})
+				if len(items) == 0 {
+					<p class="text-sm text-muted-foreground">Belum ada permohonan terbaru.</p>
+				}
+				for _, item := range items {
+					@components.PermohonanListItem(components.PermohonanItemProps{
+						Nama:          item.NamaLengkap,
+						NIK:           item.NIK,
+						StatusTerkini: item.StatusTerkini,
+						Waktu:         item.TanggalDaftar,
+						IsAdmin:       true,
+					})
+				}
 			</div>
 		}
 		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
-			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
+			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm, Href: "/admin/permohonan"}) {
 				Lihat Semua Permohonan
 				@components.IconArrowRight()
 			}
@@ -123,7 +109,20 @@ templ RecentPermohonanCard() {
 	}
 }
 
-templ UpcomingScheduleCard() {
+func getIndicatorColor(terisi, maksimal int) string {
+	if maksimal == 0 {
+		return "bg-gray-400"
+	}
+	percent := float64(terisi) / float64(maksimal) * 100
+	if percent >= 90 {
+		return "bg-red-500"
+	} else if percent >= 70 {
+		return "bg-yellow-500"
+	}
+	return "bg-green-500"
+}
+
+templ UpcomingScheduleCard(items []TodayJadwalItem) {
 	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
 		@card.Header() {
 			@card.Title() {
@@ -135,13 +134,16 @@ templ UpcomingScheduleCard() {
 		}
 		@card.Content() {
 			<div class="space-y-4">
-				@ScheduleItem("Sesi Pagi", "08:00 - 11:00", "32/50", "bg-green-500")
-				@ScheduleItem("Sesi Siang", "13:00 - 15:00", "28/50", "bg-green-500")
-				@ScheduleItem("Sesi Sore", "15:00 - 17:00", "15/50", "bg-yellow-500")
+				if len(items) == 0 {
+					<p class="text-sm text-muted-foreground">Tidak ada jadwal hari ini.</p>
+				}
+				for _, item := range items {
+					@ScheduleItem(item.SessionName, item.Time, fmt.Sprintf("%d/%d", item.KuotaTerisi, item.KuotaMaksimal), getIndicatorColor(item.KuotaTerisi, item.KuotaMaksimal))
+				}
 			</div>
 		}
 		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
-			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
+			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm, Href: "/admin/jadwal"}) {
 				Kelola Jadwal
 				@components.IconArrowRight()
 			}

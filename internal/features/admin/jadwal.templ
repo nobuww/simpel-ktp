@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"fmt"
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
@@ -8,18 +10,19 @@ import (
 	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
 	"github.com/nobuww/simpel-ktp/ui/templui/label"
-	"github.com/nobuww/simpel-ktp/ui/templui/selectbox"
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
 	"github.com/nobuww/simpel-ktp/ui/templui/table"
 )
 
 type JadwalPageData struct {
-	UserName    string
-	UserRole    string
-	ActivePage  string
-	List        []JadwalItem
-	Kelurahan   []KelurahanOption
-	CurrentWeek string
+	UserName      string
+	UserRole      string
+	ActivePage    string
+	List          []JadwalItem
+	CurrentWeek     string
+	StartOfWeekDate string // YYYY-MM-DD for navigation
+	KelurahanName   string // Admin Kelurahan: their kelurahan name, Admin Kecamatan: empty
+	IsKecamatan     bool   // True if user is admin kecamatan
 }
 
 type JadwalItem struct {
@@ -32,11 +35,6 @@ type JadwalItem struct {
 	KuotaTerisi   int
 	KuotaMaksimal int
 	StatusSesi    string
-}
-
-type KelurahanOption struct {
-	ID   int
-	Nama string
 }
 
 templ JadwalPage(data JadwalPageData) {
@@ -60,57 +58,34 @@ templ JadwalPage(data JadwalPageData) {
 						<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 							<div class="flex flex-wrap items-center gap-2 sm:gap-4">
 								<!-- Week Navigation -->
-								<div class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg shadow-sm p-1">
-									@button.Button(button.Props{
-										Variant: button.VariantGhost,
-										Size:    button.SizeIcon,
-										Attributes: templ.Attributes{
-											"hx-get":    "/admin/jadwal?week=prev",
-											"hx-target": "#jadwal-content",
-											"hx-swap":   "innerHTML",
-										},
-									}) {
-										@IconChevronLeftNav()
-									}
-									<span class="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium whitespace-nowrap">{ data.CurrentWeek }</span>
-									@button.Button(button.Props{
-										Variant: button.VariantGhost,
-										Size:    button.SizeIcon,
-										Attributes: templ.Attributes{
-											"hx-get":    "/admin/jadwal?week=next",
-											"hx-target": "#jadwal-content",
-											"hx-swap":   "innerHTML",
-										},
-									}) {
-										@IconChevronRightNav()
-									}
-								</div>
-								<!-- View Toggle (hidden on mobile) -->
-								<div
-									class="hidden sm:flex items-center gap-1 bg-card rounded-lg shadow-sm p-1"
-									x-data="{ view: 'card' }"
-								>
-									<button
-										class="px-3 py-1.5 text-sm rounded-md transition-colors"
-										:class="view === 'card' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-										@click="view = 'card'"
-									>
-										@IconGrid()
-										<span class="ml-1.5">Kartu</span>
-									</button>
-									<button
-										class="px-3 py-1.5 text-sm rounded-md transition-colors"
-										:class="view === 'table' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
-										@click="view = 'table'"
-									>
-										@IconList()
-										<span class="ml-1.5">Tabel</span>
-									</button>
-								</div>
+								<!-- Week Navigation -->
+								@WeekNavigation(data, false)
 							</div>
 							<!-- Actions -->
 							<div class="flex flex-wrap gap-2 w-full sm:w-auto">
-								@JadwalKelurahanFilter(data.Kelurahan)
+								if data.IsKecamatan {
+									<div class="flex items-center px-3 py-1.5 bg-muted rounded-lg text-sm text-muted-foreground">
+										@components.IconMapPin()
+										<span class="ml-1.5">Kecamatan Pademangan</span>
+									</div>
+								} else if data.KelurahanName != "" {
+									<div class="flex items-center px-3 py-1.5 bg-muted rounded-lg text-sm text-muted-foreground">
+										@components.IconMapPin()
+										<span class="ml-1.5">{ data.KelurahanName }</span>
+									</div>
+								}
+								<form hx-post="/admin/jadwal/generate" hx-swap="none">
+									<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+									@button.Button(button.Props{
+										Variant: button.VariantSecondary,
+										Class:   "w-full",
+										Type:    button.TypeSubmit,
+									}) {
+										@components.IconPlus()
+										<span class="hidden sm:inline">Generate 30 Hari</span>
+										<span class="sm:hidden">Gen 30</span>
+									}
+								</form>
 								@dialog.Trigger(dialog.TriggerProps{For: "create-jadwal-dialog"}) {
 									@button.Button(button.Props{Class: "flex-1 sm:flex-none"}) {
 										@components.IconPlus()
@@ -129,38 +104,11 @@ templ JadwalPage(data JadwalPageData) {
 			}
 		}
 		<!-- Create Jadwal Dialog -->
-		@CreateJadwalDialog(data.Kelurahan)
-		<!-- Edit Jadwal Dialog -->
-		@EditJadwalDialog()
+		@CreateJadwalDialog(data)
 	}
 }
 
-templ JadwalKelurahanFilter(kelurahan []KelurahanOption) {
-	@selectbox.SelectBox(selectbox.Props{Class: "w-auto flex-1 sm:flex-none"}) {
-		@selectbox.Trigger(selectbox.TriggerProps{
-			Name:  "kelurahan",
-			Class: "w-full sm:w-44",
-			Attributes: templ.Attributes{
-				"hx-get":     "/admin/jadwal/filter",
-				"hx-trigger": "change",
-				"hx-target":  "#jadwal-content",
-				"hx-swap":    "innerHTML",
-			},
-		}) {
-			@selectbox.Value(selectbox.ValueProps{Placeholder: "Semua Kelurahan"})
-		}
-		@selectbox.Content(selectbox.ContentProps{NoSearch: len(kelurahan) < 10}) {
-			@selectbox.Item(selectbox.ItemProps{Value: ""}) {
-				Semua Kelurahan
-			}
-			for _, k := range kelurahan {
-				@selectbox.Item(selectbox.ItemProps{Value: intToStr(k.ID)}) {
-					{ k.Nama }
-				}
-			}
-		}
-	}
-}
+// JadwalKelurahanFilter removed - kelurahan is now determined from session
 
 templ JadwalCardView(items []JadwalItem) {
 	if len(items) == 0 {
@@ -231,24 +179,12 @@ templ JadwalCard(item JadwalItem, index int) {
 						Class:   "flex-1",
 						Attributes: templ.Attributes{
 							"hx-get":      "/admin/jadwal/" + item.ID + "/antrian",
-							"hx-target":   "#main-content",
+							"hx-target":   "body",
 							"hx-push-url": "true",
 						},
 					}) {
 						@IconUserList()
 						Antrian
-					}
-					@button.Button(button.Props{
-						Variant: button.VariantGhost,
-						Size:    button.SizeIcon,
-						Attributes: templ.Attributes{
-							"hx-get":                  "/admin/jadwal/" + item.ID,
-							"hx-target":               "#edit-jadwal-form",
-							"hx-swap":                 "innerHTML",
-							"data-tui-dialog-trigger": "edit-jadwal-dialog",
-						},
-					}) {
-						@components.IconEdit()
 					}
 				</div>
 			}
@@ -326,27 +262,20 @@ templ JadwalTableRow(item JadwalItem) {
 				@button.Button(button.Props{
 					Variant: button.VariantOutline,
 					Size:    button.SizeSm,
-				}) {
-					Antrian
-				}
-				@button.Button(button.Props{
-					Variant: button.VariantGhost,
-					Size:    button.SizeIcon,
 					Attributes: templ.Attributes{
-						"hx-get":                  "/admin/jadwal/" + item.ID,
-						"hx-target":               "#edit-jadwal-form",
-						"hx-swap":                 "innerHTML",
-						"data-tui-dialog-trigger": "edit-jadwal-dialog",
+						"hx-get":      "/admin/jadwal/" + item.ID + "/antrian",
+						"hx-target":   "body",
+						"hx-push-url": "true",
 					},
 				}) {
-					@components.IconEdit()
+					Antrian
 				}
 			</div>
 		}
 	}
 }
 
-templ CreateJadwalDialog(kelurahan []KelurahanOption) {
+templ CreateJadwalDialog(data JadwalPageData) {
 	@dialog.Dialog(dialog.Props{ID: "create-jadwal-dialog"}) {
 		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
 			@dialog.Header() {
@@ -354,38 +283,24 @@ templ CreateJadwalDialog(kelurahan []KelurahanOption) {
 					Tambah Jadwal Sesi
 				}
 				@dialog.Description() {
-					Buat jadwal sesi pelayanan baru
+					if data.IsKecamatan {
+						Buat jadwal sesi pelayanan baru untuk Kantor Kecamatan Pademangan
+					} else {
+						Buat jadwal sesi pelayanan baru untuk { data.KelurahanName }
+					}
 				}
 			}
 			<form hx-post="/admin/jadwal" hx-swap="none" class="space-y-4 py-4">
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "tanggal"}) {
-							Tanggal
-						}
-						@input.Input(input.Props{
-							Type: input.TypeDate,
-							Name: "tanggal",
-							ID:   "tanggal",
-						})
-					</div>
-					<div class="space-y-2">
-						@label.Label(label.Props{For: "kelurahan_id"}) {
-							Kelurahan
-						}
-						@selectbox.SelectBox() {
-							@selectbox.Trigger(selectbox.TriggerProps{Name: "kelurahan_id", Class: "w-full"}) {
-								@selectbox.Value(selectbox.ValueProps{Placeholder: "Pilih"})
-							}
-							@selectbox.Content(selectbox.ContentProps{NoSearch: len(kelurahan) < 10}) {
-								for _, k := range kelurahan {
-									@selectbox.Item(selectbox.ItemProps{Value: intToStr(k.ID)}) {
-										{ k.Nama }
-									}
-								}
-							}
-						}
-					</div>
+				<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "tanggal"}) {
+						Tanggal
+					}
+					@input.Input(input.Props{
+						Type: input.TypeDate,
+						Name: "tanggal",
+						ID:   "tanggal",
+					})
 				</div>
 				<div class="grid grid-cols-2 gap-4">
 					<div class="space-y-2">
@@ -439,122 +354,7 @@ templ CreateJadwalDialog(kelurahan []KelurahanOption) {
 	}
 }
 
-templ EditJadwalDialog() {
-	@dialog.Dialog(dialog.Props{ID: "edit-jadwal-dialog"}) {
-		@dialog.Trigger()
-		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
-			@dialog.Header() {
-				@dialog.Title() {
-					Edit Jadwal Sesi
-				}
-				@dialog.Description() {
-					Ubah informasi jadwal sesi
-				}
-			}
-			<form id="edit-jadwal-form" hx-put="/admin/jadwal" hx-swap="none">
-				<!-- Content loaded via HTMX -->
-				<div class="flex items-center justify-center py-8">
-					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-				</div>
-			</form>
-		}
-	}
-}
 
-// Partial: Edit form content
-templ EditJadwalForm(item JadwalItem, kelurahan []KelurahanOption) {
-	<input type="hidden" name="id" value={ item.ID }/>
-	<div class="space-y-4 py-4">
-		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-			<div class="space-y-2">
-				@label.Label(label.Props{For: "edit-tanggal"}) {
-					Tanggal
-				}
-				@input.Input(input.Props{
-					Type:  input.TypeDate,
-					Name:  "tanggal",
-					ID:    "edit-tanggal",
-					Value: item.Tanggal,
-				})
-			</div>
-			<div class="space-y-2">
-				@label.Label(label.Props{For: "edit-status"}) {
-					Status Sesi
-				}
-				@selectbox.SelectBox() {
-					@selectbox.Trigger(selectbox.TriggerProps{Name: "status_sesi", Class: "w-full"}) {
-						@selectbox.Value(selectbox.ValueProps{Placeholder: "Pilih status"})
-					}
-					@selectbox.Content(selectbox.ContentProps{NoSearch: true}) {
-						@selectbox.Item(selectbox.ItemProps{Value: "BUKA", Selected: item.StatusSesi == "BUKA"}) {
-							Buka
-						}
-						@selectbox.Item(selectbox.ItemProps{Value: "ISTIRAHAT", Selected: item.StatusSesi == "ISTIRAHAT"}) {
-							Istirahat
-						}
-						@selectbox.Item(selectbox.ItemProps{Value: "TUTUP", Selected: item.StatusSesi == "TUTUP"}) {
-							Tutup
-						}
-					}
-				}
-			</div>
-		</div>
-		<div class="grid grid-cols-2 gap-4">
-			<div class="space-y-2">
-				@label.Label(label.Props{For: "edit-jam-mulai"}) {
-					Jam Mulai
-				}
-				@input.Input(input.Props{
-					Type:  input.TypeTime,
-					Name:  "jam_mulai",
-					ID:    "edit-jam-mulai",
-					Value: item.JamMulai,
-				})
-			</div>
-			<div class="space-y-2">
-				@label.Label(label.Props{For: "edit-jam-selesai"}) {
-					Jam Selesai
-				}
-				@input.Input(input.Props{
-					Type:  input.TypeTime,
-					Name:  "jam_selesai",
-					ID:    "edit-jam-selesai",
-					Value: item.JamSelesai,
-				})
-			</div>
-		</div>
-		<div class="space-y-2">
-			@label.Label(label.Props{For: "edit-kuota"}) {
-				Kuota Maksimal
-			}
-			@input.Input(input.Props{
-				Type:  input.TypeNumber,
-				Name:  "kuota_maksimal",
-				ID:    "edit-kuota",
-				Value: intToStr(item.KuotaMaksimal),
-				Attributes: templ.Attributes{
-					"min": "1",
-					"max": "200",
-				},
-			})
-		</div>
-		<div class="p-3 bg-muted/50 rounded-lg">
-			<p class="text-sm text-muted-foreground">
-				Kuota terisi saat ini: <span class="font-semibold">{ intToStr(item.KuotaTerisi) }</span>
-			</p>
-		</div>
-	</div>
-	@dialog.Footer() {
-		@dialog.Close() {
-			@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
-				Batal
-			}
-		}
-		@button.Button(button.Props{Type: button.TypeSubmit}) {
-			Simpan Perubahan
-		}
-	}
-}
 
 // Additional icons for jadwal
 templ IconChevronLeftNav() {
@@ -596,4 +396,154 @@ templ IconUserList() {
 		<line x1="17" x2="22" y1="11" y2="11"></line>
 		<line x1="17" x2="22" y1="15" y2="15"></line>
 	</svg>
+}
+
+templ WeekNavigation(data JadwalPageData, oob bool) {
+	<div 
+		id="week-nav" 
+		class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg shadow-sm p-1"
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		@button.Button(button.Props{
+			Variant: button.VariantGhost,
+			Size:    button.SizeIcon,
+			Attributes: templ.Attributes{
+				"hx-get":    "/admin/jadwal?week=prev&ref_date=" + data.StartOfWeekDate,
+				"hx-target": "#jadwal-content",
+				"hx-swap":   "innerHTML",
+			},
+		}) {
+			@IconChevronLeftNav()
+		}
+		<span class="px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium whitespace-nowrap">{ data.CurrentWeek }</span>
+		@button.Button(button.Props{
+			Variant: button.VariantGhost,
+			Size:    button.SizeIcon,
+			Attributes: templ.Attributes{
+				"hx-get":    "/admin/jadwal?week=next&ref_date=" + data.StartOfWeekDate,
+				"hx-target": "#jadwal-content",
+				"hx-swap":   "innerHTML",
+			},
+		}) {
+			@IconChevronRightNav()
+		}
+	</div>
+}
+
+type AntrianItem struct {
+	ID           string
+	KodeBooking  string
+	NIK          string
+	NamaLengkap  string
+	Status       string
+	NoAntrian    int
+}
+
+type JadwalAntrianData struct {
+	JadwalInfo   JadwalItem
+	AntrianList  []AntrianItem
+	UserName     string
+	UserRole     string 
+	ActivePage   string
+}
+
+templ JadwalAntrianPage(data JadwalAntrianData) {
+	@layouts.Admin("Antrian Sesi - Simpel KTP", nil) {
+		@sidebar.Layout() {
+			@components.AdminSidebar(components.AdminSidebarData{
+				UserName:   data.UserName,
+				UserRole:   data.UserRole,
+				ActivePage: data.ActivePage,
+			})
+			@sidebar.Inset() {
+				@components.AdminMobileHeader("Detail Antrian")
+				<div class="flex-1 p-4 md:p-6 lg:p-8">
+					<div class="mb-6">
+						@button.Button(button.Props{
+							Variant: button.VariantGhost,
+							Size: button.SizeSm,
+							Class: "mb-2 pl-0 gap-1",
+							Attributes: templ.Attributes{
+								"hx-get": "/admin/jadwal",
+								"hx-target": "body", 
+								"hx-push-url": "true",
+							},
+						}) {
+							@IconChevronLeftNav()
+							Kembali ke Jadwal
+						}
+						
+						@components.PageHeader(components.PageHeaderProps{
+							Title:       "Antrian Sesi: " + data.JadwalInfo.TanggalFormat,
+							Description: fmt.Sprintf("%s • %s - %s", data.JadwalInfo.NamaKelurahan, data.JadwalInfo.JamMulai, data.JadwalInfo.JamSelesai),
+						})
+					</div>
+
+					<!-- Stats / Details Card -->
+					<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+						 <div class="p-4 bg-card rounded-lg border shadow-sm">
+							<div class="text-sm font-medium text-muted-foreground">Total Antrian</div>
+							<div class="text-2xl font-bold">{ intToStr(len(data.AntrianList)) }</div>
+						 </div>
+						 <div class="p-4 bg-card rounded-lg border shadow-sm">
+							<div class="text-sm font-medium text-muted-foreground">Sisa Kuota</div>
+							<div class="text-2xl font-bold">{ intToStr(data.JadwalInfo.KuotaMaksimal - data.JadwalInfo.KuotaTerisi) }</div>
+						 </div>
+					</div>
+
+					<!-- Table -->
+					<div class="bg-card rounded-lg shadow-sm overflow-hidden">
+						<div class="overflow-x-auto">
+							@table.Table(table.Props{Class: "w-full"}) {
+								@table.Header() {
+									@table.Row() {
+										@table.Head() { No. }
+										@table.Head() { Kode Booking }
+										@table.Head() { Nama Lengkap }
+										@table.Head() { NIK }
+										@table.Head() { Status }
+										@table.Head(table.HeadProps{Class:"text-right"}) { Aksi }
+									}
+								}
+								@table.Body() {
+									 if len(data.AntrianList) == 0 {
+										@table.Row() {
+											@table.Cell(table.CellProps{Attributes: templ.Attributes{"colspan": "6", "class": "px-4 py-8 text-center text-muted-foreground"}}) {
+												Belum ada antrian pada sesi ini
+											}
+										}
+									 } else {
+										for _, item := range data.AntrianList {
+											@table.Row(table.RowProps{Class: "hover:bg-muted/50"}) {
+												@table.Cell() { <span class="font-mono">{ intToStr(item.NoAntrian) }</span> }
+												@table.Cell() { <span class="font-mono bg-muted px-1.5 py-0.5 rounded">{ item.KodeBooking }</span> }
+												@table.Cell() { { item.NamaLengkap } }
+												 @table.Cell() { { item.NIK } }
+												@table.Cell() { @components.StatusBadge(item.Status) }
+												@table.Cell(table.CellProps{Class:"text-right"}) {
+													@button.Button(button.Props{
+														Variant: button.VariantGhost,
+														Size: button.SizeIcon,
+														Attributes: templ.Attributes{
+															"hx-get": "/admin/permohonan/" + item.ID,
+															"hx-target": "body", 
+															"hx-push-url": "true",
+														},
+													}) {
+														@components.IconEdit() 
+													}
+												}
+											}
+										}
+									 }
+								}
+							}
+						</div>
+					</div>
+				</div>
+			}
+		}
+	}
 }

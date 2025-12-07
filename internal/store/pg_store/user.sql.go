@@ -89,6 +89,59 @@ func (q *Queries) GetPendudukProfile(ctx context.Context, nik string) (GetPendud
 	return i, err
 }
 
+const getPermohonanByKodeBooking = `-- name: GetPermohonanByKodeBooking :one
+SELECT 
+    p.id,
+    p.kode_booking,
+    p.jenis_permohonan,
+    p.status_terkini,
+    p.created_at as tanggal_daftar,
+    p.nomor_antrian_sesi as nomor_antrian,
+    js.tanggal as jadwal_tanggal,
+    js.jam_mulai as jadwal_jam_mulai,
+    js.jam_selesai as jadwal_jam_selesai,
+    k.nama_kelurahan as lokasi_kelurahan,
+    pd.nama_lengkap
+FROM permohonan p
+LEFT JOIN penduduk pd ON p.nik = pd.nik
+LEFT JOIN jadwal_sesi js ON p.jadwal_sesi_id = js.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+WHERE p.kode_booking = $1
+`
+
+type GetPermohonanByKodeBookingRow struct {
+	ID               uuid.UUID        `json:"id"`
+	KodeBooking      pgtype.Text      `json:"kodeBooking"`
+	JenisPermohonan  string           `json:"jenisPermohonan"`
+	StatusTerkini    pgtype.Text      `json:"statusTerkini"`
+	TanggalDaftar    pgtype.Timestamp `json:"tanggalDaftar"`
+	NomorAntrian     pgtype.Int2      `json:"nomorAntrian"`
+	JadwalTanggal    pgtype.Date      `json:"jadwalTanggal"`
+	JadwalJamMulai   pgtype.Time      `json:"jadwalJamMulai"`
+	JadwalJamSelesai pgtype.Time      `json:"jadwalJamSelesai"`
+	LokasiKelurahan  pgtype.Text      `json:"lokasiKelurahan"`
+	NamaLengkap      pgtype.Text      `json:"namaLengkap"`
+}
+
+func (q *Queries) GetPermohonanByKodeBooking(ctx context.Context, kodeBooking pgtype.Text) (GetPermohonanByKodeBookingRow, error) {
+	row := q.db.QueryRow(ctx, getPermohonanByKodeBooking, kodeBooking)
+	var i GetPermohonanByKodeBookingRow
+	err := row.Scan(
+		&i.ID,
+		&i.KodeBooking,
+		&i.JenisPermohonan,
+		&i.StatusTerkini,
+		&i.TanggalDaftar,
+		&i.NomorAntrian,
+		&i.JadwalTanggal,
+		&i.JadwalJamMulai,
+		&i.JadwalJamSelesai,
+		&i.LokasiKelurahan,
+		&i.NamaLengkap,
+	)
+	return i, err
+}
+
 const getPermohonanByNIK = `-- name: GetPermohonanByNIK :many
 SELECT 
     p.id,

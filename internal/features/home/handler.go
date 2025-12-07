@@ -3,6 +3,8 @@ package home
 import (
 	"net/http"
 
+	"github.com/nobuww/simpel-ktp/internal/middleware"
+	"github.com/nobuww/simpel-ktp/internal/session"
 	"github.com/nobuww/simpel-ktp/internal/store"
 )
 
@@ -19,6 +21,17 @@ func New(s *store.Store) *Handler {
 }
 
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if user is already logged in
+	userSession := middleware.GetUserFromContext(r.Context())
+	if userSession != nil {
+		target := "/dashboard"
+		if userSession.UserType == session.UserTypePetugas {
+			target = "/admin"
+		}
+		http.Redirect(w, r, target, http.StatusSeeOther)
+		return
+	}
+
 	Page().Render(r.Context(), w)
 }
 

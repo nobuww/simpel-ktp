@@ -20,6 +20,8 @@ const (
 
 	RoleAdminKecamatan = "ADMIN_KECAMATAN"
 	RoleAdminKelurahan = "ADMIN_KELURAHAN"
+
+	KeyKelurahanID = "kelurahan_id"
 )
 
 // Manager handles session operations
@@ -29,10 +31,11 @@ type Manager struct {
 
 // UserSession contains session data for an authenticated user
 type UserSession struct {
-	UserID   string
-	UserType string
-	UserName string
-	UserRole string // Only for petugas: ADMIN_KECAMATAN or ADMIN_KELURAHAN
+	UserID      string
+	UserType    string
+	UserName    string
+	UserRole    string // Only for petugas: ADMIN_KECAMATAN or ADMIN_KELURAHAN
+	KelurahanID *int16 // Optional: nil for kecamatan/warga, set for kelurahan admin
 }
 
 // New creates a new session manager with the given secret
@@ -46,11 +49,17 @@ func New(secret string) *Manager {
 	}
 
 	store := sessions.NewCookieStore([]byte(secret))
+	// Determine if we should enforce secure cookies
+	isSecure := os.Getenv("GO_ENV") == "production"
+	if secureEnv := os.Getenv("HTTP_SECURE"); secureEnv != "" {
+		isSecure = secureEnv == "true"
+	}
+
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400, // 24 hours default
 		HttpOnly: true,
-		Secure:   os.Getenv("GO_ENV") == "production",
+		Secure:   isSecure,
 		SameSite: http.SameSiteLaxMode,
 	}
 
@@ -79,7 +88,7 @@ func (m *Manager) SetWargaSession(w http.ResponseWriter, r *http.Request, nik, n
 }
 
 // SetPetugasSession creates a session for petugas (officer) users
-func (m *Manager) SetPetugasSession(w http.ResponseWriter, r *http.Request, petugasID, namaPetugas, role string, remember bool) error {
+func (m *Manager) SetPetugasSession(w http.ResponseWriter, r *http.Request, petugasID, namaPetugas, role string, kelurahanID *int16, remember bool) error {
 	session, err := m.store.Get(r, SessionName)
 	if err != nil {
 		return err
@@ -88,7 +97,14 @@ func (m *Manager) SetPetugasSession(w http.ResponseWriter, r *http.Request, petu
 	session.Values[KeyUserID] = petugasID
 	session.Values[KeyUserType] = UserTypePetugas
 	session.Values[KeyUserName] = namaPetugas
+	session.Values[KeyUserType] = UserTypePetugas
+	session.Values[KeyUserName] = namaPetugas
 	session.Values[KeyUserRole] = role
+	if kelurahanID != nil {
+		session.Values[KeyKelurahanID] = *kelurahanID
+	} else {
+		delete(session.Values, KeyKelurahanID)
+	}
 
 	if remember {
 		session.Options.MaxAge = 86400 * 30 // 30 days
@@ -116,11 +132,17 @@ func (m *Manager) GetSession(r *http.Request) *UserSession {
 	userName, _ := session.Values[KeyUserName].(string)
 	userRole, _ := session.Values[KeyUserRole].(string)
 
+	var kelurahanID *int16
+	if val, ok := session.Values[KeyKelurahanID].(int16); ok {
+		kelurahanID = &val
+	}
+
 	return &UserSession{
-		UserID:   userID,
-		UserType: userType,
-		UserName: userName,
-		UserRole: userRole,
+		UserID:      userID,
+		UserType:    userType,
+		UserName:    userName,
+		UserRole:    userRole,
+		KelurahanID: kelurahanID,
 	}
 }
 

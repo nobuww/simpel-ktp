@@ -19,3 +19,8 @@ type JadwalOption struct {
 	KuotaSisa  int
 	StatusSesi string
 }
+
+type LocationOption struct {
+	ID    int16
+	Label string
+}

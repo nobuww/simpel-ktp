@@ -80,6 +80,7 @@ type PetugasLoginResult struct {
 	ID          string
 	NamaPetugas string
 	Role        string
+	KelurahanID *int16
 }
 
 // LoginPetugas authenticates a petugas (officer) by NIP and password
@@ -97,10 +98,17 @@ func (s *Service) LoginPetugas(ctx context.Context, input PetugasLoginInput) (*P
 		return nil, ErrInvalidCredentials
 	}
 
+	var kelurahanID *int16
+	if petugas.KelurahanID.Valid {
+		val := petugas.KelurahanID.Int16
+		kelurahanID = &val
+	}
+
 	return &PetugasLoginResult{
 		ID:          petugas.ID.String(),
 		NamaPetugas: petugas.NamaPetugas,
 		Role:        petugas.Role,
+		KelurahanID: kelurahanID,
 	}, nil
 }
 

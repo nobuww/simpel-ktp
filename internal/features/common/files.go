@@ -30,7 +30,7 @@ func ProcessUpload(r *http.Request, formKey string, userID string, docType strin
 	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("gagal membaca file")
 	}
-	
+
 	contentType := http.DetectContentType(buffer[:n])
 
 	allowedTypes := map[string]bool{
@@ -53,15 +53,21 @@ func ProcessUpload(r *http.Request, formKey string, userID string, docType strin
 	}
 
 	ext := strings.ToLower(filepath.Ext(header.Filename))
-	
+
 	validExt := false
 	switch contentType {
 	case "image/jpeg":
-		if ext == ".jpg" || ext == ".jpeg" { validExt = true }
+		if ext == ".jpg" || ext == ".jpeg" {
+			validExt = true
+		}
 	case "image/png":
-		if ext == ".png" { validExt = true }
+		if ext == ".png" {
+			validExt = true
+		}
 	case "application/pdf":
-		if ext == ".pdf" { validExt = true }
+		if ext == ".pdf" {
+			validExt = true
+		}
 	}
 
 	if !validExt {

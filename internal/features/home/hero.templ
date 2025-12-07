@@ -1,6 +1,7 @@
 package home
 
 import (
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/templui/badge"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/icon"
@@ -97,19 +98,39 @@ templ Hero() {
 				x-transition:enter-start="opacity-0 transform translate-y-4"
 				x-transition:enter-end="opacity-100 transform translate-y-0"
 			>
-				@button.Button(button.Props{
-					Href:  "/register",
-					Class: "px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/25 group",
-				}) {
-					Daftar Sekarang
-					@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
-				}
-				@button.Button(button.Props{
-					Href:    "#features",
-					Variant: button.VariantOutline,
-					Class:   "px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 text-white rounded-lg font-semibold",
-				}) {
-					Pelajari Lebih Lanjut
+				if middleware.GetUserFromContext(ctx) != nil {
+					@button.Button(button.Props{
+						Href:  "/dashboard",
+						Class: "px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/25 group",
+					}) {
+						Ke Dashboard
+						@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
+					}
+					<form action="/auth/logout" method="POST" class="inline-block">
+						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+						@button.Button(button.Props{
+							Variant: button.VariantOutline,
+							Class:   "px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 text-white rounded-lg font-semibold",
+							Type:    "submit",
+						}) {
+							Keluar
+						}
+					</form>
+				} else {
+					@button.Button(button.Props{
+						Href:  "/register",
+						Class: "px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg shadow-emerald-500/25 group",
+					}) {
+						Daftar Sekarang
+						@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
+					}
+					@button.Button(button.Props{
+						Href:    "#features",
+						Variant: button.VariantOutline,
+						Class:   "px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 text-white rounded-lg font-semibold",
+					}) {
+						Pelajari Lebih Lanjut
+					}
 				}
 			</div>
 		</div>

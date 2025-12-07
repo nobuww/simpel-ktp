@@ -31,7 +31,6 @@ func GetExampleStages() []components.TrackerStage {
 			Status:              components.StatusInProgress,
 			StartDate:           "02 Des 2024, 15:00",
 			EstimatedCompletion: "07 Des 2024",
-			ActionRequired:      "Tunggu proses pencetakan selesai",
 			ResponsibleParty:    "Disdukcapil Kota",
 		},
 		{
@@ -73,8 +72,6 @@ func GetBlockedExampleStages() []components.TrackerStage {
 			Status:            components.StatusBlocked,
 			StartDate:         "01 Des 2024, 09:15",
 			Notes:             "Foto KK tidak terbaca dengan jelas. Silakan upload ulang dengan kualitas lebih baik.",
-			ActionRequired:    "Upload ulang dokumen KK",
-			ActionURL:         "/permohonan/upload",
 			ResponsibleParty:  "Pemohon",
 			DocumentsRequired: []string{"Foto KK (kualitas tinggi)", "Foto diri dengan latar biru"},
 		},

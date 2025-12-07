@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
 	"github.com/nobuww/simpel-ktp/ui/templui/input"
@@ -45,6 +46,7 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 					hx-swap="innerHTML"
 					hx-indicator="#auth-loading"
 				>
+					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-nik"}) {
 							NIK
