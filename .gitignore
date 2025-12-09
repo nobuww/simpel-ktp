@@ -61,3 +61,6 @@ desktop.ini
 dist/
 build/
 static/
+
+# user uploads (persisted separately from static assets)
+uploads/

@@ -47,7 +47,7 @@ func ProcessUpload(r *http.Request, formKey string, userID string, docType strin
 		return "", fmt.Errorf("gagal memproses file")
 	}
 
-	uploadDir := filepath.Join("static", "uploads", userID)
+	uploadDir := filepath.Join("uploads", userID)
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori upload")
 	}

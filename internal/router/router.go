@@ -31,6 +31,10 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 	staticServer := http.FileServer(http.Dir("./static"))
 	r.Handle("/static/*", http.StripPrefix("/static", staticServer))
 
+	// Serve uploaded files from persistent uploads directory
+	uploadsServer := http.FileServer(http.Dir("./uploads"))
+	r.Handle("/uploads/*", http.StripPrefix("/uploads", uploadsServer))
+
 	// Home
 	homeHandler := home.New(s)
 	r.Get("/", homeHandler.HomeHandler)
