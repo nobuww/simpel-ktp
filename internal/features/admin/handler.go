@@ -506,8 +506,8 @@ func (h *Handler) GenerateJadwalHandler(w http.ResponseWriter, r *http.Request) 
 		lokasiKelurahanID = pgtype.Int2{Valid: false}
 	}
 
-	startDate := time.Now().AddDate(0, 0, 1) // Start tomorrow
-	for i := 0; i < 30; i++ {
+	startDate := time.Now() // Start today
+	for i := range 30 {
 		date := startDate.AddDate(0, 0, i)
 		if date.Weekday() == time.Saturday || date.Weekday() == time.Sunday {
 			continue

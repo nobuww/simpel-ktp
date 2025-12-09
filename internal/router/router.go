@@ -40,6 +40,10 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 	r.Get("/", homeHandler.HomeHandler)
 	r.Get("/components/infographic", homeHandler.InfographicHandler)
 	r.Get("/api/tracker-demo", homeHandler.TrackerDemoHandler)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
 	// Auth
 	authHandler := auth.New(s, sessionMgr)

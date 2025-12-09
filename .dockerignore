@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+.github
+
+# Build Output
+server
+server.exe
+static/
+dist/
+*.log
+
+# Dependencies
+node_modules
+vendor
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Uploads (should be volume mapped)
+uploads/*
+!uploads/.gitkeep
+
+# Other
+bin/
+tmp/
+coverage/
+.DS_Store
+.vscode
+.idea
+Dockerfile
+docker-compose.yml
+Makefile
+deploy.sh
+Justfile
+*.md

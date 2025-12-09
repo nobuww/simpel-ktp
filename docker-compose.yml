@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  web:
+    container_name: simpel-ktp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    expose:
+      - "7899"
+    environment:
+      - PORT=7899
+      - GO_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - SESSION_SECRET=${SESSION_SECRET}
+    volumes:
+      - ./uploads:/app/uploads
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 128M
+    networks:
+      - caddy_net
+
+networks:
+  caddy_net:
+    external: true

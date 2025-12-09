@@ -61,14 +61,14 @@ SELECT
     pd.jenis_kelamin,
     pd.alamat,
     pd.no_hp,
-    k.nama_kelurahan,
+    COALESCE(k.nama_kelurahan, 'Kecamatan Pademangan')::text as nama_kelurahan,
     js.tanggal as jadwal_tanggal,
     js.jam_mulai as jadwal_jam_mulai,
     js.jam_selesai as jadwal_jam_selesai
 FROM permohonan p
 JOIN penduduk pd ON p.nik = pd.nik
-LEFT JOIN ref_kelurahan k ON pd.kelurahan_id = k.id
 LEFT JOIN jadwal_sesi js ON p.jadwal_sesi_id = js.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
 WHERE p.id = $1;
 
 -- name: GetRiwayatStatusByPermohonan :many

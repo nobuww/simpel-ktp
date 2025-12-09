@@ -64,10 +64,11 @@ func (s *PermohonanService) GetFormData(ctx context.Context, nik string) (FormDa
 
 func (s *PermohonanService) GetAvailableJadwal(ctx context.Context, kelurahanID *int32) ([]JadwalOption, error) {
 	today := time.Now()
-	nextMonth := today.AddDate(0, 1, 0)
+	tomorrow := today.AddDate(0, 0, 1)
+	next30Days := tomorrow.AddDate(0, 0, 30)
 
-	todayPg := pgtype.Date{Time: today, Valid: true}
-	nextMonthPg := pgtype.Date{Time: nextMonth, Valid: true}
+	tomorrowPg := pgtype.Date{Time: tomorrow, Valid: true}
+	next30DaysPg := pgtype.Date{Time: next30Days, Valid: true}
 
 	var targetKecamatan bool
 	var kelurahanIDPg pgtype.Int4
@@ -82,8 +83,8 @@ func (s *PermohonanService) GetAvailableJadwal(ctx context.Context, kelurahanID 
 	}
 
 	jadwalList, err := s.repo.ListJadwalSesi(ctx, pg_store.ListJadwalSesiParams{
-		Tanggal:     todayPg,
-		Tanggal_2:   nextMonthPg,
+		Tanggal:     tomorrowPg,
+		Tanggal_2:   next30DaysPg,
 		KelurahanID: kelurahanIDPg,
 	})
 	if err != nil {
@@ -219,7 +220,7 @@ func (s *PermohonanService) GetSuccessData(ctx context.Context, permohonanID str
 		ApplicationType: formatApplicationType(applicationType),
 		JadwalTanggal:   formatDate(detail.JadwalTanggal),
 		JadwalJam:       formatTime(detail.JadwalJamMulai) + " - " + formatTime(detail.JadwalJamSelesai),
-		NamaKelurahan:   detail.NamaKelurahan.String,
+		NamaKelurahan:   detail.NamaKelurahan,
 	}
 
 	return successData, nil

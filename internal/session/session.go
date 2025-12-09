@@ -24,22 +24,18 @@ const (
 	KeyKelurahanID = "kelurahan_id"
 )
 
-// Manager handles session operations
 type Manager struct {
 	store *sessions.CookieStore
 }
 
-// UserSession contains session data for an authenticated user
 type UserSession struct {
 	UserID      string
 	UserType    string
 	UserName    string
-	UserRole    string // Only for petugas: ADMIN_KECAMATAN or ADMIN_KELURAHAN
-	KelurahanID *int16 // Optional: nil for kecamatan/warga, set for kelurahan admin
+	UserRole    string 
+	KelurahanID *int16 
 }
 
-// New creates a new session manager with the given secret
-// If secret is empty, it reads from SESSION_SECRET env var
 func New(secret string) *Manager {
 	if secret == "" {
 		secret = os.Getenv("SESSION_SECRET")
@@ -49,7 +45,6 @@ func New(secret string) *Manager {
 	}
 
 	store := sessions.NewCookieStore([]byte(secret))
-	// Determine if we should enforce secure cookies
 	isSecure := os.Getenv("GO_ENV") == "production"
 	if secureEnv := os.Getenv("HTTP_SECURE"); secureEnv != "" {
 		isSecure = secureEnv == "true"
@@ -115,8 +110,6 @@ func (m *Manager) SetPetugasSession(w http.ResponseWriter, r *http.Request, petu
 	return session.Save(r, w)
 }
 
-// GetSession retrieves the current user session
-// Returns nil if no valid session exists
 func (m *Manager) GetSession(r *http.Request) *UserSession {
 	session, err := m.store.Get(r, SessionName)
 	if err != nil {
@@ -146,7 +139,6 @@ func (m *Manager) GetSession(r *http.Request) *UserSession {
 	}
 }
 
-// ClearSession removes the current session (logout)
 func (m *Manager) ClearSession(w http.ResponseWriter, r *http.Request) error {
 	session, err := m.store.Get(r, SessionName)
 	if err != nil {
@@ -159,18 +151,15 @@ func (m *Manager) ClearSession(w http.ResponseWriter, r *http.Request) error {
 	return session.Save(r, w)
 }
 
-// IsAuthenticated checks if the user has a valid session
 func (m *Manager) IsAuthenticated(r *http.Request) bool {
 	return m.GetSession(r) != nil
 }
 
-// IsWarga checks if the authenticated user is a warga
 func (m *Manager) IsWarga(r *http.Request) bool {
 	s := m.GetSession(r)
 	return s != nil && s.UserType == UserTypeWarga
 }
 
-// IsPetugas checks if the authenticated user is a petugas
 func (m *Manager) IsPetugas(r *http.Request) bool {
 	s := m.GetSession(r)
 	return s != nil && s.UserType == UserTypePetugas
