@@ -109,7 +109,7 @@ templ VerticalTimeline(props StatusTrackerProps) {
 				if i != len(props.Stages)-1 {
 					<div
 						class={
-							"absolute left-[19px] top-10 w-0.5 h-[calc(100%-2.5rem)]",
+							"hidden md:block absolute left-[19px] top-10 w-0.5 h-[calc(100%-2.5rem)]",
 							templ.KV("bg-emerald-500", stage.Status == StatusCompleted),
 							// Use gray for all other statuses including blocked/in-progress/pending
 							templ.KV("bg-slate-300", stage.Status != StatusCompleted),
@@ -322,7 +322,7 @@ templ StageStatusBadge(status StageStatus) {
 		class={
 			"inline-flex items-center justify-center px-3 py-1 rounded-[4px] text-xs font-medium min-w-[80px]",
 			templ.KV("bg-[#4CAF50] text-white", status == StatusCompleted),
-			templ.KV("bg-[#2196F3] text-white animate-pulse", status == StatusInProgress),
+			templ.KV("bg-[#2196F3] text-white", status == StatusInProgress),
 			// Prompt said: Menunggu: Grey #E0E0E0, Dark grey #424242
 			templ.KV("bg-[#E0E0E0] text-[#424242]", status == StatusPending),
 			// Keeping red for Blocked as it wasn't explicitly forbidden but might fall under 'Menunggu' style if not handled.

@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
@@ -46,47 +45,7 @@ templ DashboardPage(data DashboardData) {
 			<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 				<!-- Welcome Section -->
 				<div class="mb-8">
-					<h1 class="text-2xl font-bold text-foreground">Selamat Datang, { data.UserName }!</h1>
-					<p class="mt-1 text-sm text-muted-foreground">NIK: { data.NIK }</p>
-				</div>
-				<!-- Stats Cards -->
-				<div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-					@components.StatCard(components.StatCardProps{
-						Title:     "Total",
-						Value:     fmt.Sprintf("%d", data.Stats.Total),
-						TextColor: "text-secondary-foreground",
-						Centered:  true,
-					})
-					@components.StatCard(components.StatCardProps{
-						Title:     "Verifikasi",
-						Value:     fmt.Sprintf("%d", data.Stats.Verifikasi),
-						TextColor: "text-blue-600",
-						Centered:  true,
-					})
-					@components.StatCard(components.StatCardProps{
-						Title:     "Proses",
-						Value:     fmt.Sprintf("%d", data.Stats.Proses),
-						TextColor: "text-yellow-600",
-						Centered:  true,
-					})
-					@components.StatCard(components.StatCardProps{
-						Title:     "Siap Ambil",
-						Value:     fmt.Sprintf("%d", data.Stats.SiapAmbil),
-						TextColor: "text-green-600",
-						Centered:  true,
-					})
-					@components.StatCard(components.StatCardProps{
-						Title:     "Selesai",
-						Value:     fmt.Sprintf("%d", data.Stats.Selesai),
-						TextColor: "text-emerald-600",
-						Centered:  true,
-					})
-					@components.StatCard(components.StatCardProps{
-						Title:     "Ditolak",
-						Value:     fmt.Sprintf("%d", data.Stats.Ditolak),
-						TextColor: "text-red-600",
-						Centered:  true,
-					})
+					@DashboardHeader(data)
 				</div>
 				<!-- Quick Actions -->
 				<div class="mb-8">
@@ -105,6 +64,11 @@ templ DashboardPage(data DashboardData) {
 				<div class="grid gap-6 lg:grid-cols-2">
 					@RecentPermohonanCard(data.RecentPermohonan)
 					@InfoCard()
+
+				</div>
+				<!-- Tutorial Section -->
+				<div class="mt-8 mb-12">
+					@TutorialSection()
 				</div>
 			</div>
 		</div>
@@ -112,27 +76,28 @@ templ DashboardPage(data DashboardData) {
 }
 
 templ UserNavbar(userName string) {
-	<nav class="sticky top-0 z-50 border-b border-gray-200 bg-card">
+	<nav class="sticky top-0 z-50 border-b border-white/10 text-white" style="background: var(--color-slate-900);">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a href="/" class="flex items-center gap-2">
-						<div class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+						<div class="flex size-9 items-center justify-center rounded-lg bg-white/10 text-white">
 							<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
 							</svg>
 						</div>
-						<span class="text-lg font-bold text-foreground">Simpel KTP</span>
+						<span class="text-lg font-bold">Simpel KTP</span>
 					</a>
 				</div>
 				<div class="flex items-center gap-4">
-					<span class="text-sm text-muted-foreground">{ userName }</span>
+					<span class="text-sm text-white/80">{ userName }</span>
 					<form action="/auth/logout" method="POST">
 						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 						@button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Size:    button.SizeSm,
 							Type:    "submit",
+							Class:   "border-white/20 hover:bg-white/10 hover:text-white text-white bg-transparent",
 						}) {
 							Keluar
 						}
@@ -184,7 +149,7 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 			}
 		}
 		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
-			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
+			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm, Href: "/lacak-status"}) {
 				Lihat Semua
 				@components.IconArrowRight()
 			}
@@ -258,4 +223,122 @@ templ InfoCard() {
 			</div>
 		}
 	}
+}
+
+
+type TutorialStep struct {
+	Number      string
+	Title       string
+	Description string
+	Icon        templ.Component
+	ColorRef    string
+}
+
+templ TutorialSection() {
+	<div class="animate-slide-up" style="animation-delay: 0.2s">
+		<div class="mb-6">
+			<h2 class="text-lg md:text-xl font-bold text-foreground">Cara Penggunaan</h2>
+			<p class="text-sm text-muted-foreground mt-1">
+				Ikuti langkah-langkah berikut untuk mengurus KTP-el Anda
+			</p>
+		</div>
+		<div class="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory hide-scrollbar">
+			for i, step := range getTutorialSteps() {
+				<div class="min-w-[280px] md:min-w-[320px] snap-center group bg-card rounded-xl p-5 shadow-sm border border-border hover:shadow-md transition-all duration-300">
+					<div class="flex items-start gap-4">
+						<div class={ "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 " + step.ColorRef }>
+							<div class="[&>svg]:size-6">
+								@step.Icon
+							</div>
+						</div>
+						<div class="flex-1">
+							<div class="flex items-center gap-2 mb-2">
+								<span class="text-xs font-bold text-muted-foreground">
+									LANGKAH { step.Number }
+								</span>
+								if i < 3 {
+									<div class="hidden md:block text-muted-foreground/50">
+										@components.IconArrowRight()
+									</div>
+								}
+							</div>
+							<h3 class="text-base font-semibold text-foreground mb-1">
+								{ step.Title }
+							</h3>
+							<p class="text-sm text-muted-foreground leading-relaxed">
+								{ step.Description }
+							</p>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func getTutorialSteps() []TutorialStep {
+	return []TutorialStep{
+		{
+			Number:      "1",
+			Title:       "Ajukan Permohonan",
+			Description: "Pilih jenis layanan dan isi formulir pengajuan sesuai kebutuhan Anda.",
+			Icon:        components.IconFileText(),
+			ColorRef:    "bg-blue-50 text-blue-600",
+		},
+		{
+			Number:      "2",
+			Title:       "Verifikasi Berkas",
+			Description: "Petugas akan memverifikasi kelengkapan dokumen yang Anda unggah.",
+			Icon:        components.IconSearch(),
+			ColorRef:    "bg-yellow-50 text-yellow-600",
+		},
+		{
+			Number:      "3",
+			Title:       "Proses Pembuatan",
+			Description: "Permohonan disetujui dan KTP sedang dalam proses pencetakan.",
+			Icon:        components.IconSettings(),
+			ColorRef:    "bg-orange-100 text-orange-600",
+		},
+		{
+			Number:      "4",
+			Title:       "Ambil KTP",
+			Description: "Datang ke kelurahan dengan membawa dokumen asli untuk pengambilan.",
+			Icon:        components.IconMapPin(),
+			ColorRef:    "bg-green-50 text-green-600",
+		},
+	}
+}
+
+templ DashboardHeader(data DashboardData) {
+	<div class="rounded-2xl p-6 md:p-8 text-white shadow-sm animate-fade-in border border-slate-800" style="background: linear-gradient(135deg, #0f172a 0%, #0f172a 80%, #022c22 100%);">
+		<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+			<div class="flex items-center gap-4">
+				<div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent/20 flex items-center justify-center">
+					<div class="[&>svg]:size-7 md:[&>svg]:size-8 text-accent">
+						@components.IconUser()
+					</div>
+				</div>
+				<div>
+					<p class="text-sm text-primary-foreground/70 mb-1">Selamat datang,</p>
+					<h1 class="text-xl md:text-2xl font-bold">{ data.UserName }</h1>
+				</div>
+			</div>
+			<div class="flex items-center justify-end gap-3 bg-primary-foreground/10 rounded-xl px-4 py-3 backdrop-blur-sm text-right ml-auto">
+				<div>
+					<p class="text-xs text-primary-foreground/70">NIK Terverifikasi</p>
+					<p class="text-sm font-semibold tracking-wider">{ maskNIK(data.NIK) }</p>
+				</div>
+				<div class="[&>svg]:size-5 text-accent">
+					@components.IconShield()
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+func maskNIK(nik string) string {
+	if len(nik) < 8 {
+		return nik
+	}
+	return nik[:4] + "••••••••" + nik[len(nik)-4:]
 }

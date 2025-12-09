@@ -35,7 +35,7 @@ templ StatusDetailPage(data StatusDetailData) {
 		<div class="min-h-screen bg-background">
 			<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 				<!-- Header -->
-				<div class="mb-8">
+				<div class="mb-12">
 					<a
 						href="/dashboard"
 						class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
@@ -132,28 +132,24 @@ templ StatusDetailPage(data StatusDetailData) {
 							@card.Content() {
 								<div class="grid gap-3 sm:grid-cols-2">
 									for _, step := range data.NextSteps {
-										<a
-											href={ templ.SafeURL(step.ActionURL) }
-											class={
-												"flex items-start gap-3 p-4 rounded-lg border transition-all hover:shadow-md",
-												templ.KV("bg-primary text-primary-foreground border-primary hover:bg-primary/90", step.IsPrimary),
-												templ.KV("bg-card border-gray-200 hover:border-primary/50", !step.IsPrimary),
-											}
+										<div
+											class="flex items-start gap-3 p-4 rounded-lg border-2 border-amber-300 bg-amber-50"
 										>
-											<div class={ "shrink-0", templ.KV("text-primary-foreground", step.IsPrimary), templ.KV("text-primary", !step.IsPrimary) }>
-												if step.Icon != nil {
-													@step.Icon
-												}
+											<div class="shrink-0 text-amber-600">
+												<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+													<circle cx="12" cy="12" r="10"></circle>
+													<polyline points="12 6 12 12 16 14"></polyline>
+												</svg>
 											</div>
 											<div>
-												<p class={ "font-medium", templ.KV("text-primary-foreground", step.IsPrimary), templ.KV("text-foreground", !step.IsPrimary) }>
+												<p class="font-medium text-amber-800">
 													{ step.Title }
 												</p>
-												<p class={ "text-sm mt-0.5", templ.KV("text-primary-foreground/80", step.IsPrimary), templ.KV("text-muted-foreground", !step.IsPrimary) }>
+												<p class="text-sm mt-0.5 text-amber-700">
 													{ step.Description }
 												</p>
 											</div>
-										</a>
+										</div>
 									}
 								</div>
 							}

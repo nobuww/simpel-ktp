@@ -75,3 +75,9 @@
 @source "../../internal/**/*.go";
 @source "../../ui/**/*.templ";
 @source "../../ui/**/*.go";
+
+@layer components {
+  .gradient-hero {
+    background: linear-gradient(135deg, var(--color-slate-900) 0%, oklch(0.45 0.2 260) 100%);
+  }
+}
