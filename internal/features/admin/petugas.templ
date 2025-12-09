@@ -1,0 +1,477 @@
+package admin
+
+import (
+	"github.com/nobuww/simpel-ktp/internal/middleware"
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+	"github.com/nobuww/simpel-ktp/ui/templui/input"
+	"github.com/nobuww/simpel-ktp/ui/templui/label"
+	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
+)
+
+// Data Structures
+type PetugasPageData struct {
+	UserName      string
+	UserRole      string
+	ActivePage    string
+	List          []PetugasItem
+	Stats         PetugasStats
+	IsKecamatan   bool // true if current user is admin kecamatan
+	KelurahanList []KelurahanOption
+}
+
+type PetugasItem struct {
+	ID          string
+	Username    string
+	NamaLengkap string
+	Role        string
+	KelurahanID int16
+	Kelurahan   string
+	Status      string
+}
+
+type PetugasStats struct {
+	Total          int
+	AdminKecamatan int
+	AdminKelurahan int
+	Aktif          int
+}
+
+type KelurahanOption struct {
+	ID   int16
+	Nama string
+}
+
+// Main Page Component
+templ PetugasPage(data PetugasPageData) {
+	@layouts.Admin("Kelola Petugas - Simpel KTP", nil) {
+		@sidebar.Layout() {
+			@components.AdminSidebar(components.AdminSidebarData{
+				UserName:   data.UserName,
+				UserRole:   data.UserRole,
+				ActivePage: data.ActivePage,
+			})
+			@sidebar.Inset() {
+				@components.AdminMobileHeader("Kelola Petugas")
+				<div class="flex-1 p-4 md:p-6 lg:p-8">
+					@components.PageHeader(components.PageHeaderProps{
+						Title:       "Kelola Petugas",
+						Description: "Kelola data petugas dan admin sistem",
+					})
+					<div
+						class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+						x-data="{ shown: false }"
+						x-init="setTimeout(() => shown = true, 100)"
+					>
+						@PetugasStatCard("Total Petugas", data.Stats.Total, "bg-white text-blue-600", "bg-blue-500", 0) {
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M215.12,171.63A76.08,76.08,0,0,0,168,104.91V80a40,40,0,0,0-80,0v24.91A76.08,76.08,0,0,0,40.88,171.63a8,8,0,0,0,7.2,10.37H207.92A8,8,0,0,0,215.12,171.63Z"></path></svg>
+						}
+						@PetugasStatCard("Admin Kecamatan", data.Stats.AdminKecamatan, "bg-white text-purple-600", "bg-purple-500", 1) {
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z"></path></svg>
+						}
+						@PetugasStatCard("Admin Kelurahan", data.Stats.AdminKelurahan, "bg-white text-teal-600", "bg-teal-500", 2) {
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path></svg>
+						}
+						@PetugasStatCard("Aktif", data.Stats.Aktif, "bg-white text-green-600", "bg-green-500", 3) {
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+						}
+					</div>
+					<div
+						class="bg-white rounded-lg shadow-sm"
+						x-data={ petugasFilterInit(data.IsKecamatan) }
+					>
+						<div class="p-4">
+							<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+								<div class="relative w-full sm:w-80">
+									<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+										@components.IconSearch()
+									</span>
+									<input
+										type="search"
+										placeholder="Cari username atau nama..."
+										class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-10"
+										x-model="search"
+									/>
+								</div>
+								<div class="flex flex-wrap gap-2">
+									<div class="relative" x-data="{ open: false }" @click.outside="open = false">
+										<button
+											type="button"
+											class="flex h-9 w-40 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+											@click="open = !open"
+										>
+											<span x-text="roleFilter ? formatRole(roleFilter) : 'Semua Role'"></span>
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"></path></svg>
+										</button>
+										<div
+											x-show="open"
+											x-transition:enter="transition ease-out duration-200"
+											x-transition:enter-start="opacity-0 translate-y-1"
+											x-transition:enter-end="opacity-100 translate-y-0"
+											x-transition:leave="transition ease-in duration-150"
+											x-transition:leave-start="opacity-100 translate-y-0"
+											x-transition:leave-end="opacity-0 translate-y-1"
+											class="absolute z-50 mt-1 max-h-60 w-40 overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+											style="display: none;"
+										>
+											<div class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50" @click="roleFilter = ''; open = false" :class="roleFilter === '' ? 'bg-accent text-accent-foreground' : ''">
+												Semua Role
+											</div>
+											<template x-for="role in ['ADMIN_KECAMATAN', 'ADMIN_KELURAHAN']">
+												<div
+													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+													@click="roleFilter = role; open = false"
+													:class="roleFilter === role ? 'bg-accent text-accent-foreground' : ''"
+												>
+													<span x-text="formatRole(role)"></span>
+												</div>
+											</template>
+										</div>
+									</div>
+									if data.IsKecamatan {
+										@dialog.Trigger(dialog.TriggerProps{For: "create-petugas-dialog"}) {
+											@button.Button(button.Props{Variant: button.VariantDefault, Size: button.SizeSm}) {
+												<svg xmlns="http://www.w3.org/2000/svg" class="size-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+												Tambah Petugas
+											}
+										}
+									}
+								</div>
+							</div>
+						</div>
+						<div class="hidden md:block overflow-x-auto">
+							<table class="w-full">
+								<thead class="bg-slate-50">
+									<tr>
+										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Petugas</th>
+										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
+										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Kelurahan</th>
+										<th class="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+										if data.IsKecamatan {
+											<th class="px-6 py-4 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Aksi</th>
+										}
+									</tr>
+								</thead>
+								<tbody id="petugas-table-body">
+									<template x-if="filteredItems.length === 0">
+										<tr>
+											<td colspan={ colSpan(data.IsKecamatan) } class="px-6 py-12 text-center">
+												<div class="flex flex-col items-center justify-center gap-2">
+													<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+													</svg>
+													<p class="text-sm font-medium text-slate-900">Data tidak ditemukan</p>
+													<p class="text-xs text-slate-500">Coba ubah filter atau kata kunci pencarian</p>
+												</div>
+											</td>
+										</tr>
+									</template>
+									<template x-for="item in filteredItems" :key="item.id">
+										<tr class="hover:bg-slate-50 transition-colors group">
+											<td class="px-6 py-4">
+												<div>
+													<p class="text-sm font-bold text-slate-900" x-text="item.namaLengkap"></p>
+													<p class="text-xs text-slate-500 font-mono mt-0.5" x-text="'@' + item.username"></p>
+												</div>
+											</td>
+											<td class="px-6 py-4">
+												<span
+													class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+													:class="getRoleBadgeClass(item.role)"
+													x-text="formatRole(item.role)"
+												></span>
+											</td>
+											<td class="px-6 py-4">
+												<p class="text-sm text-slate-600" x-text="item.kelurahan || 'Kecamatan'"></p>
+											</td>
+											<td class="px-6 py-4">
+												<span
+													class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+													:class="getStatusBadgeClass(item.status)"
+													x-text="item.status === 'AKTIF' ? 'Aktif' : 'Non-Aktif'"
+												></span>
+											</td>
+											if data.IsKecamatan {
+												<td class="px-6 py-4 text-right">
+													<button
+														class="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition-colors"
+														@click="if(confirm('Yakin ingin menghapus petugas ini?')) { deletePetugas(item.id) }"
+														title="Hapus Petugas"
+													>
+														<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+													</button>
+												</td>
+											}
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+						<div class="md:hidden">
+							<template x-for="item in filteredItems" :key="item.id">
+								<div class="p-4 hover:bg-slate-50 transition-colors border-b last:border-b-0">
+									<div class="flex items-start justify-between mb-3">
+										<div>
+											<p class="font-bold text-slate-900" x-text="item.namaLengkap"></p>
+											<p class="text-xs text-slate-500 font-mono" x-text="'@' + item.username"></p>
+										</div>
+										if data.IsKecamatan {
+											<button
+												class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+												@click="if(confirm('Yakin ingin menghapus petugas ini?')) { deletePetugas(item.id) }"
+												title="Hapus Petugas"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+											</button>
+										}
+									</div>
+									<div class="space-y-2">
+										<div class="flex items-center gap-2">
+											<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium" :class="getRoleBadgeClass(item.role)" x-text="formatRole(item.role)"></span>
+											<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium" :class="getStatusBadgeClass(item.status)" x-text="item.status === 'AKTIF' ? 'Aktif' : 'Non-Aktif'"></span>
+										</div>
+										<p class="text-sm text-slate-600" x-text="item.kelurahan || 'Kecamatan'"></p>
+									</div>
+								</div>
+							</template>
+						</div>
+						<div class="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+							<p class="text-sm text-slate-500">
+								Menampilkan <span class="font-medium text-slate-900" x-text="filteredItems.length"></span> dari <span class="font-medium text-slate-900" x-text="items.length"></span> data petugas
+							</p>
+							<div class="flex gap-2" x-show="search || roleFilter">
+								<button
+									type="button"
+									class="text-sm text-blue-600 hover:underline font-medium"
+									@click="resetFilters()"
+								>
+									Reset Filter
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		}
+		@PetugasFilterScript(data.List)
+		if data.IsKecamatan {
+			@CreatePetugasDialog(data.KelurahanList)
+		}
+	}
+}
+
+// Create Petugas Dialog
+templ CreatePetugasDialog(kelurahanList []KelurahanOption) {
+	@dialog.Dialog(dialog.Props{ID: "create-petugas-dialog"}) {
+		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Tambah Petugas Baru
+				}
+				@dialog.Description() {
+					Isi form berikut untuk menambahkan petugas baru ke sistem
+				}
+			}
+			<form hx-post="/admin/petugas" hx-swap="none" class="space-y-4 py-4" id="create-petugas-form">
+				<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "nip"}) {
+						NIP
+					}
+					@input.Input(input.Props{
+						Type:        input.TypeText,
+						Name:        "nip",
+						ID:          "nip",
+						Placeholder: "Masukkan NIP (18 digit)",
+						Attributes: templ.Attributes{
+							"maxlength": "18",
+							"pattern":   "[0-9]{18}",
+						},
+					})
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "nama"}) {
+						Nama Lengkap
+					}
+					@input.Input(input.Props{
+						Type:        input.TypeText,
+						Name:        "nama",
+						ID:          "nama",
+						Placeholder: "Masukkan nama lengkap",
+						Attributes: templ.Attributes{
+							"required": true,
+						},
+					})
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "email"}) {
+						Email
+					}
+					@input.Input(input.Props{
+						Type:        input.TypeEmail,
+						Name:        "email",
+						ID:          "email",
+						Placeholder: "Masukkan email",
+						Attributes: templ.Attributes{
+							"required": true,
+						},
+					})
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "password"}) {
+						Password
+					}
+					@input.Input(input.Props{
+						Type:        input.TypePassword,
+						Name:        "password",
+						ID:          "password",
+						Placeholder: "Masukkan password",
+						Attributes: templ.Attributes{
+							"minlength": "6",
+							"required":  true,
+						},
+					})
+				</div>
+				<div class="space-y-2">
+					@label.Label(label.Props{For: "kelurahan_id"}) {
+						Kelurahan
+					}
+					<select
+						name="kelurahan_id"
+						id="kelurahan_id"
+						class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						<option value="">Kecamatan (Admin Kecamatan)</option>
+						for _, kel := range kelurahanList {
+							<option value={ intToStr(int(kel.ID)) }>{ kel.Nama }</option>
+						}
+					</select>
+					<p class="text-xs text-muted-foreground">Kosongkan untuk Admin Kecamatan</p>
+				</div>
+				@dialog.Footer() {
+					@dialog.Close() {
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+							Batal
+						}
+					}
+					@button.Button(button.Props{Type: button.TypeSubmit}) {
+						Simpan Petugas
+					}
+				}
+			</form>
+		}
+	}
+}
+
+// Stat Card Component specific for Petugas Page
+templ PetugasStatCard(label string, value int, colorClass string, barColorClass string, index int) {
+	<div
+		class={ "rounded-xl p-5 shadow-sm flex flex-col justify-between h-28 relative overflow-hidden group hover:shadow-md transition-all " + colorClass }
+		x-show="shown"
+		x-transition:enter="transition ease-out duration-300"
+		x-transition:enter-start="opacity-0 translate-y-2"
+		x-transition:enter-end="opacity-100 translate-y-0"
+		:style={ "'transition-delay: ' + " + intToStr(index) + " * 50 + 'ms'" }
+	>
+		<div class="absolute right-0 top-0 p-4">
+			{ children... }
+		</div>
+		<div class="relative z-10">
+			<h3 class="text-3xl font-bold">{ intToStr(value) }</h3>
+			<p class="text-sm font-medium mt-1 opacity-80">{ label }</p>
+		</div>
+		<div class="w-full bg-opacity-20 bg-slate-400 h-1 mt-auto rounded-full overflow-hidden relative z-10">
+			<div class={ "h-full rounded-full w-3/4 " + barColorClass }></div>
+		</div>
+	</div>
+}
+
+func petugasFilterInit(isKecamatan bool) string {
+	if isKecamatan {
+		return "petugasFilter(true)"
+	}
+	return "petugasFilter(false)"
+}
+
+func colSpan(isKecamatan bool) string {
+	if isKecamatan {
+		return "5"
+	}
+	return "4"
+}
+
+templ PetugasFilterScript(items []PetugasItem) {
+	@templ.JSONScript("petugas-data", itemsPetugasToJSON(items))
+	<script>
+		function petugasFilter(isKecamatan) {
+			return {
+				search: "",
+				roleFilter: "",
+				items: [],
+				isKecamatan: isKecamatan,
+				init() {
+					this.items = JSON.parse(
+						document.getElementById("petugas-data").textContent,
+					);
+				},
+				get filteredItems() {
+					const searchLower = this.search.toLowerCase();
+					return this.items.filter((item) => {
+						// Search filter (username, nama)
+						const matchSearch =
+							!this.search ||
+							item.username.toLowerCase().includes(searchLower) ||
+							item.namaLengkap.toLowerCase().includes(searchLower);
+
+						// Role filter
+						const matchRole =
+							!this.roleFilter || item.role === this.roleFilter;
+
+						return matchSearch && matchRole;
+					});
+				},
+				resetFilters() {
+					this.search = "";
+					this.roleFilter = "";
+				},
+				getRoleBadgeClass(role) {
+					return role === "ADMIN_KECAMATAN"
+						? "bg-purple-50 text-purple-700"
+						: "bg-teal-50 text-teal-700";
+				},
+				getStatusBadgeClass(status) {
+					return status === "AKTIF"
+						? "bg-green-50 text-green-700"
+						: "bg-slate-100 text-slate-600";
+				},
+				formatRole(role) {
+					if (role === "ADMIN_KECAMATAN") return "Admin Kecamatan";
+					if (role === "ADMIN_KELURAHAN") return "Admin Kelurahan";
+					return role;
+				},
+				deletePetugas(id) {
+					// TODO: implement delete via HTMX
+					console.log("Delete petugas:", id);
+					alert("Fitur hapus akan diimplementasikan dengan backend");
+				},
+			};
+		}
+	</script>
+}
+
+func itemsPetugasToJSON(items []PetugasItem) []map[string]any {
+	result := make([]map[string]any, len(items))
+	for i, item := range items {
+		result[i] = map[string]any{
+			"id":          item.ID,
+			"username":    item.Username,
+			"namaLengkap": item.NamaLengkap,
+			"role":        item.Role,
+			"kelurahan":   item.Kelurahan,
+			"status":      item.Status,
+		}
+	}
+	return result
+}

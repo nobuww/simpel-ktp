@@ -164,3 +164,25 @@ WHERE js.tanggal = CURRENT_DATE
     (sqlc.narg('kelurahan_id')::smallint IS NULL AND js.lokasi_kelurahan_id IS NULL)
   )
 ORDER BY js.jam_mulai;
+
+-- name: GetPetugasStatsAdmin :one
+SELECT 
+    COUNT(*) AS total,
+    COUNT(*) FILTER (WHERE role = 'ADMIN_KECAMATAN') AS admin_kecamatan,
+    COUNT(*) FILTER (WHERE role = 'ADMIN_KELURAHAN') AS admin_kelurahan,
+    COUNT(*) FILTER (WHERE is_active = TRUE) AS aktif
+FROM petugas;
+
+-- name: ListPetugasAdmin :many
+SELECT 
+    p.id,
+    p.username,
+    p.nama_petugas,
+    p.nip,
+    p.role,
+    p.is_active,
+    CASE WHEN p.is_active THEN 'AKTIF' ELSE 'NON_AKTIF' END AS status,
+    k.nama_kelurahan
+FROM petugas p
+LEFT JOIN ref_kelurahan k ON p.kelurahan_id = k.id
+ORDER BY p.created_at DESC;

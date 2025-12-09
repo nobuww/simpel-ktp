@@ -6,6 +6,36 @@ templ Admin(title string, scripts templ.Component) {
 	<html lang="id" class="scroll-smooth">
 		@Head(title)
 		<body class="bg-background font-sans text-foreground antialiased">
+			<style>
+				/* Override sidebar colors to dark theme matching navbar */
+				[data-tui-sidebar-wrapper],
+				[data-tui-sidebar-wrapper] [data-sidebar="sidebar"],
+				[data-tui-sidebar-wrapper] aside,
+				[data-tui-sidebar-wrapper] aside > div,
+				.sidebar-mobile-portal {
+					background-color: #0f172a !important;
+					color: #f1f5f9 !important;
+				}
+				[data-tui-sidebar-wrapper] [data-tui-sidebar="separator"] {
+					border-color: rgba(255,255,255,0.15) !important;
+				}
+				[data-tui-sidebar-wrapper] [data-tui-sidebar="group-label"] {
+					color: rgba(255,255,255,0.6) !important;
+				}
+				[data-tui-sidebar-wrapper] [data-tui-sidebar="menu-button"] {
+					color: rgba(255,255,255,0.85) !important;
+				}
+				[data-tui-sidebar-wrapper] [data-tui-sidebar="menu-button"]:hover {
+					background-color: rgba(255,255,255,0.1) !important;
+				}
+				[data-tui-sidebar-wrapper] [data-tui-sidebar-active="true"] {
+					background-color: rgba(255,255,255,0.15) !important;
+					color: #fff !important;
+				}
+				[data-tui-sidebar-wrapper] .text-muted-foreground {
+					color: rgba(255,255,255,0.6) !important;
+				}
+			</style>
 			{ children... }
 			if scripts != nil {
 				@scripts

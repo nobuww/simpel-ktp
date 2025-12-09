@@ -39,6 +39,7 @@ type Querier interface {
 	GetPermohonanStatusById(ctx context.Context, id uuid.UUID) (GetPermohonanStatusByIdRow, error)
 	GetPetugasByNIP(ctx context.Context, nip pgtype.Text) (Petugas, error)
 	GetPetugasByUsername(ctx context.Context, username string) (Petugas, error)
+	GetPetugasStatsAdmin(ctx context.Context) (GetPetugasStatsAdminRow, error)
 	GetRiwayatStatusByPermohonan(ctx context.Context, permohonanID pgtype.UUID) ([]GetRiwayatStatusByPermohonanRow, error)
 	IncrementKuotaTerisi(ctx context.Context, id uuid.UUID) error
 	InsertRiwayatStatus(ctx context.Context, arg InsertRiwayatStatusParams) error
@@ -49,6 +50,7 @@ type Querier interface {
 	ListPermohonanAdmin(ctx context.Context, arg ListPermohonanAdminParams) ([]ListPermohonanAdminRow, error)
 	ListPermohonanByJadwal(ctx context.Context, jadwalSesiID pgtype.UUID) ([]ListPermohonanByJadwalRow, error)
 	ListPermohonanByStatus(ctx context.Context, arg ListPermohonanByStatusParams) ([]ListPermohonanByStatusRow, error)
+	ListPetugasAdmin(ctx context.Context) ([]ListPetugasAdminRow, error)
 	ListTodayJadwal(ctx context.Context, kelurahanID pgtype.Int2) ([]ListTodayJadwalRow, error)
 	TruncateSeedTables(ctx context.Context) error
 	UpdateJadwalSesi(ctx context.Context, arg UpdateJadwalSesiParams) error

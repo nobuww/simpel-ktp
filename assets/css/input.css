@@ -46,16 +46,18 @@
   --color-ring: oklch(0.55 0.2 260);
   /* Match Primary */
 
-  /* Sidebar colors */
-  --color-sidebar: oklch(1 0 0);
-  /* White sidebar for clean look */
-  --color-sidebar-foreground: oklch(0.35 0 0);
-  /* Softer text for sidebar */
-  --color-sidebar-primary: oklch(0.55 0.2 260);
+  /* Sidebar colors - Dark theme matching user navbar */
+  --color-sidebar: oklch(0.129 0.042 264.695);
+  /* Dark sidebar matching navbar (slate-900) */
+  --color-sidebar-foreground: oklch(0.95 0 0);
+  /* Light text for dark sidebar */
+  --color-sidebar-primary: oklch(0.75 0.15 260);
   --color-sidebar-primary-foreground: oklch(1 0 0);
-  --color-sidebar-accent: oklch(0.97 0 0);
-  --color-sidebar-accent-foreground: oklch(0.205 0 0);
-  --color-sidebar-border: oklch(0.95 0 0);
+  --color-sidebar-accent: oklch(0.25 0.02 260);
+  /* Subtle highlight on dark bg */
+  --color-sidebar-accent-foreground: oklch(0.95 0 0);
+  --color-sidebar-border: oklch(0.25 0 0);
+  /* Darker border */
   --color-sidebar-ring: oklch(0.55 0.2 260);
 
   --animate-infinite-scroll: infinite-scroll 40s linear infinite;

@@ -77,6 +77,8 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 		r.Post("/admin/jadwal/generate", adminHandler.GenerateJadwalHandler)
 
 		r.Get("/admin/jadwal/{id}/antrian", adminHandler.JadwalAntrianHandler)
+		r.Get("/admin/petugas", adminHandler.PetugasHandler)
+		r.Post("/admin/petugas", adminHandler.CreatePetugasHandler)
 	})
 
 	// User routes (protected - warga only)

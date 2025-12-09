@@ -235,6 +235,34 @@ func (q *Queries) GetPermohonanDetailAdmin(ctx context.Context, arg GetPermohona
 	return i, err
 }
 
+const getPetugasStatsAdmin = `-- name: GetPetugasStatsAdmin :one
+SELECT 
+    COUNT(*) AS total,
+    COUNT(*) FILTER (WHERE role = 'ADMIN_KECAMATAN') AS admin_kecamatan,
+    COUNT(*) FILTER (WHERE role = 'ADMIN_KELURAHAN') AS admin_kelurahan,
+    COUNT(*) FILTER (WHERE is_active = TRUE) AS aktif
+FROM petugas
+`
+
+type GetPetugasStatsAdminRow struct {
+	Total          int64 `json:"total"`
+	AdminKecamatan int64 `json:"adminKecamatan"`
+	AdminKelurahan int64 `json:"adminKelurahan"`
+	Aktif          int64 `json:"aktif"`
+}
+
+func (q *Queries) GetPetugasStatsAdmin(ctx context.Context) (GetPetugasStatsAdminRow, error) {
+	row := q.db.QueryRow(ctx, getPetugasStatsAdmin)
+	var i GetPetugasStatsAdminRow
+	err := row.Scan(
+		&i.Total,
+		&i.AdminKecamatan,
+		&i.AdminKelurahan,
+		&i.Aktif,
+	)
+	return i, err
+}
+
 const listPendudukAdmin = `-- name: ListPendudukAdmin :many
 SELECT 
     p.nik,
@@ -385,6 +413,61 @@ func (q *Queries) ListPermohonanAdmin(ctx context.Context, arg ListPermohonanAdm
 			&i.NomorAntrian,
 			&i.LokasiKelurahanID,
 			&i.LokasiNamaKelurahan,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPetugasAdmin = `-- name: ListPetugasAdmin :many
+SELECT 
+    p.id,
+    p.username,
+    p.nama_petugas,
+    p.nip,
+    p.role,
+    p.is_active,
+    CASE WHEN p.is_active THEN 'AKTIF' ELSE 'NON_AKTIF' END AS status,
+    k.nama_kelurahan
+FROM petugas p
+LEFT JOIN ref_kelurahan k ON p.kelurahan_id = k.id
+ORDER BY p.created_at DESC
+`
+
+type ListPetugasAdminRow struct {
+	ID            uuid.UUID   `json:"id"`
+	Username      string      `json:"username"`
+	NamaPetugas   string      `json:"namaPetugas"`
+	Nip           pgtype.Text `json:"nip"`
+	Role          string      `json:"role"`
+	IsActive      pgtype.Bool `json:"isActive"`
+	Status        string      `json:"status"`
+	NamaKelurahan pgtype.Text `json:"namaKelurahan"`
+}
+
+func (q *Queries) ListPetugasAdmin(ctx context.Context) ([]ListPetugasAdminRow, error) {
+	rows, err := q.db.Query(ctx, listPetugasAdmin)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPetugasAdminRow
+	for rows.Next() {
+		var i ListPetugasAdminRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.NamaPetugas,
+			&i.Nip,
+			&i.Role,
+			&i.IsActive,
+			&i.Status,
+			&i.NamaKelurahan,
 		); err != nil {
 			return nil, err
 		}

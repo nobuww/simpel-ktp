@@ -34,6 +34,7 @@ templ AdminSidebar(data AdminSidebarData) {
 	@sidebar.Sidebar(sidebar.Props{
 		Variant:     sidebar.VariantInset,
 		Collapsible: sidebar.CollapsibleIcon,
+		Class:       "!bg-slate-900 !text-white [&_[data-sidebar=sidebar]]:!bg-slate-900 [&_[data-tui-sidebar=header]]:!text-white [&_[data-tui-sidebar=content]]:!text-white [&_[data-tui-sidebar=footer]]:!text-white [&_[data-tui-sidebar=group-label]]:!text-white/70 [&_[data-tui-sidebar=separator]]:!border-white/20 [&_[data-tui-sidebar=menu-button]]:!text-white/90 [&_[data-tui-sidebar=menu-button]:hover]:!bg-white/10",
 	}) {
 		@sidebar.Header() {
 			<div class="flex items-center gap-2 px-2">

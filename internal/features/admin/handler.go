@@ -14,6 +14,7 @@ import (
 	"github.com/nobuww/simpel-ktp/internal/session"
 	"github.com/nobuww/simpel-ktp/internal/store"
 	"github.com/nobuww/simpel-ktp/internal/store/pg_store"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Handler manages admin-related HTTP handlers
@@ -600,6 +601,154 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	PendudukPage(data).Render(r.Context(), w)
+}
+
+func (h *Handler) PetugasHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	// Check if user is admin kecamatan (no kelurahan_id)
+	isKecamatan := user.KelurahanID == nil
+
+	// Fetch Stats
+	statsRow, err := h.store.GetPetugasStatsAdmin(ctx)
+	if err != nil {
+		statsRow = pg_store.GetPetugasStatsAdminRow{}
+	}
+
+	stats := PetugasStats{
+		Total:          int(statsRow.Total),
+		AdminKecamatan: int(statsRow.AdminKecamatan),
+		AdminKelurahan: int(statsRow.AdminKelurahan),
+		Aktif:          int(statsRow.Aktif),
+	}
+
+	// Fetch List
+	rows, err := h.store.ListPetugasAdmin(ctx)
+	if err != nil {
+		rows = []pg_store.ListPetugasAdminRow{}
+	}
+
+	list := make([]PetugasItem, len(rows))
+	for i, r := range rows {
+		list[i] = PetugasItem{
+			ID:          r.ID.String(),
+			Username:    r.Username,
+			NamaLengkap: r.NamaPetugas,
+			Role:        r.Role,
+			Kelurahan:   r.NamaKelurahan.String,
+			Status:      r.Status,
+		}
+	}
+
+	// Load kelurahan list for the create form (only for admin kecamatan)
+	var kelurahanList []KelurahanOption
+	if isKecamatan {
+		kelRows, err := h.store.ListKelurahan(ctx)
+		if err == nil {
+			kelurahanList = make([]KelurahanOption, len(kelRows))
+			for i, k := range kelRows {
+				kelurahanList[i] = KelurahanOption{
+					ID:   k.ID,
+					Nama: k.NamaKelurahan,
+				}
+			}
+		}
+	}
+
+	data := PetugasPageData{
+		UserName:      user.UserName,
+		UserRole:      common.FormatRole(user.UserRole),
+		ActivePage:    "petugas",
+		Stats:         stats,
+		List:          list,
+		IsKecamatan:   isKecamatan,
+		KelurahanList: kelurahanList,
+	}
+
+	PetugasPage(data).Render(r.Context(), w)
+}
+
+// CreatePetugasHandler handles the creation of new petugas
+func (h *Handler) CreatePetugasHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Invalid form data")
+		return
+	}
+
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+
+	// Only admin kecamatan can create petugas
+	if user.KelurahanID != nil {
+		common.WriteError(w, http.StatusForbidden, "Anda tidak memiliki akses untuk menambah petugas")
+		return
+	}
+
+	ctx := r.Context()
+
+	nip := r.FormValue("nip")
+	nama := r.FormValue("nama")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	kelurahanIDStr := r.FormValue("kelurahan_id")
+
+	// Validate required fields
+	if nama == "" || email == "" || password == "" {
+		common.WriteError(w, http.StatusBadRequest, "Nama, email, dan password wajib diisi")
+		return
+	}
+
+	if len(password) < 6 {
+		common.WriteError(w, http.StatusBadRequest, "Password minimal 6 karakter")
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		common.WriteError(w, http.StatusInternalServerError, "Gagal memproses password")
+		return
+	}
+
+	// Parse kelurahan ID (optional - empty means admin kecamatan)
+	var kelurahanID pgtype.Int2
+	if kelurahanIDStr != "" {
+		kelID, err := strconv.Atoi(kelurahanIDStr)
+		if err != nil {
+			common.WriteError(w, http.StatusBadRequest, "Kelurahan ID tidak valid")
+			return
+		}
+		kelurahanID = pgtype.Int2{Int16: int16(kelID), Valid: true}
+	}
+
+	// Get current user ID for created_by
+	var createdBy pgtype.UUID
+	if uid, err := uuid.Parse(user.UserID); err == nil {
+		createdBy = pgtype.UUID{Bytes: uid, Valid: true}
+	}
+
+	// Create petugas
+	_, err = h.store.CreatePetugas(ctx, pg_store.CreatePetugasParams{
+		KelurahanID:  kelurahanID,
+		Nip:          pgtype.Text{String: nip, Valid: nip != ""},
+		NamaPetugas:  nama,
+		CreatedBy:    createdBy,
+		Username:     email,
+		PasswordHash: string(hashedPassword),
+	})
+	if err != nil {
+		common.WriteError(w, http.StatusInternalServerError, "Gagal membuat petugas: "+err.Error())
+		return
+	}
+
+	common.HXTrigger(w, `{"closeDialog": "create-petugas-dialog", "refreshPetugas": true}`)
+	common.HXRedirect(w, "/admin/petugas")
 }
 
 // PermohonanStatusFormHandler returns the status update form partial
