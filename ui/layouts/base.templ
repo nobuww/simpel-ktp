@@ -1,17 +1,12 @@
 package layouts
 
-import (
-	"fmt"
-	"github.com/nobuww/simpel-ktp/internal/middleware"
-)
-
 // scripts is an explicit parameter.
 // The main content is implicit via { children... }
 templ Base(title string, scripts templ.Component) {
 	<!DOCTYPE html>
 	<html lang="id" class="scroll-smooth">
 		@Head(title)
-		<body class="bg-background font-sans text-foreground antialiased" hx-headers={ fmt.Sprintf(`{"X-CSRF-Token": "%s"}`, middleware.GetCSRFToken(ctx)) }>
+		<body class="bg-background font-sans text-foreground antialiased">
 			<main class="w-full">
 				{ children... }
 			</main>

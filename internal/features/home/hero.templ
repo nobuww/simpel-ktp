@@ -107,18 +107,6 @@ templ Hero() {
 						@icon.Icon("arrow-right")(icon.Props{Size: 20, Class: "group-hover:translate-x-1 transition-transform"})
 					}
 					<form action="/auth/logout" method="POST" class="inline-block">
-<<<<<<< HEAD
-					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
-					@button.Button(button.Props{
-						Variant: button.VariantOutline,
-						Class:   "px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 text-white rounded-lg font-semibold",
-						Type:    "submit",
-					}) {
-						Keluar
-					}
-				</form>
-=======
-						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 						@button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Class:   "px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 text-white rounded-lg font-semibold",
@@ -127,7 +115,6 @@ templ Hero() {
 							Keluar
 						}
 					</form>
->>>>>>> 0de58a406a9ec895db4eed1b0df046ad72eb9966
 				} else {
 					@button.Button(button.Props{
 						Href:  "/register",

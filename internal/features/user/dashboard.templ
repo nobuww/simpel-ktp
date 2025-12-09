@@ -1,291 +1,306 @@
 package user
 
 import (
-"fmt"
-"github.com/nobuww/simpel-ktp/internal/middleware"
-"github.com/nobuww/simpel-ktp/ui/components"
-"github.com/nobuww/simpel-ktp/ui/layouts"
-"github.com/nobuww/simpel-ktp/ui/templui/button"
-"github.com/nobuww/simpel-ktp/ui/templui/card"
-"github.com/nobuww/simpel-ktp/ui/templui/dialog"
+	"fmt"
+	"github.com/nobuww/simpel-ktp/ui/components"
+	"github.com/nobuww/simpel-ktp/ui/layouts"
+	"github.com/nobuww/simpel-ktp/ui/templui/button"
+	"github.com/nobuww/simpel-ktp/ui/templui/card"
+	"github.com/nobuww/simpel-ktp/ui/templui/dialog"
 )
 
 type DashboardData struct {
-UserName string
-NIK string
-Stats UserStats
-RecentPermohonan []PermohonanItem
+	UserName         string
+	NIK              string
+	Stats            UserStats
+	RecentPermohonan []PermohonanItem
 }
 
 type UserStats struct {
-Total int64
-Verifikasi int64
-Proses int64
-SiapAmbil int64
-Selesai int64
-Ditolak int64
+	Total      int64
+	Verifikasi int64
+	Proses     int64
+	SiapAmbil  int64
+	Selesai    int64
+	Ditolak    int64
 }
 
 type PermohonanItem struct {
-ID string
-KodeBooking string
-JenisPermohonan string
-StatusTerkini string
-NomorAntrian int
-JadwalTanggal string
-JadwalJam string
-LokasiKelurahan string
-TanggalDaftar string
+	ID              string
+	KodeBooking     string
+	JenisPermohonan string
+	StatusTerkini   string
+	NomorAntrian    int
+	JadwalTanggal   string
+	JadwalJam       string
+	LokasiKelurahan string
+	TanggalDaftar   string
 }
 
 templ DashboardPage(data DashboardData) {
-@layouts.Base("Dashboard - Simpel KTP", nil) {
-<!-- Navigation -->
-@UserNavbar(data.UserName)
-<div class="min-h-screen bg-background">
-	<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-		<!-- Welcome Section -->
-		<div class="mb-8">
-			<h1 class="text-2xl font-bold text-foreground">Selamat Datang, { data.UserName }!</h1>
-			<p class="mt-1 text-sm text-muted-foreground">NIK: { data.NIK }</p>
-		</div>
-		<!-- Stats Cards -->
-		<div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-			@components.StatCard(components.StatCardProps{
-			Title: "Total",
-			Value: fmt.Sprintf("%d", data.Stats.Total),
-			TextColor: "text-secondary-foreground",
-			Centered: true,
-			})
-			@components.StatCard(components.StatCardProps{
-			Title: "Verifikasi",
-			Value: fmt.Sprintf("%d", data.Stats.Verifikasi),
-			TextColor: "text-blue-600",
-			Centered: true,
-			})
-			@components.StatCard(components.StatCardProps{
-			Title: "Proses",
-			Value: fmt.Sprintf("%d", data.Stats.Proses),
-			TextColor: "text-yellow-600",
-			Centered: true,
-			})
-			@components.StatCard(components.StatCardProps{
-			Title: "Siap Ambil",
-			Value: fmt.Sprintf("%d", data.Stats.SiapAmbil),
-			TextColor: "text-green-600",
-			Centered: true,
-			})
-			@components.StatCard(components.StatCardProps{
-			Title: "Selesai",
-			Value: fmt.Sprintf("%d", data.Stats.Selesai),
-			TextColor: "text-emerald-600",
-			Centered: true,
-			})
-			@components.StatCard(components.StatCardProps{
-			Title: "Ditolak",
-			Value: fmt.Sprintf("%d", data.Stats.Ditolak),
-			TextColor: "text-red-600",
-			Centered: true,
-			})
-		</div>
-		<!-- Quick Actions -->
-		<div class="mb-8">
-			<h2 class="mb-4 text-lg font-semibold text-foreground">Aksi Cepat</h2>
-			<div class="flex flex-wrap gap-3">
-				@PermohonanModal()
-				<a href="/lacak-status">
-					@button.Button(button.Props{Variant: button.VariantOutline}) {
-					@components.IconSearch()
-					Lacak Status
-					}
-				</a>
+	@layouts.Base("Dashboard - Simpel KTP", nil) {
+		<!-- Navigation -->
+		@UserNavbar(data.UserName)
+		<div class="min-h-screen bg-background">
+			<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+				<!-- Welcome Section -->
+				<div class="mb-8">
+					<h1 class="text-2xl font-bold text-foreground">Selamat Datang, { data.UserName }!</h1>
+					<p class="mt-1 text-sm text-muted-foreground">NIK: { data.NIK }</p>
+				</div>
+				<!-- Stats Cards -->
+				<div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+					@components.StatCard(components.StatCardProps{
+						Title:     "Total",
+						Value:     fmt.Sprintf("%d", data.Stats.Total),
+						TextColor: "text-secondary-foreground",
+						Centered:  true,
+					})
+					@components.StatCard(components.StatCardProps{
+						Title:     "Verifikasi",
+						Value:     fmt.Sprintf("%d", data.Stats.Verifikasi),
+						TextColor: "text-blue-600",
+						Centered:  true,
+					})
+					@components.StatCard(components.StatCardProps{
+						Title:     "Proses",
+						Value:     fmt.Sprintf("%d", data.Stats.Proses),
+						TextColor: "text-yellow-600",
+						Centered:  true,
+					})
+					@components.StatCard(components.StatCardProps{
+						Title:     "Siap Ambil",
+						Value:     fmt.Sprintf("%d", data.Stats.SiapAmbil),
+						TextColor: "text-green-600",
+						Centered:  true,
+					})
+					@components.StatCard(components.StatCardProps{
+						Title:     "Selesai",
+						Value:     fmt.Sprintf("%d", data.Stats.Selesai),
+						TextColor: "text-emerald-600",
+						Centered:  true,
+					})
+					@components.StatCard(components.StatCardProps{
+						Title:     "Ditolak",
+						Value:     fmt.Sprintf("%d", data.Stats.Ditolak),
+						TextColor: "text-red-600",
+						Centered:  true,
+					})
+				</div>
+				<!-- Quick Actions -->
+				<div class="mb-8">
+					<h2 class="mb-4 text-lg font-semibold text-foreground">Aksi Cepat</h2>
+					<div class="flex flex-wrap gap-3">
+						@PermohonanModal()
+						<a href="/lacak-status">
+							@button.Button(button.Props{Variant: button.VariantOutline}) {
+								@components.IconSearch()
+								Lacak Status
+							}
+						</a>
+					</div>
+				</div>
+				<!-- Recent Permohonan -->
+				<div class="grid gap-6 lg:grid-cols-2">
+					@RecentPermohonanCard(data.RecentPermohonan)
+					@InfoCard()
+				</div>
 			</div>
 		</div>
-		<!-- Recent Permohonan -->
-		<div class="grid gap-6 lg:grid-cols-2">
-			@RecentPermohonanCard(data.RecentPermohonan)
-			@InfoCard()
-		</div>
-	</div>
-</div>
-}
+	}
 }
 
 templ UserNavbar(userName string) {
-<nav class="sticky top-0 z-50 shadow-md" style="background-color: #1c283c">
-	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-		<div class="flex h-16 items-center justify-between">
-			<div class="flex items-center gap-3">
-				<a href="/" class="flex items-center gap-2">
-					<div class="flex size-9 items-center justify-center rounded-lg bg-emerald-500 text-white">
-						<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-							<path stroke-linecap="round" stroke-linejoin="round"
-								d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2">
-							</path>
-						</svg>
-					</div>
-					<span class="text-lg font-bold text-white">Simpel KTP</span>
-				</a>
-			</div>
-			<div class="flex items-center gap-4">
-				<div class="flex items-center gap-2 text-white">
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-							d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-					</svg>
-					<span class="text-sm font-medium">{ userName }</span>
+	<nav class="sticky top-0 z-50 shadow-md" style="background-color: #1c283c">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="flex h-16 items-center justify-between">
+				<div class="flex items-center gap-3">
+					<a href="/" class="flex items-center gap-2">
+						<div class="flex size-9 items-center justify-center rounded-lg bg-emerald-500 text-white">
+							<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+								></path>
+							</svg>
+						</div>
+						<span class="text-lg font-bold text-white">Simpel KTP</span>
+					</a>
 				</div>
-				<form action="/auth/logout" method="POST">
-					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) } />
-					@button.Button(button.Props{
-					Variant: button.VariantOutline,
-					Size: button.SizeSm,
-					Type: "submit",
-					Class: "border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent",
-					}) {
-					Keluar
-					}
-				</form>
+				<div class="flex items-center gap-4">
+					<div class="flex items-center gap-2 text-white">
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+							></path>
+						</svg>
+						<span class="text-sm font-medium">{ userName }</span>
+					</div>
+					<form action="/auth/logout" method="POST">
+						@button.Button(button.Props{
+							Variant: button.VariantOutline,
+							Size:    button.SizeSm,
+							Type:    "submit",
+							Class:   "border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent",
+						}) {
+							Keluar
+						}
+					</form>
+				</div>
 			</div>
 		</div>
-	</div>
-</nav>
+	</nav>
 }
 
 templ RecentPermohonanCard(items []PermohonanItem) {
-@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
-@card.Header() {
-@card.Title() {
-Permohonan Saya
-}
-@card.Description() {
-Daftar permohonan KTP terbaru Anda
-}
-}
-@card.Content() {
-if len(items) == 0 {
-<div class="py-8 text-center">
-	<div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-		<svg class="size-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-			stroke-width="2">
-			<path stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" stroke-linejoin="round"
-				d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-			</path>
-		</svg>
-	</div>
-	<p class="text-sm text-muted-foreground">Belum ada permohonan</p>
-	<p class="mt-1 text-xs text-muted-foreground/80">Ajukan permohonan KTP pertama Anda</p>
-</div>
-} else {
-<div class="space-y-3">
-	for _, item := range items {
-	@components.PermohonanListItem(components.PermohonanItemProps{
-	ID: item.ID,
-	KodeBooking: item.KodeBooking,
-	JenisPermohonan: item.JenisPermohonan,
-	StatusTerkini: item.StatusTerkini,
-	TanggalDaftar: item.TanggalDaftar,
-	JadwalTanggal: item.JadwalTanggal,
-	JadwalJam: item.JadwalJam,
-	LokasiKelurahan: item.LokasiKelurahan,
-	NomorAntrian: item.NomorAntrian,
-	IsAdmin: false,
-	})
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+		@card.Header() {
+			@card.Title() {
+				Permohonan Saya
+			}
+			@card.Description() {
+				Daftar permohonan KTP terbaru Anda
+			}
+		}
+		@card.Content() {
+			if len(items) == 0 {
+				<div class="py-8 text-center">
+					<div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+						<svg
+							class="size-6 text-muted-foreground"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path
+								stroke-linecap="round"
+								xmlns="http://www.w3.org/2000/svg"
+								stroke-linejoin="round"
+								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							></path>
+						</svg>
+					</div>
+					<p class="text-sm text-muted-foreground">Belum ada permohonan</p>
+					<p class="mt-1 text-xs text-muted-foreground/80">Ajukan permohonan KTP pertama Anda</p>
+				</div>
+			} else {
+				<div class="space-y-3">
+					for _, item := range items {
+						@components.PermohonanListItem(components.PermohonanItemProps{
+							ID:              item.ID,
+							KodeBooking:     item.KodeBooking,
+							JenisPermohonan: item.JenisPermohonan,
+							StatusTerkini:   item.StatusTerkini,
+							TanggalDaftar:   item.TanggalDaftar,
+							JadwalTanggal:   item.JadwalTanggal,
+							JadwalJam:       item.JadwalJam,
+							LokasiKelurahan: item.LokasiKelurahan,
+							NomorAntrian:    item.NomorAntrian,
+							IsAdmin:         false,
+						})
+					}
+				</div>
+			}
+		}
+		@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
+			@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
+				Lihat Semua
+				@components.IconArrowRight()
+			}
+		}
 	}
-</div>
-}
-}
-@card.Footer(card.FooterProps{Class: "justify-center border-t border-gray-100 pt-4"}) {
-@button.Button(button.Props{Variant: button.VariantLink, Size: button.SizeSm}) {
-Lihat Semua
-@components.IconArrowRight()
-}
-}
-}
 }
 
 templ PermohonanModal() {
-@dialog.Dialog(dialog.Props{ID: "permohonan-modal"}) {
-@dialog.Trigger(dialog.TriggerProps{Class: "w-full sm:w-auto"}) {
-@button.Button(button.Props{Variant: button.VariantDefault, Class: "w-full sm:w-auto"}) {
-@components.IconPlus()
-Ajukan Permohonan Baru
-}
-}
-@dialog.Content(dialog.ContentProps{Class: "sm:max-w-md border-zinc-200 shadow-sm rounded-xl"}) {
-@dialog.Header() {
-@dialog.Title() {
-Pilih Jenis Permohonan
-}
-@dialog.Description() {
-Silakan pilih jenis layanan KTP yang Anda butuhkan
-}
-}
-<div class="grid gap-3 py-4">
-	@PermohonanOption("KTP Baru", "Untuk yang belum pernah punya KTP", "/permohonan/baru", components.IconPlus())
-	@PermohonanOption("KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang",
-	components.IconSearch())
-	@PermohonanOption("Perubahan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah",
-	components.IconEdit())
-	@PermohonanOption("KTP Rusak", "Pengajuan cetak ulang karena KTP rusak", "/permohonan/rusak", components.IconEdit())
-</div>
-@dialog.Footer() {
-@dialog.Close() {
-@button.Button(button.Props{Variant: button.VariantOutline, Class: "border-zinc-200"}) {
-Batal
-}
-}
-}
-}
-}
+	@dialog.Dialog(dialog.Props{ID: "permohonan-modal"}) {
+		@dialog.Trigger(dialog.TriggerProps{Class: "w-full sm:w-auto"}) {
+			@button.Button(button.Props{Variant: button.VariantDefault, Class: "w-full sm:w-auto"}) {
+				@components.IconPlus()
+				Ajukan Permohonan Baru
+			}
+		}
+		@dialog.Content(dialog.ContentProps{Class: "sm:max-w-md border-zinc-200 shadow-sm rounded-xl"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Pilih Jenis Permohonan
+				}
+				@dialog.Description() {
+					Silakan pilih jenis layanan KTP yang Anda butuhkan
+				}
+			}
+			<div class="grid gap-3 py-4">
+				@PermohonanOption("KTP Baru", "Untuk yang belum pernah punya KTP", "/permohonan/baru", components.IconPlus())
+				@PermohonanOption("KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang",
+					components.IconSearch())
+				@PermohonanOption("Perubahan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah",
+					components.IconEdit())
+				@PermohonanOption("KTP Rusak", "Pengajuan cetak ulang karena KTP rusak", "/permohonan/rusak", components.IconEdit())
+			</div>
+			@dialog.Footer() {
+				@dialog.Close() {
+					@button.Button(button.Props{Variant: button.VariantOutline, Class: "border-zinc-200"}) {
+						Batal
+					}
+				}
+			}
+		}
+	}
 }
 
 templ PermohonanOption(title, description, href string, icon templ.Component) {
-<a href={ templ.SafeURL(href) }
-	class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-md hover:shadow-lg hover:bg-zinc-50 transition-all text-left group">
-	<div
-		class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-		if icon != nil {
-		@icon
-		}
-	</div>
-	<div>
-		<h3 class="font-medium text-zinc-900">{ title }</h3>
-		<p class="text-sm text-zinc-500">{ description }</p>
-	</div>
-</a>
+	<a
+		href={ templ.SafeURL(href) }
+		class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-md hover:shadow-lg hover:bg-zinc-50 transition-all text-left group"
+	>
+		<div
+			class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors"
+		>
+			if icon != nil {
+				@icon
+			}
+		</div>
+		<div>
+			<h3 class="font-medium text-zinc-900">{ title }</h3>
+			<p class="text-sm text-zinc-500">{ description }</p>
+		</div>
+	</a>
 }
 
 templ InfoCard() {
-@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
-@card.Header() {
-@card.Title() {
-Informasi Penting
-}
-@card.Description() {
-Panduan dan informasi layanan KTP
-}
-}
-@card.Content() {
-<div class="space-y-4">
-	@components.ListItem("Jam Layanan", "Senin - Jumat: 08:00 - 16:00 WIB", components.IconClock())
-	@components.ListItem("Dokumen", "Siapkan KK asli & fotokopi untuk pengambilan", components.IconDocument())
-	@components.ListItem("Bantuan", "Hubungi call center: 1500-123", components.IconPhone())
-</div>
-}
-}
+	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+		@card.Header() {
+			@card.Title() {
+				Informasi Penting
+			}
+			@card.Description() {
+				Panduan dan informasi layanan KTP
+			}
+		}
+		@card.Content() {
+			<div class="space-y-4">
+				@components.ListItem("Jam Layanan", "Senin - Jumat: 08:00 - 16:00 WIB", components.IconClock())
+				@components.ListItem("Dokumen", "Siapkan KK asli & fotokopi untuk pengambilan", components.IconDocument())
+				@components.ListItem("Bantuan", "Hubungi call center: 1500-123", components.IconPhone())
+			</div>
+		}
+	}
 }
 
 templ InfoItem(title, description string, icon templ.Component) {
-<div class="flex items-start gap-3">
-	<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-		if icon != nil {
-		@icon
-		}
+	<div class="flex items-start gap-3">
+		<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+			if icon != nil {
+				@icon
+			}
+		</div>
+		<div>
+			<p class="text-sm font-medium text-foreground">{ title }</p>
+			<p class="text-xs text-muted-foreground">{ description }</p>
+		</div>
 	</div>
-	<div>
-		<p class="text-sm font-medium text-foreground">{ title }</p>
-		<p class="text-xs text-muted-foreground">{ description }</p>
-	</div>
-</div>
 }

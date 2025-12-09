@@ -11,14 +11,15 @@ templ Alert(props AlertProps) {
 	{{ variantClasses := getAlertVariantClasses(props.Variant) }}
 	<div class={ "rounded-r-lg border-l-4 p-4 shadow-sm " + variantClasses + " " + props.Class }>
 		<div class="flex items-center gap-3">
-			if props.Variant == "error" {
-				@IconAlertError()
-			} else if props.Variant == "success" {
-				@IconAlertSuccess()
-			} else if props.Variant == "warning" {
-				@IconAlertWarning()
-			} else {
-				@IconAlertInfo()
+			switch props.Variant {
+				case "error":
+					@IconAlertError()
+				case "success":
+					@IconAlertSuccess()
+				case "warning":
+					@IconAlertWarning()
+				default:
+					@IconAlertInfo()
 			}
 			<div class="text-sm font-medium">
 				{ children... }

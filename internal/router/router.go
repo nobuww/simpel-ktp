@@ -20,10 +20,6 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 
 	// Security middlewares
 	r.Use(middleware.SecurityHeaders)
-<<<<<<< HEAD
-	r.Use(middleware.CSRF)
-=======
->>>>>>> 0de58a406a9ec895db4eed1b0df046ad72eb9966
 
 	authMiddleware := middleware.NewAuth(sessionMgr)
 	r.Use(authMiddleware.InjectUser)

@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
@@ -15,10 +14,10 @@ import (
 )
 
 type JadwalPageData struct {
-	UserName      string
-	UserRole      string
-	ActivePage    string
-	List          []JadwalItem
+	UserName        string
+	UserRole        string
+	ActivePage      string
+	List            []JadwalItem
 	CurrentWeek     string
 	StartOfWeekDate string // YYYY-MM-DD for navigation
 	KelurahanName   string // Admin Kelurahan: their kelurahan name, Admin Kecamatan: empty
@@ -75,7 +74,6 @@ templ JadwalPage(data JadwalPageData) {
 									</div>
 								}
 								<form hx-post="/admin/jadwal/generate" hx-swap="none">
-									<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 									@button.Button(button.Props{
 										Variant: button.VariantSecondary,
 										Class:   "w-full",
@@ -109,7 +107,6 @@ templ JadwalPage(data JadwalPageData) {
 }
 
 // JadwalKelurahanFilter removed - kelurahan is now determined from session
-
 templ JadwalCardView(items []JadwalItem) {
 	if len(items) == 0 {
 		<div class="bg-card rounded-lg shadow-sm">
@@ -291,7 +288,6 @@ templ CreateJadwalDialog(data JadwalPageData) {
 				}
 			}
 			<form hx-post="/admin/jadwal" hx-swap="none" class="space-y-4 py-4">
-				<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 				<div class="space-y-2">
 					@label.Label(label.Props{For: "tanggal"}) {
 						Tanggal
@@ -354,8 +350,6 @@ templ CreateJadwalDialog(data JadwalPageData) {
 	}
 }
 
-
-
 // Additional icons for jadwal
 templ IconChevronLeftNav() {
 	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -399,8 +393,8 @@ templ IconUserList() {
 }
 
 templ WeekNavigation(data JadwalPageData, oob bool) {
-	<div 
-		id="week-nav" 
+	<div
+		id="week-nav"
 		class="flex items-center gap-1 sm:gap-2 bg-card rounded-lg shadow-sm p-1"
 		if oob {
 			hx-swap-oob="true"
@@ -433,20 +427,20 @@ templ WeekNavigation(data JadwalPageData, oob bool) {
 }
 
 type AntrianItem struct {
-	ID           string
-	KodeBooking  string
-	NIK          string
-	NamaLengkap  string
-	Status       string
-	NoAntrian    int
+	ID          string
+	KodeBooking string
+	NIK         string
+	NamaLengkap string
+	Status      string
+	NoAntrian   int
 }
 
 type JadwalAntrianData struct {
-	JadwalInfo   JadwalItem
-	AntrianList  []AntrianItem
-	UserName     string
-	UserRole     string 
-	ActivePage   string
+	JadwalInfo  JadwalItem
+	AntrianList []AntrianItem
+	UserName    string
+	UserRole    string
+	ActivePage  string
 }
 
 templ JadwalAntrianPage(data JadwalAntrianData) {
@@ -463,81 +457,100 @@ templ JadwalAntrianPage(data JadwalAntrianData) {
 					<div class="mb-6">
 						@button.Button(button.Props{
 							Variant: button.VariantGhost,
-							Size: button.SizeSm,
-							Class: "mb-2 pl-0 gap-1",
+							Size:    button.SizeSm,
+							Class:   "mb-2 pl-0 gap-1",
 							Attributes: templ.Attributes{
-								"hx-get": "/admin/jadwal",
-								"hx-target": "body", 
+								"hx-get":      "/admin/jadwal",
+								"hx-target":   "body",
 								"hx-push-url": "true",
 							},
 						}) {
 							@IconChevronLeftNav()
 							Kembali ke Jadwal
 						}
-						
 						@components.PageHeader(components.PageHeaderProps{
 							Title:       "Antrian Sesi: " + data.JadwalInfo.TanggalFormat,
 							Description: fmt.Sprintf("%s • %s - %s", data.JadwalInfo.NamaKelurahan, data.JadwalInfo.JamMulai, data.JadwalInfo.JamSelesai),
 						})
 					</div>
-
 					<!-- Stats / Details Card -->
 					<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-						 <div class="p-4 bg-card rounded-lg border shadow-sm">
+						<div class="p-4 bg-card rounded-lg border shadow-sm">
 							<div class="text-sm font-medium text-muted-foreground">Total Antrian</div>
 							<div class="text-2xl font-bold">{ intToStr(len(data.AntrianList)) }</div>
-						 </div>
-						 <div class="p-4 bg-card rounded-lg border shadow-sm">
+						</div>
+						<div class="p-4 bg-card rounded-lg border shadow-sm">
 							<div class="text-sm font-medium text-muted-foreground">Sisa Kuota</div>
 							<div class="text-2xl font-bold">{ intToStr(data.JadwalInfo.KuotaMaksimal - data.JadwalInfo.KuotaTerisi) }</div>
-						 </div>
+						</div>
 					</div>
-
 					<!-- Table -->
 					<div class="bg-card rounded-lg shadow-sm overflow-hidden">
 						<div class="overflow-x-auto">
 							@table.Table(table.Props{Class: "w-full"}) {
 								@table.Header() {
 									@table.Row() {
-										@table.Head() { No. }
-										@table.Head() { Kode Booking }
-										@table.Head() { Nama Lengkap }
-										@table.Head() { NIK }
-										@table.Head() { Status }
-										@table.Head(table.HeadProps{Class:"text-right"}) { Aksi }
+										@table.Head() {
+											No. 
+										}
+										@table.Head() {
+											Kode Booking 
+										}
+										@table.Head() {
+											Nama Lengkap 
+										}
+										@table.Head() {
+											NIK 
+										}
+										@table.Head() {
+											Status 
+										}
+										@table.Head(table.HeadProps{Class: "text-right"}) {
+											Aksi 
+										}
 									}
 								}
 								@table.Body() {
-									 if len(data.AntrianList) == 0 {
+									if len(data.AntrianList) == 0 {
 										@table.Row() {
 											@table.Cell(table.CellProps{Attributes: templ.Attributes{"colspan": "6", "class": "px-4 py-8 text-center text-muted-foreground"}}) {
 												Belum ada antrian pada sesi ini
 											}
 										}
-									 } else {
+									} else {
 										for _, item := range data.AntrianList {
 											@table.Row(table.RowProps{Class: "hover:bg-muted/50"}) {
-												@table.Cell() { <span class="font-mono">{ intToStr(item.NoAntrian) }</span> }
-												@table.Cell() { <span class="font-mono bg-muted px-1.5 py-0.5 rounded">{ item.KodeBooking }</span> }
-												@table.Cell() { { item.NamaLengkap } }
-												 @table.Cell() { { item.NIK } }
-												@table.Cell() { @components.StatusBadge(item.Status) }
-												@table.Cell(table.CellProps{Class:"text-right"}) {
+												@table.Cell() {
+													<span class="font-mono">{ intToStr(item.NoAntrian) }</span>
+												}
+												@table.Cell() {
+													<span class="font-mono bg-muted px-1.5 py-0.5 rounded">{ item.KodeBooking }</span>
+												}
+												@table.Cell() {
+													{ item.NamaLengkap }
+												}
+												@table.Cell() {
+													{ item.NIK }
+												}
+												@table.Cell() {
+													@components.StatusBadge(item.Status)
+												}
+												@table.Cell(table.CellProps{Class: "text-right"}) {
 													@button.Button(button.Props{
 														Variant: button.VariantGhost,
-														Size: button.SizeIcon,
+														Size:    button.SizeIcon,
 														Attributes: templ.Attributes{
-															"hx-get": "/admin/permohonan/" + item.ID,
-															"hx-target": "body", 
+															"hx-get":      "/admin/permohonan/" + item.ID,
+															"hx-target":   "body",
 															"hx-push-url": "true",
 														},
 													}) {
-														@components.IconEdit() 
+														@components.IconEdit()
 													}
 												}
 											}
 										}
-									 }
+									}
 								}
 							}
 						</div>
