@@ -2,7 +2,6 @@ package user
 
 import (
 	"fmt"
-	"github.com/nobuww/simpel-ktp/internal/middleware"
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
@@ -112,27 +111,41 @@ templ DashboardPage(data DashboardData) {
 }
 
 templ UserNavbar(userName string) {
-	<nav class="sticky top-0 z-50 border-b border-gray-200 bg-card">
+	<nav class="sticky top-0 z-50 shadow-md" style="background-color: #1c283c">
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a href="/" class="flex items-center gap-2">
-						<div class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+						<div class="flex size-9 items-center justify-center rounded-lg bg-emerald-500 text-white">
 							<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+								></path>
 							</svg>
 						</div>
-						<span class="text-lg font-bold text-foreground">Simpel KTP</span>
+						<span class="text-lg font-bold text-white">Simpel KTP</span>
 					</a>
 				</div>
 				<div class="flex items-center gap-4">
-					<span class="text-sm text-muted-foreground">{ userName }</span>
+					<div class="flex items-center gap-2 text-white">
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+							></path>
+						</svg>
+						<span class="text-sm font-medium">{ userName }</span>
+					</div>
 					<form action="/auth/logout" method="POST">
-						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 						@button.Button(button.Props{
 							Variant: button.VariantOutline,
 							Size:    button.SizeSm,
 							Type:    "submit",
+							Class:   "border-white/20 text-white hover:bg-white/10 hover:text-white bg-transparent",
 						}) {
 							Keluar
 						}
@@ -157,8 +170,19 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 			if len(items) == 0 {
 				<div class="py-8 text-center">
 					<div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-						<svg class="size-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+						<svg
+							class="size-6 text-muted-foreground"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path
+								stroke-linecap="round"
+								xmlns="http://www.w3.org/2000/svg"
+								stroke-linejoin="round"
+								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							></path>
 						</svg>
 					</div>
 					<p class="text-sm text-muted-foreground">Belum ada permohonan</p>
@@ -211,8 +235,10 @@ templ PermohonanModal() {
 			}
 			<div class="grid gap-3 py-4">
 				@PermohonanOption("KTP Baru", "Untuk yang belum pernah punya KTP", "/permohonan/baru", components.IconPlus())
-				@PermohonanOption("KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang", components.IconSearch())
-				@PermohonanOption("Perubahan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah", components.IconEdit())
+				@PermohonanOption("KTP Hilang", "Pengajuan cetak ulang karena KTP hilang", "/permohonan/hilang",
+					components.IconSearch())
+				@PermohonanOption("Perubahan Data KTP", "Ubah data identitas pada KTP Anda", "/permohonan/ubah",
+					components.IconEdit())
 				@PermohonanOption("KTP Rusak", "Pengajuan cetak ulang karena KTP rusak", "/permohonan/rusak", components.IconEdit())
 			</div>
 			@dialog.Footer() {
@@ -227,8 +253,13 @@ templ PermohonanModal() {
 }
 
 templ PermohonanOption(title, description, href string, icon templ.Component) {
-	<a href={ templ.SafeURL(href) } class="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm hover:bg-zinc-50 transition-colors text-left group">
-		<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+	<a
+		href={ templ.SafeURL(href) }
+		class="flex items-center gap-4 rounded-xl bg-white p-4 shadow-md hover:shadow-lg hover:bg-zinc-50 transition-all text-left group"
+	>
+		<div
+			class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors"
+		>
 			if icon != nil {
 				@icon
 			}
@@ -258,4 +289,18 @@ templ InfoCard() {
 			</div>
 		}
 	}
+}
+
+templ InfoItem(title, description string, icon templ.Component) {
+	<div class="flex items-start gap-3">
+		<div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+			if icon != nil {
+				@icon
+			}
+		</div>
+		<div>
+			<p class="text-sm font-medium text-foreground">{ title }</p>
+			<p class="text-xs text-muted-foreground">{ description }</p>
+		</div>
+	</div>
 }

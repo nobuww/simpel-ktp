@@ -65,6 +65,7 @@ templ StatusTracker(props StatusTrackerProps) {
 // TrackerProgressBar shows overall progress
 templ TrackerProgressBar(stages []TrackerStage, currentIdx int) {
 	{{
+		
 		completed := 0
 		for _, s := range stages {
 			if s.Status == StatusCompleted {
@@ -414,6 +415,7 @@ templ TrackerIconWarning() {
 // Compact Mini Tracker for inline/summary display
 templ MiniStatusTracker(stages []TrackerStage, currentIdx int) {
 	{{
+		
 		completed := 0
 		for _, s := range stages {
 			if s.Status == StatusCompleted {
