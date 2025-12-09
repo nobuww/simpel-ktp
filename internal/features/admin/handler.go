@@ -1,11 +1,19 @@
 package admin
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/nobuww/simpel-ktp/internal/features/common"
+	"github.com/nobuww/simpel-ktp/internal/middleware"
+	"github.com/nobuww/simpel-ktp/internal/session"
 	"github.com/nobuww/simpel-ktp/internal/store"
+	"github.com/nobuww/simpel-ktp/internal/store/pg_store"
 )
 
 // Handler manages admin-related HTTP handlers
@@ -20,19 +28,67 @@ func New(s *store.Store) *Handler {
 	}
 }
 
+func getKelurahanID(user *session.UserSession) pgtype.Int2 {
+	if user == nil || user.KelurahanID == nil {
+		return pgtype.Int2{Valid: false}
+	}
+	return pgtype.Int2{Int16: *user.KelurahanID, Valid: true}
+}
+
 func (h *Handler) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
 	if !ok {
 		return
 	}
+	ctx := r.Context()
 
-	data := DashboardData{
-		UserName:   user.UserName,
-		UserRole:   common.FormatRole(user.UserRole),
-		ActivePage: "dashboard",
+	scopeID := getKelurahanID(user)
+
+	// Get Stats
+	statsRow, err := h.store.GetAdminDashboardStats(ctx, scopeID)
+	if err != nil {
+		statsRow = pg_store.GetAdminDashboardStatsRow{}
 	}
 
-	DashboardPage(data).Render(r.Context(), w)
+	stats := PermohonanStats{
+		Total:      int(statsRow.TotalPermohonan),
+		Verifikasi: int(statsRow.Verifikasi),
+		Proses:     int(statsRow.Proses),
+		SiapAmbil:  int(statsRow.SiapAmbil),
+		Selesai:    int(statsRow.Selesai),
+		Ditolak:    int(statsRow.Ditolak),
+	}
+
+	// Get Recent Permohonan (Limit 5)
+	recentRows, err := h.store.ListPermohonanAdmin(ctx, pg_store.ListPermohonanAdminParams{
+		Limit:       5,
+		Offset:      0,
+		Search:      pgtype.Text{Valid: false},
+		Status:      pgtype.Text{Valid: false},
+		KelurahanID: scopeID,
+	})
+	if err != nil {
+		recentRows = nil
+	}
+	recent := convertPermohonanList(recentRows)
+
+	// Get Today's Jadwal
+	todayJadwalRows, err := h.store.ListTodayJadwal(ctx, scopeID)
+	if err != nil {
+		todayJadwalRows = nil
+	}
+	todayJadwal := convertTodayJadwalList(todayJadwalRows)
+
+	data := DashboardData{
+		UserName:    user.UserName,
+		UserRole:    common.FormatRole(user.UserRole),
+		ActivePage:  "dashboard",
+		Stats:       stats,
+		Recent:      recent,
+		TodayJadwal: todayJadwal,
+	}
+
+	DashboardPage(data).Render(ctx, w)
 }
 
 func (h *Handler) PermohonanHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,214 +96,224 @@ func (h *Handler) PermohonanHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	ctx := r.Context()
 
-	// Mock data for now - will be replaced with actual DB queries
+	// Pagination
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+	limit := 20
+	offset := (page - 1) * limit
+
+	// Filters
+	search := r.URL.Query().Get("search")
+	statusFilter := r.URL.Query().Get("status")
+
+	// Stats for top cards
+	scopeID := getKelurahanID(user)
+
+	// Stats for top cards
+	statsRow, err := h.store.GetAdminDashboardStats(ctx, scopeID)
+	if err != nil {
+		statsRow = pg_store.GetAdminDashboardStatsRow{}
+	}
+	stats := PermohonanStats{
+		Total:      int(statsRow.TotalPermohonan),
+		Verifikasi: int(statsRow.Verifikasi),
+		Proses:     int(statsRow.Proses),
+		SiapAmbil:  int(statsRow.SiapAmbil),
+		Selesai:    int(statsRow.Selesai),
+		Ditolak:    int(statsRow.Ditolak),
+	}
+
+	// List
+	params := pg_store.ListPermohonanAdminParams{
+		Limit:       int32(limit),
+		Offset:      int32(offset),
+		Search:      pgtype.Text{String: search, Valid: search != ""},
+		Status:      pgtype.Text{String: statusFilter, Valid: statusFilter != ""},
+		KelurahanID: scopeID,
+	}
+
+	listRows, err := h.store.ListPermohonanAdmin(ctx, params)
+	if err != nil {
+		listRows = nil
+	}
+	list := convertPermohonanList(listRows)
+
 	data := PermohonanPageData{
 		UserName:   user.UserName,
 		UserRole:   common.FormatRole(user.UserRole),
 		ActivePage: "permohonan",
-		Stats: PermohonanStats{
-			Total:      63,
-			Verifikasi: 12,
-			Proses:     28,
-			SiapAmbil:  8,
-			Selesai:    12,
-			Ditolak:    3,
-		},
-		List: []PermohonanItem{
-			{ID: "1", KodeBooking: "JKT-02-A1B2", NIK: "3201234567890001", NamaLengkap: "Ahmad Wijaya", JenisPermohonan: "BARU", StatusTerkini: "VERIFIKASI", TanggalDaftar: "2025-12-01", JadwalSesi: "Senin, 2 Des 08:00", NomorAntrian: 1},
-			{ID: "2", KodeBooking: "JKT-02-C3D4", NIK: "3201234567890002", NamaLengkap: "Siti Nurhaliza", JenisPermohonan: "HILANG", StatusTerkini: "PROSES", TanggalDaftar: "2025-12-01", JadwalSesi: "Senin, 2 Des 08:00", NomorAntrian: 2},
-			{ID: "3", KodeBooking: "JKT-02-E5F6", NIK: "3201234567890003", NamaLengkap: "Budi Santoso", JenisPermohonan: "UPDATE", StatusTerkini: "SIAP_AMBIL", TanggalDaftar: "2025-11-30", JadwalSesi: "Senin, 2 Des 10:00", NomorAntrian: 3},
-			{ID: "4", KodeBooking: "JKT-02-G7H8", NIK: "3201234567890004", NamaLengkap: "Dewi Lestari", JenisPermohonan: "RUSAK", StatusTerkini: "SELESAI", TanggalDaftar: "2025-11-29", JadwalSesi: "Jumat, 29 Nov 13:00", NomorAntrian: 15},
-			{ID: "5", KodeBooking: "JKT-02-I9J0", NIK: "3201234567890005", NamaLengkap: "Rudi Hermawan", JenisPermohonan: "BARU", StatusTerkini: "DITOLAK", TanggalDaftar: "2025-11-28", JadwalSesi: "Kamis, 28 Nov 08:00", NomorAntrian: 5},
-		},
+		Stats:      stats,
+		List:       list,
 	}
 
-	PermohonanPage(data).Render(r.Context(), w)
+	PermohonanPage(data).Render(ctx, w)
 }
 
-// Mock data store - will be replaced with actual DB queries
-var mockPermohonanStatus = map[string]string{
-	"1": "VERIFIKASI",
-	"2": "PROSES",
-	"3": "SIAP_AMBIL",
-	"4": "SELESAI",
-	"5": "DITOLAK",
+func convertPermohonanList(list []pg_store.ListPermohonanAdminRow) []PermohonanItem {
+	items := make([]PermohonanItem, 0, len(list))
+	for _, p := range list {
+		item := PermohonanItem{
+			ID:              p.ID.String(),
+			KodeBooking:     p.KodeBooking.String,
+			NamaLengkap:     p.NamaLengkap,
+			JenisPermohonan: p.JenisPermohonan,
+			StatusTerkini:   p.StatusTerkini.String,
+		}
+
+		if p.Nik.Valid {
+			item.NIK = p.Nik.String
+		}
+		if p.TanggalDaftar.Valid {
+			item.TanggalDaftar = p.TanggalDaftar.Time.Format("2006-01-02")
+		}
+
+		if p.JadwalTanggal.Valid && p.JadwalJamMulai.Valid {
+			dateStr := p.JadwalTanggal.Time.Format("Mon, 2 Jan")
+			// Calculate time from microseconds
+			micros := p.JadwalJamMulai.Microseconds
+			hours := micros / 3600000000
+			minutes := (micros % 3600000000) / 60000000
+			timeStr := fmt.Sprintf("%02d:%02d", hours, minutes)
+			item.JadwalSesi = fmt.Sprintf("%s %s", dateStr, timeStr)
+		} else {
+			item.JadwalSesi = "-"
+		}
+
+		if p.NomorAntrian.Valid {
+			item.NomorAntrian = int(p.NomorAntrian.Int16)
+		}
+
+		items = append(items, item)
+	}
+	return items
+}
+
+func convertTodayJadwalList(rows []pg_store.ListTodayJadwalRow) []TodayJadwalItem {
+	items := make([]TodayJadwalItem, len(rows))
+	for i, r := range rows {
+		jamMulai := convertMicrosToTime(r.JamMulai.Microseconds)
+		jamSelesai := convertMicrosToTime(r.JamSelesai.Microseconds)
+
+		items[i] = TodayJadwalItem{
+			ID:            r.ID.String(),
+			SessionName:   r.NamaKelurahan,
+			Time:          fmt.Sprintf("%s - %s", jamMulai, jamSelesai),
+			KuotaTerisi:   int(r.KuotaTerisi),
+			KuotaMaksimal: int(r.KuotaMaksimal),
+			StatusSesi:    r.StatusSesi.String,
+		}
+	}
+	return items
 }
 
 func (h *Handler) PermohonanDetailHandler(w http.ResponseWriter, r *http.Request) {
-	permohonanID := chi.URLParam(r, "id")
-
-	// Mock data - will be replaced with actual DB query
-	detailMap := map[string]PermohonanDetail{
-		"1": {
-			ID:               "1",
-			KodeBooking:      "JKT-02-A1B2",
-			NIK:              "3201234567890001",
-			NamaLengkap:      "Ahmad Wijaya",
-			TempatLahir:      "Jakarta",
-			TanggalLahir:     "15 Maret 1990",
-			JenisKelamin:     "Laki-laki",
-			Alamat:           "Jl. Menteng Raya No. 45",
-			RT:               "005",
-			RW:               "012",
-			Kelurahan:        "Menteng",
-			Kecamatan:        "Menteng",
-			Agama:            "Islam",
-			StatusPerkawinan: "Kawin",
-			Pekerjaan:        "Karyawan Swasta",
-			Kewarganegaraan:  "WNI",
-			NoTelp:           "081234567890",
-			JenisPermohonan:  "BARU",
-			AlasanPermohonan: "Pembuatan KTP untuk pertama kali setelah berusia 17 tahun.",
-			StatusTerkini:    "VERIFIKASI",
-			TanggalDaftar:    "1 Desember 2025",
-			JadwalSesi:       "Senin, 2 Des 2025 - 08:00 WIB",
-			NomorAntrian:     1,
-			Catatan:          "",
-			RiwayatStatus: []RiwayatStatusItem{
-				{Status: "VERIFIKASI", Waktu: "1 Des 2025, 14:30", Petugas: "Admin Kelurahan", Catatan: "Menunggu verifikasi dokumen"},
-				{Status: "DAFTAR", Waktu: "1 Des 2025, 10:15", Petugas: "Sistem", Catatan: "Permohonan berhasil didaftarkan"},
-			},
-		},
-		"2": {
-			ID:               "2",
-			KodeBooking:      "JKT-02-C3D4",
-			NIK:              "3201234567890002",
-			NamaLengkap:      "Siti Nurhaliza",
-			TempatLahir:      "Bandung",
-			TanggalLahir:     "22 Juli 1985",
-			JenisKelamin:     "Perempuan",
-			Alamat:           "Jl. Cikini Raya No. 88",
-			RT:               "003",
-			RW:               "008",
-			Kelurahan:        "Cikini",
-			Kecamatan:        "Menteng",
-			Agama:            "Islam",
-			StatusPerkawinan: "Kawin",
-			Pekerjaan:        "Ibu Rumah Tangga",
-			Kewarganegaraan:  "WNI",
-			NoTelp:           "082345678901",
-			JenisPermohonan:  "HILANG",
-			AlasanPermohonan: "KTP hilang saat bepergian, sudah membuat laporan kehilangan di kepolisian.",
-			StatusTerkini:    "PROSES",
-			TanggalDaftar:    "1 Desember 2025",
-			JadwalSesi:       "Senin, 2 Des 2025 - 08:00 WIB",
-			NomorAntrian:     2,
-			Catatan:          "Dokumen surat kehilangan sudah diverifikasi",
-			RiwayatStatus: []RiwayatStatusItem{
-				{Status: "PROSES", Waktu: "1 Des 2025, 16:00", Petugas: "Budi Santoso", Catatan: "Dokumen lengkap, proses pencetakan"},
-				{Status: "VERIFIKASI", Waktu: "1 Des 2025, 14:30", Petugas: "Admin Kelurahan", Catatan: "Memverifikasi surat kehilangan"},
-				{Status: "DAFTAR", Waktu: "1 Des 2025, 09:00", Petugas: "Sistem", Catatan: "Permohonan berhasil didaftarkan"},
-			},
-		},
-		"3": {
-			ID:               "3",
-			KodeBooking:      "JKT-02-E5F6",
-			NIK:              "3201234567890003",
-			NamaLengkap:      "Budi Santoso",
-			TempatLahir:      "Surabaya",
-			TanggalLahir:     "5 Januari 1978",
-			JenisKelamin:     "Laki-laki",
-			Alamat:           "Jl. Gondangdia Lama No. 12",
-			RT:               "001",
-			RW:               "004",
-			Kelurahan:        "Gondangdia",
-			Kecamatan:        "Menteng",
-			Agama:            "Kristen",
-			StatusPerkawinan: "Kawin",
-			Pekerjaan:        "Wiraswasta",
-			Kewarganegaraan:  "WNI",
-			NoTelp:           "083456789012",
-			JenisPermohonan:  "UPDATE",
-			AlasanPermohonan: "Perubahan alamat tempat tinggal karena pindah rumah.",
-			StatusTerkini:    "SIAP_AMBIL",
-			TanggalDaftar:    "30 November 2025",
-			JadwalSesi:       "Senin, 2 Des 2025 - 10:00 WIB",
-			NomorAntrian:     3,
-			Catatan:          "KTP sudah siap, silakan ambil di loket dengan membawa bukti pendaftaran",
-			RiwayatStatus: []RiwayatStatusItem{
-				{Status: "SIAP_AMBIL", Waktu: "1 Des 2025, 10:00", Petugas: "Admin Kecamatan", Catatan: "KTP sudah dicetak dan siap diambil"},
-				{Status: "PROSES", Waktu: "30 Nov 2025, 15:00", Petugas: "Budi Santoso", Catatan: "Proses pencetakan KTP"},
-				{Status: "VERIFIKASI", Waktu: "30 Nov 2025, 11:00", Petugas: "Admin Kelurahan", Catatan: "Verifikasi dokumen pendukung"},
-				{Status: "DAFTAR", Waktu: "30 Nov 2025, 09:30", Petugas: "Sistem", Catatan: "Permohonan berhasil didaftarkan"},
-			},
-		},
-		"4": {
-			ID:               "4",
-			KodeBooking:      "JKT-02-G7H8",
-			NIK:              "3201234567890004",
-			NamaLengkap:      "Dewi Lestari",
-			TempatLahir:      "Yogyakarta",
-			TanggalLahir:     "18 September 1992",
-			JenisKelamin:     "Perempuan",
-			Alamat:           "Jl. Menteng Dalam No. 56",
-			RT:               "007",
-			RW:               "010",
-			Kelurahan:        "Menteng",
-			Kecamatan:        "Menteng",
-			Agama:            "Hindu",
-			StatusPerkawinan: "Belum Kawin",
-			Pekerjaan:        "PNS",
-			Kewarganegaraan:  "WNI",
-			NoTelp:           "084567890123",
-			JenisPermohonan:  "RUSAK",
-			AlasanPermohonan: "KTP rusak terkena air, tulisan tidak terbaca.",
-			StatusTerkini:    "SELESAI",
-			TanggalDaftar:    "29 November 2025",
-			JadwalSesi:       "Jumat, 29 Nov 2025 - 13:00 WIB",
-			NomorAntrian:     15,
-			Catatan:          "",
-			RiwayatStatus: []RiwayatStatusItem{
-				{Status: "SELESAI", Waktu: "29 Nov 2025, 16:30", Petugas: "Admin Kecamatan", Catatan: "KTP sudah diambil oleh pemohon"},
-				{Status: "SIAP_AMBIL", Waktu: "29 Nov 2025, 15:00", Petugas: "Admin Kecamatan", Catatan: "KTP sudah siap diambil"},
-				{Status: "PROSES", Waktu: "29 Nov 2025, 14:00", Petugas: "Budi Santoso", Catatan: "Proses pencetakan"},
-				{Status: "VERIFIKASI", Waktu: "29 Nov 2025, 13:30", Petugas: "Admin Kelurahan", Catatan: "Verifikasi KTP rusak"},
-				{Status: "DAFTAR", Waktu: "29 Nov 2025, 13:00", Petugas: "Sistem", Catatan: "Permohonan berhasil didaftarkan"},
-			},
-		},
-		"5": {
-			ID:               "5",
-			KodeBooking:      "JKT-02-I9J0",
-			NIK:              "3201234567890005",
-			NamaLengkap:      "Rudi Hermawan",
-			TempatLahir:      "Semarang",
-			TanggalLahir:     "3 Maret 1988",
-			JenisKelamin:     "Laki-laki",
-			Alamat:           "Jl. Pegangsaan Timur No. 23",
-			RT:               "002",
-			RW:               "006",
-			Kelurahan:        "Pegangsaan",
-			Kecamatan:        "Menteng",
-			Agama:            "Islam",
-			StatusPerkawinan: "Cerai Hidup",
-			Pekerjaan:        "Pedagang",
-			Kewarganegaraan:  "WNI",
-			NoTelp:           "085678901234",
-			JenisPermohonan:  "BARU",
-			AlasanPermohonan: "Pembuatan KTP baru.",
-			StatusTerkini:    "DITOLAK",
-			TanggalDaftar:    "28 November 2025",
-			JadwalSesi:       "Kamis, 28 Nov 2025 - 08:00 WIB",
-			NomorAntrian:     5,
-			Catatan:          "Dokumen KK tidak sesuai dengan data yang diinput. Harap perbaiki dan ajukan ulang.",
-			RiwayatStatus: []RiwayatStatusItem{
-				{Status: "DITOLAK", Waktu: "28 Nov 2025, 10:00", Petugas: "Admin Kelurahan", Catatan: "Data KK tidak sesuai dengan form pendaftaran"},
-				{Status: "VERIFIKASI", Waktu: "28 Nov 2025, 09:00", Petugas: "Admin Kelurahan", Catatan: "Memverifikasi kelengkapan dokumen"},
-				{Status: "DAFTAR", Waktu: "28 Nov 2025, 08:00", Petugas: "Sistem", Catatan: "Permohonan berhasil didaftarkan"},
-			},
-		},
+	permohonanIDStr := chi.URLParam(r, "id")
+	permohonanID, err := uuid.Parse(permohonanIDStr)
+	if err != nil {
+		common.WriteNotFound(w, "ID Permohonan tidak valid")
+		return
 	}
 
-	detail, exists := detailMap[permohonanID]
-	if !exists {
-		// Return a not found message
+	ctx := r.Context()
+
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	scopeID := getKelurahanID(user)
+
+	detailRow, err := h.store.GetPermohonanDetailAdmin(ctx, pg_store.GetPermohonanDetailAdminParams{
+		ID:          permohonanID,
+		KelurahanID: scopeID,
+	})
+	if err != nil {
 		common.WriteNotFound(w, "Permohonan tidak ditemukan")
 		return
-
 	}
 
-	PermohonanDetailContent(detail).Render(r.Context(), w)
+	historyRows, err := h.store.GetRiwayatStatusByPermohonan(ctx, pgtype.UUID{Bytes: permohonanID, Valid: true})
+	if err != nil {
+		// Just treat as empty
+		historyRows = []pg_store.GetRiwayatStatusByPermohonanRow{}
+	}
+
+	// Fetch documents
+	dokumenRows, err := h.store.GetDokumenByPermohonan(ctx, pgtype.UUID{Bytes: permohonanID, Valid: true})
+	if err != nil {
+		dokumenRows = []pg_store.GetDokumenByPermohonanRow{}
+	}
+
+	detail := PermohonanDetail{
+		ID:              permohonanIDStr,
+		KodeBooking:     detailRow.KodeBooking.String,
+		NIK:             detailRow.Nik.String,
+		NamaLengkap:     detailRow.NamaLengkap,
+		JenisKelamin:    detailRow.JenisKelamin,
+		Alamat:          detailRow.Alamat.String,
+		NoTelp:          detailRow.NoTelp.String,
+		JenisPermohonan: detailRow.JenisPermohonan,
+		StatusTerkini:   detailRow.StatusTerkini.String,
+		Kelurahan:       detailRow.Kelurahan.String,
+		RiwayatStatus:   convertHistoryList(historyRows),
+		Dokumen:         convertDokumenList(dokumenRows),
+	}
+
+	if detailRow.TanggalDaftar.Valid {
+		detail.TanggalDaftar = detailRow.TanggalDaftar.Time.Format("2 Jan 2006")
+	}
+	if detailRow.JadwalTanggal.Valid && detailRow.JadwalJamMulai.Valid {
+		d := detailRow.JadwalTanggal.Time.Format("Mon, 2 Jan 2006")
+		micros := detailRow.JadwalJamMulai.Microseconds
+		h := micros / 3600000000
+		m := (micros % 3600000000) / 60000000
+		detail.JadwalSesi = fmt.Sprintf("%s - %02d:%02d WIB", d, h, m)
+	}
+	if detailRow.NomorAntrian.Valid {
+		detail.NomorAntrian = int(detailRow.NomorAntrian.Int16)
+	}
+
+	PermohonanDetailContent(detail).Render(ctx, w)
+}
+
+func convertDokumenList(rows []pg_store.GetDokumenByPermohonanRow) []DokumenItem {
+	items := make([]DokumenItem, len(rows))
+	for i, r := range rows {
+		item := DokumenItem{
+			ID:           r.ID.String(),
+			JenisDokumen: r.JenisDokumen,
+			FilePath:     r.FilePath,
+		}
+		if r.UploadedAt.Valid {
+			item.UploadedAt = r.UploadedAt.Time.Format("2 Jan 2006, 15:04")
+		}
+		items[i] = item
+	}
+	return items
+}
+
+func convertHistoryList(rows []pg_store.GetRiwayatStatusByPermohonanRow) []RiwayatStatusItem {
+	items := make([]RiwayatStatusItem, len(rows))
+	for i, r := range rows {
+		item := RiwayatStatusItem{
+			Status:  r.StatusBaru,
+			Catatan: r.CatatanProses.String,
+		}
+		if r.WaktuProses.Valid {
+			item.Waktu = r.WaktuProses.Time.Format("2 Jan 2006, 15:04")
+		}
+		if r.NamaPetugas.Valid {
+			item.Petugas = r.NamaPetugas.String
+		} else {
+			item.Petugas = "Sistem"
+		}
+		items[i] = item
+	}
+	return items
 }
 
 func (h *Handler) JadwalHandler(w http.ResponseWriter, r *http.Request) {
@@ -255,28 +321,227 @@ func (h *Handler) JadwalHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	ctx := r.Context()
+	scopeID := getKelurahanID(user)
 
-	// Mock data for now - will be replaced with actual DB queries
+	// Determine date range
+	refDateStr := r.URL.Query().Get("ref_date")
+	refDate := time.Now()
+	if refDateStr != "" {
+		if parsed, err := time.Parse("2006-01-02", refDateStr); err == nil {
+			refDate = parsed
+		}
+	}
+
+	weekAction := r.URL.Query().Get("week")
+	startOfWeek := getStartOfWeek(refDate)
+	switch weekAction {
+	case "prev":
+		startOfWeek = startOfWeek.AddDate(0, 0, -7)
+	case "next":
+		startOfWeek = startOfWeek.AddDate(0, 0, 7)
+	}
+	endOfWeek := startOfWeek.AddDate(0, 0, 6)
+
+	// Determine if admin is kecamatan level
+	isKecamatan := !scopeID.Valid
+
+	// Get kelurahan name for display (for kelurahan admin)
+	kelurahanName := ""
+	if scopeID.Valid {
+		kelRow, err := h.store.GetKelurahanById(ctx, scopeID.Int16)
+		if err == nil {
+			kelurahanName = kelRow.NamaKelurahan
+		}
+	}
+
+	// Filter by user's kelurahan (kecamatan sees only kecamatan schedules - NULL kelurahan_id)
+	var filterKelurahanID pgtype.Int4
+	if scopeID.Valid {
+		filterKelurahanID = pgtype.Int4{Int32: int32(scopeID.Int16), Valid: true}
+	}
+
+	// Fetch Jadwal
+	listParams := pg_store.ListJadwalSesiParams{
+		Tanggal:     pgtype.Date{Time: startOfWeek, Valid: true},
+		Tanggal_2:   pgtype.Date{Time: endOfWeek, Valid: true},
+		KelurahanID: filterKelurahanID,
+	}
+
+	rows, err := h.store.ListJadwalSesi(ctx, listParams)
+	if err != nil {
+		rows = []pg_store.ListJadwalSesiRow{}
+	}
+
+	items := make([]JadwalItem, len(rows))
+	for i, r := range rows {
+		items[i] = JadwalItem{
+			ID:            r.ID.String(),
+			Tanggal:       r.Tanggal.Time.Format("2006-01-02"),
+			TanggalFormat: r.Tanggal.Time.Format("Mon, 2 Jan 2006"),
+			JamMulai:      convertMicrosToTime(r.JamMulai.Microseconds),
+			JamSelesai:    convertMicrosToTime(r.JamSelesai.Microseconds),
+			NamaKelurahan: r.NamaKelurahan,
+			KuotaTerisi:   int(r.KuotaTerisi),
+			KuotaMaksimal: int(r.KuotaMaksimal),
+			StatusSesi:    r.StatusSesi.String,
+		}
+	}
+
 	data := JadwalPageData{
-		UserName:    user.UserName,
-		UserRole:    common.FormatRole(user.UserRole),
-		ActivePage:  "jadwal",
-		CurrentWeek: "2 - 8 Des 2025",
-		Kelurahan: []KelurahanOption{
-			{ID: 1, Nama: "Kelurahan Menteng"},
-			{ID: 2, Nama: "Kelurahan Cikini"},
-			{ID: 3, Nama: "Kelurahan Gondangdia"},
-		},
-		List: []JadwalItem{
-			{ID: "1", Tanggal: "2025-12-02", TanggalFormat: "Senin, 2 Des", JamMulai: "08:00", JamSelesai: "11:00", NamaKelurahan: "Kelurahan Menteng", KuotaTerisi: 32, KuotaMaksimal: 50, StatusSesi: "BUKA"},
-			{ID: "2", Tanggal: "2025-12-02", TanggalFormat: "Senin, 2 Des", JamMulai: "13:00", JamSelesai: "15:00", NamaKelurahan: "Kelurahan Menteng", KuotaTerisi: 50, KuotaMaksimal: 50, StatusSesi: "PENUH"},
-			{ID: "3", Tanggal: "2025-12-03", TanggalFormat: "Selasa, 3 Des", JamMulai: "08:00", JamSelesai: "11:00", NamaKelurahan: "Kelurahan Cikini", KuotaTerisi: 15, KuotaMaksimal: 50, StatusSesi: "BUKA"},
-			{ID: "4", Tanggal: "2025-12-03", TanggalFormat: "Selasa, 3 Des", JamMulai: "13:00", JamSelesai: "16:00", NamaKelurahan: "Kelurahan Gondangdia", KuotaTerisi: 0, KuotaMaksimal: 40, StatusSesi: "BUKA"},
-			{ID: "5", Tanggal: "2025-12-04", TanggalFormat: "Rabu, 4 Des", JamMulai: "08:00", JamSelesai: "12:00", NamaKelurahan: "Kelurahan Menteng", KuotaTerisi: 28, KuotaMaksimal: 50, StatusSesi: "ISTIRAHAT"},
-		},
+		UserName:        user.UserName,
+		UserRole:        common.FormatRole(user.UserRole),
+		ActivePage:      "jadwal",
+		CurrentWeek:     fmt.Sprintf("%s - %s", startOfWeek.Format("2 Jan"), endOfWeek.Format("2 Jan 2006")),
+		StartOfWeekDate: startOfWeek.Format("2006-01-02"),
+		KelurahanName:   kelurahanName,
+		IsKecamatan:     isKecamatan,
+		List:            items,
+	}
+
+	// Determine if we should render partials (week navigation) or full page
+	// We only render partials if the request targets the content area specifically
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") == "jadwal-content" {
+		JadwalCardView(data.List).Render(ctx, w)
+		WeekNavigation(data, true).Render(ctx, w)
+		return
 	}
 
 	JadwalPage(data).Render(r.Context(), w)
+}
+
+func (h *Handler) CreateJadwalHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Invalid form data")
+		return
+	}
+
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+	scopeID := getKelurahanID(user)
+
+	// Admin Kelurahan: use their kelurahan ID
+	// Admin Kecamatan: use NULL (for Kantor Kecamatan)
+	var lokasiKelurahanID pgtype.Int2
+	if scopeID.Valid {
+		lokasiKelurahanID = scopeID
+	} else {
+		// Admin Kecamatan - lokasi is Kantor Kecamatan (NULL)
+		lokasiKelurahanID = pgtype.Int2{Valid: false}
+	}
+
+	tanggalStr := r.FormValue("tanggal")
+	jamMulaiStr := r.FormValue("jam_mulai")
+	jamSelesaiStr := r.FormValue("jam_selesai")
+	kuotaStr := r.FormValue("kuota_maksimal")
+
+	// Parse inputs
+	tanggal, err := time.Parse("2006-01-02", tanggalStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Format tanggal salah")
+		return
+	}
+
+	jamMulai, err := parseTime(jamMulaiStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Format jam mulai salah")
+		return
+	}
+
+	jamSelesai, err := parseTime(jamSelesaiStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Format jam selesai salah")
+		return
+	}
+
+	kuota, _ := strconv.Atoi(kuotaStr)
+	if kuota <= 0 {
+		kuota = 50 // Default quota
+	}
+
+	id, err := h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
+		LokasiKelurahanID: lokasiKelurahanID,
+		Tanggal:           pgtype.Date{Time: tanggal, Valid: true},
+		JamMulai:          pgtype.Time{Microseconds: jamMulai, Valid: true},
+		JamSelesai:        pgtype.Time{Microseconds: jamSelesai, Valid: true},
+		KuotaMaksimal:     int16(kuota),
+	})
+	if err != nil {
+		common.WriteError(w, http.StatusInternalServerError, "Gagal membuat jadwal: "+err.Error())
+		return
+	}
+	_ = id
+
+	common.HXTrigger(w, `{"closeDialog": "create-jadwal-dialog", "refreshJadwal": true}`)
+	common.HXRedirect(w, "/admin/jadwal")
+}
+
+func parseTime(t string) (int64, error) {
+	parsed, err := time.Parse("15:04", t)
+	if err != nil {
+		return 0, err
+	}
+	// Microseconds since midnight
+	return int64(parsed.Hour()*3600+parsed.Minute()*60) * 1000000, nil
+}
+
+func (h *Handler) GenerateJadwalHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+	scopeID := getKelurahanID(user)
+
+	// Admin Kelurahan: use their kelurahan ID
+	// Admin Kecamatan: use NULL (for Kantor Kecamatan)
+	var lokasiKelurahanID pgtype.Int2
+	if scopeID.Valid {
+		lokasiKelurahanID = scopeID
+	} else {
+		// Admin Kecamatan - lokasi is Kantor Kecamatan (NULL)
+		lokasiKelurahanID = pgtype.Int2{Valid: false}
+	}
+
+	startDate := time.Now().AddDate(0, 0, 1) // Start tomorrow
+	for i := 0; i < 30; i++ {
+		date := startDate.AddDate(0, 0, i)
+		if date.Weekday() == time.Saturday || date.Weekday() == time.Sunday {
+			continue
+		}
+
+		pgDate := pgtype.Date{Time: date, Valid: true}
+
+		// Session 1: 09:00 - 12:00
+		h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
+			LokasiKelurahanID: lokasiKelurahanID,
+			Tanggal:           pgDate,
+			JamMulai:          pgtype.Time{Microseconds: 9 * 3600 * 1000000, Valid: true},
+			JamSelesai:        pgtype.Time{Microseconds: 12 * 3600 * 1000000, Valid: true},
+			KuotaMaksimal:     50,
+		})
+		// Session 2: 13:00 - 15:00
+		h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
+			LokasiKelurahanID: lokasiKelurahanID,
+			Tanggal:           pgDate,
+			JamMulai:          pgtype.Time{Microseconds: 13 * 3600 * 1000000, Valid: true},
+			JamSelesai:        pgtype.Time{Microseconds: 15 * 3600 * 1000000, Valid: true},
+			KuotaMaksimal:     50,
+		})
+	}
+
+	common.HXRedirect(w, "/admin/jadwal")
+}
+
+func getStartOfWeek(t time.Time) time.Time {
+	weekday := int(t.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	return t.AddDate(0, 0, -weekday+1)
 }
 
 func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
@@ -284,22 +549,54 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	ctx := r.Context()
+	scopeID := getKelurahanID(user)
+
+	// Fetch Stats
+	statsRow, err := h.store.GetPendudukStatsAdmin(ctx, scopeID)
+	if err != nil {
+		statsRow = pg_store.GetPendudukStatsAdminRow{}
+	}
+
+	stats := PendudukStats{
+		Total:     int(statsRow.Total),
+		LakiLaki:  int(statsRow.LakiLaki),
+		Perempuan: int(statsRow.Perempuan),
+		WajibKTP:  int(statsRow.WajibKtp),
+	}
+
+	// Fetch List
+	search := r.URL.Query().Get("search")
+	listParams := pg_store.ListPendudukAdminParams{
+		Search:      pgtype.Text{String: search, Valid: search != ""},
+		KelurahanID: scopeID,
+	}
+
+	rows, err := h.store.ListPendudukAdmin(ctx, listParams)
+	if err != nil {
+		rows = []pg_store.ListPendudukAdminRow{}
+	}
+
+	list := make([]PendudukItem, len(rows))
+	for i, r := range rows {
+		list[i] = PendudukItem{
+			ID:           r.Nik,
+			NIK:          r.Nik,
+			NamaLengkap:  r.NamaLengkap,
+			JenisKelamin: r.JenisKelamin,
+			Alamat:       r.Alamat.String,
+			Kelurahan:    r.NamaKelurahan.String,
+			Email:        r.Email.String,
+			NoHP:         r.NoHp.String,
+		}
+	}
 
 	data := PendudukPageData{
 		UserName:   user.UserName,
 		UserRole:   common.FormatRole(user.UserRole),
 		ActivePage: "penduduk",
-		Stats: PendudukStats{
-			Total:     1200,
-			LakiLaki:  610,
-			Perempuan: 590,
-			WajibKTP:  980,
-		},
-		List: []PendudukItem{
-			{ID: "1", NIK: "3201234567890001", NamaLengkap: "Ahmad Wijaya", JenisKelamin: "LAKI_LAKI", Email: "ahmad.w@example.com", NoHP: "081234567890", Alamat: "Jl. Menteng Raya No. 45", Kelurahan: "Menteng"},
-			{ID: "2", NIK: "3201234567890002", NamaLengkap: "Siti Nurhaliza", JenisKelamin: "PEREMPUAN", Email: "siti.nur@example.com", NoHP: "085678901234", Alamat: "Jl. Cikini Raya No. 88", Kelurahan: "Cikini"},
-			{ID: "3", NIK: "3201234567890003", NamaLengkap: "Budi Santoso", JenisKelamin: "LAKI_LAKI", Email: "budi.s@example.com", NoHP: "081298765432", Alamat: "Jl. Gondangdia Lama No. 12", Kelurahan: "Gondangdia"},
-		},
+		Stats:      stats,
+		List:       list,
 	}
 
 	PendudukPage(data).Render(r.Context(), w)
@@ -307,17 +604,28 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 
 // PermohonanStatusFormHandler returns the status update form partial
 func (h *Handler) PermohonanStatusFormHandler(w http.ResponseWriter, r *http.Request) {
-	permohonanID := chi.URLParam(r, "id")
-
-	// Get current status from mock data (will be replaced with DB query)
-	currentStatus, exists := mockPermohonanStatus[permohonanID]
-	if !exists {
-		common.WriteError(w, http.StatusNotFound, "Permohonan tidak ditemukan")
+	permohonanIDStr := chi.URLParam(r, "id")
+	permohonanID, err := uuid.Parse(permohonanIDStr)
+	if err != nil {
+		common.WriteNotFound(w, "ID tidak valid")
 		return
-
 	}
 
-	StatusUpdateForm(permohonanID, currentStatus).Render(r.Context(), w)
+	ctx := r.Context()
+
+	// Get current status
+	statusRow, err := h.store.GetPermohonanStatusById(ctx, permohonanID)
+	if err != nil {
+		common.WriteError(w, http.StatusNotFound, "Permohonan tidak ditemukan")
+		return
+	}
+
+	currentStatus := ""
+	if statusRow.StatusTerkini.Valid {
+		currentStatus = statusRow.StatusTerkini.String
+	}
+
+	StatusUpdateForm(permohonanIDStr, currentStatus).Render(ctx, w)
 }
 
 // UpdateStatusHandler handles the status update submission
@@ -327,11 +635,16 @@ func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	permohonanID := r.FormValue("id")
+	permohonanIDStr := r.FormValue("id")
 	newStatus := r.FormValue("status")
 	catatan := r.FormValue("catatan")
 
-	// Validate status
+	permohonanID, err := uuid.Parse(permohonanIDStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "ID tidak valid")
+		return
+	}
+
 	validStatuses := map[string]bool{
 		"VERIFIKASI": true,
 		"PROSES":     true,
@@ -342,23 +655,116 @@ func (h *Handler) UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	if !validStatuses[newStatus] {
 		common.WriteError(w, http.StatusBadRequest, "Status tidak valid")
 		return
-
 	}
 
-	// Update mock data (will be replaced with DB update)
-	if _, exists := mockPermohonanStatus[permohonanID]; !exists {
-		common.WriteError(w, http.StatusNotFound, "Permohonan tidak ditemukan")
+	ctx := r.Context()
+
+	user := middleware.GetUserFromContext(ctx)
+	var petugasID pgtype.UUID
+	if user != nil {
+		if uid, err := uuid.Parse(user.UserID); err == nil {
+			petugasID = pgtype.UUID{Bytes: uid, Valid: true}
+		}
+	}
+
+	scopeID := getKelurahanID(user)
+
+	err = h.store.ExecTx(ctx, func(q *pg_store.Queries) error {
+		if err := q.UpdatePermohonanStatusAdmin(ctx, pg_store.UpdatePermohonanStatusAdminParams{
+			ID:            permohonanID,
+			StatusTerkini: pgtype.Text{String: newStatus, Valid: true},
+			KelurahanID:   scopeID,
+		}); err != nil {
+			return err
+		}
+
+		if err := q.InsertRiwayatStatus(ctx, pg_store.InsertRiwayatStatusParams{
+			PermohonanID:  pgtype.UUID{Bytes: permohonanID, Valid: true},
+			PetugasID:     petugasID,
+			StatusBaru:    newStatus,
+			CatatanProses: pgtype.Text{String: catatan, Valid: true},
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		common.WriteError(w, http.StatusInternalServerError, "Gagal update status: "+err.Error())
 		return
-
 	}
-	mockPermohonanStatus[permohonanID] = newStatus
 
-	// Log catatan for now (will be saved to riwayat_status in DB)
-	_ = catatan
-
-	// Return success response with HX-Trigger to close dialog and refresh data
 	common.HXTrigger(w, `{"closeDialog": "status-dialog", "refreshPermohonan": true}`)
 	common.HXReswap(w, "none")
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func convertMicrosToTime(micros int64) string {
+	hours := micros / 3600000000
+	minutes := (micros % 3600000000) / 60000000
+	return fmt.Sprintf("%02d:%02d", hours, minutes)
+}
+
+func (h *Handler) JadwalAntrianHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	// Get Jadwal Info
+	item, err := h.store.GetJadwalSesiById(ctx, id)
+	if err != nil {
+		common.WriteNotFound(w, "Jadwal not found")
+		return
+	}
+
+	jadwalInfo := JadwalItem{
+		ID:            item.ID.String(),
+		Tanggal:       item.Tanggal.Time.Format("2006-01-02"),
+		TanggalFormat: item.Tanggal.Time.Format("Mon, 2 Jan 2006"), // Formatted for display
+		JamMulai:      convertMicrosToTime(item.JamMulai.Microseconds),
+		JamSelesai:    convertMicrosToTime(item.JamSelesai.Microseconds),
+		NamaKelurahan: item.NamaKelurahan,
+		KuotaMaksimal: int(item.KuotaMaksimal),
+		KuotaTerisi:   int(item.KuotaTerisi),
+		StatusSesi:    item.StatusSesi.String,
+	}
+
+	// Get Antrian List
+	listRows, err := h.store.ListPermohonanByJadwal(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil {
+		// handle error or empty
+		listRows = []pg_store.ListPermohonanByJadwalRow{}
+	}
+
+	antrianList := make([]AntrianItem, len(listRows))
+	for i, r := range listRows {
+		antrianList[i] = AntrianItem{
+			ID:          r.ID.String(),
+			KodeBooking: r.KodeBooking.String,
+			NIK:         r.Nik.String,
+			NamaLengkap: r.NamaLengkap,
+			Status:      r.StatusTerkini.String,
+			NoAntrian:   int(r.NomorAntrian.Int16),
+		}
+	}
+
+	data := JadwalAntrianData{
+		JadwalInfo:  jadwalInfo,
+		AntrianList: antrianList,
+		UserName:    user.UserName,
+		UserRole:    common.FormatRole(user.UserRole),
+		ActivePage:  "jadwal",
+	}
+
+	JadwalAntrianPage(data).Render(ctx, w)
 }

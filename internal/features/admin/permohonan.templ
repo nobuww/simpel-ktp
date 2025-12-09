@@ -60,6 +60,7 @@ type PermohonanDetail struct {
 	NomorAntrian     int
 	Catatan          string
 	RiwayatStatus    []RiwayatStatusItem
+	Dokumen          []DokumenItem
 }
 
 type RiwayatStatusItem struct {
@@ -68,6 +69,14 @@ type RiwayatStatusItem struct {
 	Petugas string
 	Catatan string
 }
+
+type DokumenItem struct {
+	ID           string
+	JenisDokumen string
+	FilePath     string
+	UploadedAt   string
+}
+
 
 type PermohonanStats struct {
 	Total      int
@@ -135,7 +144,7 @@ templ PermohonanPage(data PermohonanPageData) {
 											@click="open = !open"
 										>
 											<span x-text="statusFilter ? getStatusLabel(statusFilter) : 'Semua Status'"></span>
-											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg>
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"></path></svg>
 										</button>
 										<div
 											x-show="open"
@@ -152,8 +161,8 @@ templ PermohonanPage(data PermohonanPageData) {
 												Semua Status
 											</div>
 											<template x-for="status in ['VERIFIKASI', 'PROSES', 'SIAP_AMBIL', 'SELESAI', 'DITOLAK']">
-												<div 
-													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50" 
+												<div
+													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
 													@click="statusFilter = status; open = false"
 													:class="statusFilter === status ? 'bg-accent text-accent-foreground' : ''"
 												>
@@ -162,7 +171,6 @@ templ PermohonanPage(data PermohonanPageData) {
 											</template>
 										</div>
 									</div>
-
 									<div class="relative" x-data="{ open: false }" @click.outside="open = false">
 										<button
 											type="button"
@@ -170,7 +178,7 @@ templ PermohonanPage(data PermohonanPageData) {
 											@click="open = !open"
 										>
 											<span x-text="jenisFilter ? getJenisLabel(jenisFilter) : 'Semua Jenis'"></span>
-											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg>
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"></path></svg>
 										</button>
 										<div
 											x-show="open"
@@ -187,8 +195,8 @@ templ PermohonanPage(data PermohonanPageData) {
 												Semua Jenis
 											</div>
 											<template x-for="jenis in ['BARU', 'HILANG', 'RUSAK', 'UPDATE']">
-												<div 
-													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50" 
+												<div
+													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
 													@click="jenisFilter = jenis; open = false"
 													:class="jenisFilter === jenis ? 'bg-accent text-accent-foreground' : ''"
 												>
@@ -536,6 +544,20 @@ templ PermohonanDetailContent(detail PermohonanDetail) {
 			<button
 				type="button"
 				class="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap"
+				:class="activeTab === 'dokumen' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'"
+				@click="activeTab = 'dokumen'"
+			>
+				<span class="hidden sm:inline">Dokumen</span>
+				<span class="sm:hidden">Dok</span>
+				if len(detail.Dokumen) > 0 {
+					<span class="ml-1 inline-flex items-center justify-center size-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+						{ intToStr(len(detail.Dokumen)) }
+					</span>
+				}
+			</button>
+			<button
+				type="button"
+				class="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap"
 				:class="activeTab === 'riwayat' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'"
 				@click="activeTab = 'riwayat'"
 			>
@@ -588,6 +610,37 @@ templ PermohonanDetailContent(detail PermohonanDetail) {
 				<div class="mt-4 pt-4 border-t">
 					<p class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Catatan Petugas</p>
 					<p class="text-sm text-foreground bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-3">{ detail.Catatan }</p>
+				</div>
+			}
+		</div>
+		<!-- Tab Content: Dokumen Verifikasi -->
+		<div x-show="activeTab === 'dokumen'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-cloak>
+			if len(detail.Dokumen) == 0 {
+				<div class="text-center py-8 text-muted-foreground">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+					</svg>
+					<p class="font-medium">Tidak ada dokumen</p>
+					<p class="text-sm">Pemohon belum mengunggah dokumen syarat</p>
+				</div>
+			} else {
+				<div class="space-y-4">
+					<div class="flex items-center justify-between">
+						<p class="text-sm font-medium text-foreground">
+							{ intToStr(len(detail.Dokumen)) } dokumen diunggah
+						</p>
+						<div class="flex items-center gap-2 text-xs text-muted-foreground">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+							</svg>
+							Klik untuk membuka dokumen
+						</div>
+					</div>
+					<div class="grid grid-cols-1 gap-3">
+						for _, doc := range detail.Dokumen {
+							@DokumenCard(doc)
+						}
+					</div>
 				</div>
 			}
 		</div>
@@ -646,6 +699,118 @@ templ RiwayatStatusItemTemplate(item RiwayatStatusItem, isLatest bool) {
 	</div>
 }
 
+templ DokumenCard(doc DokumenItem) {
+	<div class="group relative flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-all">
+		<!-- Document Icon -->
+		<div class={ "flex-shrink-0 size-12 rounded-lg flex items-center justify-center", getDokumenIconClass(doc.JenisDokumen) }>
+			@getDokumenIcon(doc.JenisDokumen)
+		</div>
+		<!-- Document Info -->
+		<div class="flex-1 min-w-0">
+			<div class="flex items-center gap-2">
+				<p class="font-medium text-foreground">{ getDokumenLabel(doc.JenisDokumen) }</p>
+				<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+					{ getFileType(doc.FilePath) }
+				</span>
+			</div>
+			<p class="text-sm text-muted-foreground mt-0.5">Diunggah: { doc.UploadedAt }</p>
+		</div>
+		<!-- Action Buttons -->
+		<div class="flex items-center gap-2">
+			<a
+				href={ templ.SafeURL("/" + doc.FilePath) }
+				target="_blank"
+				class="inline-flex items-center justify-center size-9 rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+				title="Lihat Dokumen"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+					<circle cx="12" cy="12" r="3"></circle>
+				</svg>
+			</a>
+			<a
+				href={ templ.SafeURL("/" + doc.FilePath) }
+				download
+				class="inline-flex items-center justify-center size-9 rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+				title="Unduh Dokumen"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+					<polyline points="7 10 12 15 17 10"></polyline>
+					<line x1="12" x2="12" y1="15" y2="3"></line>
+				</svg>
+			</a>
+		</div>
+	</div>
+}
+
+func getDokumenLabel(jenis string) string {
+	labels := map[string]string{
+		"KTP":          "Kartu Tanda Penduduk",
+		"KK":           "Kartu Keluarga",
+		"SURAT_POLISI": "Surat Keterangan Polisi",
+		"KTP_RUSAK":    "Foto KTP Rusak",
+	}
+	if label, ok := labels[jenis]; ok {
+		return label
+	}
+	return jenis
+}
+
+func getDokumenIconClass(jenis string) string {
+	classes := map[string]string{
+		"KTP":          "bg-blue-100 text-blue-600",
+		"KK":           "bg-green-100 text-green-600",
+		"SURAT_POLISI": "bg-orange-100 text-orange-600",
+		"KTP_RUSAK":    "bg-red-100 text-red-600",
+	}
+	if class, ok := classes[jenis]; ok {
+		return class
+	}
+	return "bg-slate-100 text-slate-600"
+}
+
+func getFileType(path string) string {
+	if len(path) >= 4 {
+		ext := path[len(path)-4:]
+		switch ext {
+		case ".pdf":
+			return "PDF"
+		case ".jpg", "jpeg":
+			return "JPG"
+		case ".png":
+			return "PNG"
+		}
+	}
+	return "FILE"
+}
+
+templ getDokumenIcon(jenis string) {
+	switch jenis {
+		case "KTP", "KTP_RUSAK":
+			<svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<rect width="20" height="14" x="2" y="5" rx="2"></rect>
+				<line x1="2" x2="22" y1="10" y2="10"></line>
+			</svg>
+		case "KK":
+			<svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+				<circle cx="9" cy="7" r="4"></circle>
+				<path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+				<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+			</svg>
+		case "SURAT_POLISI":
+			<svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+			</svg>
+		default:
+			<svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+				<path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+			</svg>
+	}
+}
+
 templ IconCheckSmall() {
 	<svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
 		<polyline points="20 6 9 17 4 12"></polyline>
@@ -658,75 +823,80 @@ templ PermohonanFilterScript(items []PermohonanItem) {
 	<script>
 		function permohonanFilter() {
 			return {
-				search: '',
-				statusFilter: '',
-				jenisFilter: '',
+				search: "",
+				statusFilter: "",
+				jenisFilter: "",
 				items: [],
 				init() {
-					this.items = JSON.parse(document.getElementById('permohonan-data').textContent);
+					this.items = JSON.parse(
+						document.getElementById("permohonan-data").textContent,
+					);
 				},
 				get filteredItems() {
 					const searchLower = this.search.toLowerCase();
-					return this.items.filter(item => {
+					return this.items.filter((item) => {
 						// Search filter
-						const matchSearch = !this.search || 
+						const matchSearch =
+							!this.search ||
 							item.kodeBooking.toLowerCase().includes(searchLower) ||
 							item.nik.toLowerCase().includes(searchLower) ||
 							item.namaLengkap.toLowerCase().includes(searchLower);
-						
+
 						// Status filter
-						const matchStatus = !this.statusFilter || item.statusTerkini === this.statusFilter;
-						
+						const matchStatus =
+							!this.statusFilter || item.statusTerkini === this.statusFilter;
+
 						// Jenis filter
-						const matchJenis = !this.jenisFilter || item.jenisPermohonan === this.jenisFilter;
-						
+						const matchJenis =
+							!this.jenisFilter || item.jenisPermohonan === this.jenisFilter;
+
 						return matchSearch && matchStatus && matchJenis;
 					});
 				},
 				resetFilters() {
-					this.search = '';
-					this.statusFilter = '';
-					this.jenisFilter = '';
+					this.search = "";
+					this.statusFilter = "";
+					this.jenisFilter = "";
 				},
 				getStatusBadgeClass(status) {
 					const classes = {
-						'VERIFIKASI': 'bg-blue-100 text-blue-800',
-						'PROSES': 'bg-yellow-100 text-yellow-800',
-						'SIAP_AMBIL': 'bg-green-100 text-green-800',
-						'SELESAI': 'bg-slate-100 text-slate-800',
-						'DITOLAK': 'bg-red-100 text-red-800'
+						VERIFIKASI: "bg-blue-100 text-blue-800",
+						PROSES: "bg-yellow-100 text-yellow-800",
+						SIAP_AMBIL: "bg-green-100 text-green-800",
+						SELESAI: "bg-slate-100 text-slate-800",
+						DITOLAK: "bg-red-100 text-red-800",
 					};
-					return classes[status] || 'bg-slate-100 text-slate-800';
+					return classes[status] || "bg-slate-100 text-slate-800";
 				},
 				getStatusLabel(status) {
 					const labels = {
-						'VERIFIKASI': 'Verifikasi',
-						'PROSES': 'Proses',
-						'SIAP_AMBIL': 'Siap Ambil',
-						'SELESAI': 'Selesai',
-						'DITOLAK': 'Ditolak'
+						VERIFIKASI: "Verifikasi",
+						PROSES: "Proses",
+						SIAP_AMBIL: "Siap Ambil",
+						SELESAI: "Selesai",
+						DITOLAK: "Ditolak",
 					};
 					return labels[status] || status;
 				},
 				getJenisBadgeClass(jenis) {
 					const classes = {
-						'BARU': 'bg-emerald-100 text-emerald-800',
-						'HILANG': 'bg-orange-100 text-orange-800',
-						'RUSAK': 'bg-red-100 text-red-800',
-						'UPDATE': 'bg-blue-100 text-blue-800'
+						BARU: "bg-emerald-100 text-emerald-800",
+						HILANG: "bg-orange-100 text-orange-800",
+						RUSAK: "bg-red-100 text-red-800",
+						UPDATE: "bg-blue-100 text-blue-800",
 					};
-					return classes[jenis] || 'bg-slate-100 text-slate-800';
+					return classes[jenis] || "bg-slate-100 text-slate-800";
 				},
 				getJenisLabel(jenis) {
 					const labels = {
-						'BARU': 'Baru',
-						'HILANG': 'Hilang',
-						'RUSAK': 'Rusak',
-						'UPDATE': 'Update'
+						BARU: "Baru",
+						HILANG: "Hilang",
+						RUSAK: "Rusak",
+						UPDATE: "Update",
 					};
 					return labels[jenis] || jenis;
-				}
-			}
+				},
+			};
 		}
 	</script>
 }

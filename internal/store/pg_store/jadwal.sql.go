@@ -22,6 +22,7 @@ INSERT INTO jadwal_sesi (
     kuota_terisi,
     status_sesi
 ) VALUES ($1, $2, $3, $4, $5, 0, 'BUKA')
+ON CONFLICT (tanggal, jam_mulai, lokasi_kelurahan_id) DO NOTHING
 RETURNING id
 `
 
@@ -56,9 +57,9 @@ SELECT
     js.kuota_maksimal,
     js.status_sesi,
     js.lokasi_kelurahan_id,
-    k.nama_kelurahan
+    COALESCE(k.nama_kelurahan, 'Kecamatan Pademangan')::text as nama_kelurahan
 FROM jadwal_sesi js
-JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
 WHERE js.id = $1
 `
 
@@ -88,6 +89,24 @@ func (q *Queries) GetJadwalSesiById(ctx context.Context, id uuid.UUID) (GetJadwa
 		&i.LokasiKelurahanID,
 		&i.NamaKelurahan,
 	)
+	return i, err
+}
+
+const getKelurahanById = `-- name: GetKelurahanById :one
+SELECT id, nama_kelurahan
+FROM ref_kelurahan
+WHERE id = $1
+`
+
+type GetKelurahanByIdRow struct {
+	ID            int16  `json:"id"`
+	NamaKelurahan string `json:"namaKelurahan"`
+}
+
+func (q *Queries) GetKelurahanById(ctx context.Context, id int16) (GetKelurahanByIdRow, error) {
+	row := q.db.QueryRow(ctx, getKelurahanById, id)
+	var i GetKelurahanByIdRow
+	err := row.Scan(&i.ID, &i.NamaKelurahan)
 	return i, err
 }
 
@@ -142,18 +161,22 @@ SELECT
     js.kuota_terisi,
     js.kuota_maksimal,
     js.status_sesi,
-    k.nama_kelurahan
+    COALESCE(k.nama_kelurahan, 'Kecamatan Pademangan')::text as nama_kelurahan
 FROM jadwal_sesi js
-JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
 WHERE js.tanggal >= $1 AND js.tanggal <= $2
-  AND ($3::integer IS NULL OR js.lokasi_kelurahan_id = $3)
+  AND (
+    ($3::integer IS NOT NULL AND js.lokasi_kelurahan_id = $3)
+    OR
+    ($3::integer IS NULL AND js.lokasi_kelurahan_id IS NULL)
+  )
 ORDER BY js.tanggal, js.jam_mulai
 `
 
 type ListJadwalSesiParams struct {
-	Tanggal   pgtype.Date `json:"tanggal"`
-	Tanggal_2 pgtype.Date `json:"tanggal2"`
-	Column3   int32       `json:"column3"`
+	Tanggal     pgtype.Date `json:"tanggal"`
+	Tanggal_2   pgtype.Date `json:"tanggal2"`
+	KelurahanID pgtype.Int4 `json:"kelurahanId"`
 }
 
 type ListJadwalSesiRow struct {
@@ -168,7 +191,7 @@ type ListJadwalSesiRow struct {
 }
 
 func (q *Queries) ListJadwalSesi(ctx context.Context, arg ListJadwalSesiParams) ([]ListJadwalSesiRow, error) {
-	rows, err := q.db.Query(ctx, listJadwalSesi, arg.Tanggal, arg.Tanggal_2, arg.Column3)
+	rows, err := q.db.Query(ctx, listJadwalSesi, arg.Tanggal, arg.Tanggal_2, arg.KelurahanID)
 	if err != nil {
 		return nil, err
 	}
@@ -185,6 +208,56 @@ func (q *Queries) ListJadwalSesi(ctx context.Context, arg ListJadwalSesiParams) 
 			&i.KuotaMaksimal,
 			&i.StatusSesi,
 			&i.NamaKelurahan,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPermohonanByJadwal = `-- name: ListPermohonanByJadwal :many
+SELECT 
+    p.id,
+    p.kode_booking,
+    p.nik,
+    pd.nama_lengkap,
+    p.status_terkini,
+    p.nomor_antrian_sesi as nomor_antrian
+FROM permohonan p
+JOIN penduduk pd ON p.nik = pd.nik
+WHERE p.jadwal_sesi_id = $1
+ORDER BY p.nomor_antrian_sesi ASC
+`
+
+type ListPermohonanByJadwalRow struct {
+	ID            uuid.UUID   `json:"id"`
+	KodeBooking   pgtype.Text `json:"kodeBooking"`
+	Nik           pgtype.Text `json:"nik"`
+	NamaLengkap   string      `json:"namaLengkap"`
+	StatusTerkini pgtype.Text `json:"statusTerkini"`
+	NomorAntrian  pgtype.Int2 `json:"nomorAntrian"`
+}
+
+func (q *Queries) ListPermohonanByJadwal(ctx context.Context, jadwalSesiID pgtype.UUID) ([]ListPermohonanByJadwalRow, error) {
+	rows, err := q.db.Query(ctx, listPermohonanByJadwal, jadwalSesiID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPermohonanByJadwalRow
+	for rows.Next() {
+		var i ListPermohonanByJadwalRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.KodeBooking,
+			&i.Nik,
+			&i.NamaLengkap,
+			&i.StatusTerkini,
+			&i.NomorAntrian,
 		); err != nil {
 			return nil, err
 		}

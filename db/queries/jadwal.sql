@@ -7,11 +7,15 @@ SELECT
     js.kuota_terisi,
     js.kuota_maksimal,
     js.status_sesi,
-    k.nama_kelurahan
+    COALESCE(k.nama_kelurahan, 'Kecamatan Pademangan')::text as nama_kelurahan
 FROM jadwal_sesi js
-JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
 WHERE js.tanggal >= $1 AND js.tanggal <= $2
-  AND ($3::integer IS NULL OR js.lokasi_kelurahan_id = $3)
+  AND (
+    (sqlc.narg('kelurahan_id')::integer IS NOT NULL AND js.lokasi_kelurahan_id = sqlc.narg('kelurahan_id'))
+    OR
+    (sqlc.narg('kelurahan_id')::integer IS NULL AND js.lokasi_kelurahan_id IS NULL)
+  )
 ORDER BY js.tanggal, js.jam_mulai;
 
 -- name: GetJadwalSesiById :one
@@ -24,9 +28,9 @@ SELECT
     js.kuota_maksimal,
     js.status_sesi,
     js.lokasi_kelurahan_id,
-    k.nama_kelurahan
+    COALESCE(k.nama_kelurahan, 'Kecamatan Pademangan')::text as nama_kelurahan
 FROM jadwal_sesi js
-JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
 WHERE js.id = $1;
 
 -- name: CreateJadwalSesi :one
@@ -39,6 +43,7 @@ INSERT INTO jadwal_sesi (
     kuota_terisi,
     status_sesi
 ) VALUES ($1, $2, $3, $4, $5, 0, 'BUKA')
+ON CONFLICT (tanggal, jam_mulai, lokasi_kelurahan_id) DO NOTHING
 RETURNING id;
 
 -- name: UpdateJadwalSesi :exec
@@ -60,3 +65,21 @@ WHERE id = $1 AND kuota_terisi < kuota_maksimal;
 SELECT id, nama_kelurahan
 FROM ref_kelurahan
 ORDER BY nama_kelurahan;
+
+-- name: GetKelurahanById :one
+SELECT id, nama_kelurahan
+FROM ref_kelurahan
+WHERE id = $1;
+
+-- name: ListPermohonanByJadwal :many
+SELECT 
+    p.id,
+    p.kode_booking,
+    p.nik,
+    pd.nama_lengkap,
+    p.status_terkini,
+    p.nomor_antrian_sesi as nomor_antrian
+FROM permohonan p
+JOIN penduduk pd ON p.nik = pd.nik
+WHERE p.jadwal_sesi_id = $1
+ORDER BY p.nomor_antrian_sesi ASC;

@@ -20,7 +20,10 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 
 	// Security middlewares
 	r.Use(middleware.SecurityHeaders)
+<<<<<<< HEAD
 	r.Use(middleware.CSRF)
+=======
+>>>>>>> 0de58a406a9ec895db4eed1b0df046ad72eb9966
 
 	authMiddleware := middleware.NewAuth(sessionMgr)
 	r.Use(authMiddleware.InjectUser)
@@ -66,6 +69,10 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 		r.Get("/admin/permohonan/{id}/status", adminHandler.PermohonanStatusFormHandler)
 		r.Post("/admin/permohonan/update-status", adminHandler.UpdateStatusHandler)
 		r.Get("/admin/jadwal", adminHandler.JadwalHandler)
+		r.Post("/admin/jadwal", adminHandler.CreateJadwalHandler)
+		r.Post("/admin/jadwal/generate", adminHandler.GenerateJadwalHandler)
+
+		r.Get("/admin/jadwal/{id}/antrian", adminHandler.JadwalAntrianHandler)
 	})
 
 	// User routes (protected - warga only)
@@ -87,6 +94,7 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 		r.Get("/permohonan/ubah", permohonanHandler.HandleKTPUbahForm)
 		r.Post("/permohonan/ubah", permohonanHandler.HandleKTPUbahForm)
 		r.Get("/permohonan/sukses", permohonanHandler.HandleSuccessPage)
+		r.Get("/permohonan/jadwal-options", permohonanHandler.HandleGetJadwalOptions)
 	})
 
 	return r

@@ -13,7 +13,8 @@ import (
 
 type Service interface {
 	GetFormData(ctx context.Context, nik string) (FormData, error)
-	GetAvailableJadwal(ctx context.Context) ([]JadwalOption, error)
+	GetAvailableJadwal(ctx context.Context, kelurahanID *int32) ([]JadwalOption, error)
+	GetLocations(ctx context.Context) ([]LocationOption, error)
 	CreatePermohonan(ctx context.Context, req CreatePermohonanRequest) (uuid.UUID, error)
 	GetSuccessData(ctx context.Context, permohonanID string, applicationType string) (SuccessData, error)
 }
@@ -61,16 +62,29 @@ func (s *PermohonanService) GetFormData(ctx context.Context, nik string) (FormDa
 	return formData, nil
 }
 
-func (s *PermohonanService) GetAvailableJadwal(ctx context.Context) ([]JadwalOption, error) {
+func (s *PermohonanService) GetAvailableJadwal(ctx context.Context, kelurahanID *int32) ([]JadwalOption, error) {
 	today := time.Now()
 	nextMonth := today.AddDate(0, 1, 0)
 
 	todayPg := pgtype.Date{Time: today, Valid: true}
 	nextMonthPg := pgtype.Date{Time: nextMonth, Valid: true}
 
+	var targetKecamatan bool
+	var kelurahanIDPg pgtype.Int4
+	if kelurahanID != nil && *kelurahanID == 0 {
+		targetKecamatan = true
+		// Pass Valid: false to fetch all, will filter in loop
+		kelurahanIDPg = pgtype.Int4{Valid: false}
+	} else if kelurahanID != nil {
+		kelurahanIDPg = pgtype.Int4{Int32: *kelurahanID, Valid: true}
+	} else {
+		kelurahanIDPg = pgtype.Int4{Valid: false}
+	}
+
 	jadwalList, err := s.repo.ListJadwalSesi(ctx, pg_store.ListJadwalSesiParams{
-		Tanggal:   todayPg,
-		Tanggal_2: nextMonthPg,
+		Tanggal:     todayPg,
+		Tanggal_2:   nextMonthPg,
+		KelurahanID: kelurahanIDPg,
 	})
 	if err != nil {
 		return nil, err
@@ -78,6 +92,9 @@ func (s *PermohonanService) GetAvailableJadwal(ctx context.Context) ([]JadwalOpt
 
 	options := make([]JadwalOption, 0, len(jadwalList))
 	for _, j := range jadwalList {
+		if targetKecamatan && j.NamaKelurahan != "Kecamatan Pademangan" {
+			continue
+		}
 		if j.StatusSesi.String != "BUKA" {
 			continue
 		}
@@ -104,6 +121,28 @@ func (s *PermohonanService) GetAvailableJadwal(ctx context.Context) ([]JadwalOpt
 	return options, nil
 }
 
+func (s *PermohonanService) GetLocations(ctx context.Context) ([]LocationOption, error) {
+	locations, err := s.repo.ListAllKelurahan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	options := make([]LocationOption, 0, len(locations)+1)
+	options = append(options, LocationOption{
+		ID:    0,
+		Label: "Kecamatan Pademangan",
+	})
+
+	for _, l := range locations {
+		options = append(options, LocationOption{
+			ID:    l.ID,
+			Label: l.NamaKelurahan,
+		})
+	}
+
+	return options, nil
+}
+
 func (s *PermohonanService) CreatePermohonan(ctx context.Context, req CreatePermohonanRequest) (uuid.UUID, error) {
 	jadwalUUID, err := uuid.Parse(req.JadwalID)
 	if err != nil {
@@ -111,6 +150,18 @@ func (s *PermohonanService) CreatePermohonan(ctx context.Context, req CreatePerm
 	}
 
 	nikText := pgtype.Text{String: req.UserID, Valid: true}
+
+	// Check for active permohonan
+	counts, err := s.repo.CountPermohonanByNIK(ctx, nikText)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to check existing applications: %w", err)
+	}
+
+	activeCount := counts.Verifikasi + counts.Proses + counts.SiapAmbil
+	if activeCount > 0 {
+		return uuid.Nil, fmt.Errorf("anda masih memiliki permohonan yang sedang berjalan (Status: Verifikasi/Proses/Siap Ambil)")
+	}
+
 	jadwalUUIDPg := pgtype.UUID{Bytes: jadwalUUID, Valid: true}
 
 	jenisPermohonan := ""

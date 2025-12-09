@@ -3,6 +3,7 @@ package permohonan
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/nobuww/simpel-ktp/internal/features/common"
 )
@@ -30,13 +31,24 @@ func (h *Handler) HandleKTPBaruForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jadwalList, err := h.service.GetAvailableJadwal(ctx)
-	if err != nil {
-		jadwalList = []JadwalOption{}
+	locations, _ := h.service.GetLocations(ctx)
+	var jadwalList []JadwalOption
+	if lokasiIDStr := r.FormValue("lokasi_id"); lokasiIDStr != "" {
+		if lid, err := strconv.Atoi(lokasiIDStr); err == nil {
+			val := int32(lid)
+			jadwalList, _ = h.service.GetAvailableJadwal(ctx, &val)
+		}
 	}
 
 	if r.Method == http.MethodGet {
-		KTPBaruFormPage(formData, jadwalList).Render(ctx, w)
+		KTPBaruFormPage(formData, locations, jadwalList).Render(ctx, w)
+		return
+	}
+
+	// Parse multipart form data (10MB max)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		formData.Errors["general"] = "Gagal memproses form: " + err.Error()
+		KTPBaruFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -52,7 +64,7 @@ func (h *Handler) HandleKTPBaruForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formData.Errors) > 0 {
-		KTPBaruFormPage(formData, jadwalList).Render(ctx, w)
+		KTPBaruFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -68,7 +80,7 @@ func (h *Handler) HandleKTPBaruForm(w http.ResponseWriter, r *http.Request) {
 	permohonanID, err := h.service.CreatePermohonan(ctx, req)
 	if err != nil {
 		formData.Errors["general"] = "Gagal membuat permohonan: " + err.Error()
-		KTPBaruFormPage(formData, jadwalList).Render(ctx, w)
+		KTPBaruFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -87,10 +99,24 @@ func (h *Handler) HandleKTPHilangForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gagal memuat data user", http.StatusInternalServerError)
 		return
 	}
-	jadwalList, _ := h.service.GetAvailableJadwal(ctx)
+	locations, _ := h.service.GetLocations(ctx)
+	var jadwalList []JadwalOption
+	if lokasiIDStr := r.FormValue("lokasi_id"); lokasiIDStr != "" {
+		if lid, err := strconv.Atoi(lokasiIDStr); err == nil {
+			val := int32(lid)
+			jadwalList, _ = h.service.GetAvailableJadwal(ctx, &val)
+		}
+	}
 
 	if r.Method == http.MethodGet {
-		KTPHilangFormPage(formData, jadwalList).Render(ctx, w)
+		KTPHilangFormPage(formData, locations, jadwalList).Render(ctx, w)
+		return
+	}
+
+	// Parse multipart form data (10MB max)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		formData.Errors["general"] = "Gagal memproses form: " + err.Error()
+		KTPHilangFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -114,7 +140,7 @@ func (h *Handler) HandleKTPHilangForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formData.Errors) > 0 {
-		KTPHilangFormPage(formData, jadwalList).Render(ctx, w)
+		KTPHilangFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -130,7 +156,7 @@ func (h *Handler) HandleKTPHilangForm(w http.ResponseWriter, r *http.Request) {
 	permohonanID, err := h.service.CreatePermohonan(ctx, req)
 	if err != nil {
 		formData.Errors["general"] = "Gagal membuat permohonan: " + err.Error()
-		KTPHilangFormPage(formData, jadwalList).Render(ctx, w)
+		KTPHilangFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -149,10 +175,24 @@ func (h *Handler) HandleKTPRusakForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gagal memuat data user", http.StatusInternalServerError)
 		return
 	}
-	jadwalList, _ := h.service.GetAvailableJadwal(ctx)
+	locations, _ := h.service.GetLocations(ctx)
+	var jadwalList []JadwalOption
+	if lokasiIDStr := r.FormValue("lokasi_id"); lokasiIDStr != "" {
+		if lid, err := strconv.Atoi(lokasiIDStr); err == nil {
+			val := int32(lid)
+			jadwalList, _ = h.service.GetAvailableJadwal(ctx, &val)
+		}
+	}
 
 	if r.Method == http.MethodGet {
-		KTPRusakFormPage(formData, jadwalList).Render(ctx, w)
+		KTPRusakFormPage(formData, locations, jadwalList).Render(ctx, w)
+		return
+	}
+
+	// Parse multipart form data (10MB max)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		formData.Errors["general"] = "Gagal memproses form: " + err.Error()
+		KTPRusakFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -177,7 +217,7 @@ func (h *Handler) HandleKTPRusakForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formData.Errors) > 0 {
-		KTPRusakFormPage(formData, jadwalList).Render(ctx, w)
+		KTPRusakFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -194,7 +234,7 @@ func (h *Handler) HandleKTPRusakForm(w http.ResponseWriter, r *http.Request) {
 	permohonanID, err := h.service.CreatePermohonan(ctx, req)
 	if err != nil {
 		formData.Errors["general"] = "Gagal membuat permohonan: " + err.Error()
-		KTPRusakFormPage(formData, jadwalList).Render(ctx, w)
+		KTPRusakFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -213,10 +253,24 @@ func (h *Handler) HandleKTPUbahForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gagal memuat data user", http.StatusInternalServerError)
 		return
 	}
-	jadwalList, _ := h.service.GetAvailableJadwal(ctx)
+	locations, _ := h.service.GetLocations(ctx)
+	var jadwalList []JadwalOption
+	if lokasiIDStr := r.FormValue("lokasi_id"); lokasiIDStr != "" {
+		if lid, err := strconv.Atoi(lokasiIDStr); err == nil {
+			val := int32(lid)
+			jadwalList, _ = h.service.GetAvailableJadwal(ctx, &val)
+		}
+	}
 
 	if r.Method == http.MethodGet {
-		KTPUbahFormPage(formData, jadwalList).Render(ctx, w)
+		KTPUbahFormPage(formData, locations, jadwalList).Render(ctx, w)
+		return
+	}
+
+	// Parse multipart form data (10MB max)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		formData.Errors["general"] = "Gagal memproses form: " + err.Error()
+		KTPUbahFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -241,7 +295,7 @@ func (h *Handler) HandleKTPUbahForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(formData.Errors) > 0 {
-		KTPUbahFormPage(formData, jadwalList).Render(ctx, w)
+		KTPUbahFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -258,7 +312,7 @@ func (h *Handler) HandleKTPUbahForm(w http.ResponseWriter, r *http.Request) {
 	permohonanID, err := h.service.CreatePermohonan(ctx, req)
 	if err != nil {
 		formData.Errors["general"] = "Gagal membuat permohonan: " + err.Error()
-		KTPUbahFormPage(formData, jadwalList).Render(ctx, w)
+		KTPUbahFormPage(formData, locations, jadwalList).Render(ctx, w)
 		return
 	}
 
@@ -287,4 +341,27 @@ func (h *Handler) HandleSuccessPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SuccessPage(successData).Render(ctx, w)
+}
+
+func (h *Handler) HandleGetJadwalOptions(w http.ResponseWriter, r *http.Request) {
+	lokasiIDStr := r.URL.Query().Get("lokasi_id")
+	if lokasiIDStr == "" {
+		JadwalSelectPartial([]JadwalOption{}, "").Render(r.Context(), w)
+		return
+	}
+
+	lokasiID, err := strconv.Atoi(lokasiIDStr)
+	if err != nil {
+		JadwalSelectPartial([]JadwalOption{}, "Invalid Location ID").Render(r.Context(), w)
+		return
+	}
+
+	lid := int32(lokasiID)
+	jadwalList, err := h.service.GetAvailableJadwal(r.Context(), &lid)
+	if err != nil {
+		JadwalSelectPartial([]JadwalOption{}, "Error fetching schedules").Render(r.Context(), w)
+		return
+	}
+
+	JadwalSelectPartial(jadwalList, "").Render(r.Context(), w)
 }

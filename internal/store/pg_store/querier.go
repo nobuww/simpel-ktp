@@ -15,6 +15,7 @@ type Querier interface {
 	CheckEmailExists(ctx context.Context, email pgtype.Text) (bool, error)
 	CheckHealth(ctx context.Context) (int32, error)
 	CheckPendudukExists(ctx context.Context, nik string) (bool, error)
+	CountPermohonanAdmin(ctx context.Context, arg CountPermohonanAdminParams) (int64, error)
 	CountPermohonanByNIK(ctx context.Context, nik pgtype.Text) (CountPermohonanByNIKRow, error)
 	CountPermohonanByStatus(ctx context.Context) (CountPermohonanByStatusRow, error)
 	CreateDokumenSyarat(ctx context.Context, arg CreateDokumenSyaratParams) error
@@ -23,12 +24,18 @@ type Querier interface {
 	CreatePenduduk(ctx context.Context, arg CreatePendudukParams) (Penduduk, error)
 	CreatePermohonan(ctx context.Context, arg CreatePermohonanParams) (uuid.UUID, error)
 	CreatePetugas(ctx context.Context, arg CreatePetugasParams) (Petugas, error)
+	GetAdminDashboardStats(ctx context.Context, kelurahanID pgtype.Int2) (GetAdminDashboardStatsRow, error)
+	GetDokumenByPermohonan(ctx context.Context, permohonanID pgtype.UUID) ([]GetDokumenByPermohonanRow, error)
 	GetJadwalSesiById(ctx context.Context, id uuid.UUID) (GetJadwalSesiByIdRow, error)
+	GetKelurahanById(ctx context.Context, id int16) (GetKelurahanByIdRow, error)
 	GetKelurahanByKodeArea(ctx context.Context, kodeArea string) (RefKelurahan, error)
 	GetPendudukByNIK(ctx context.Context, nik string) (Penduduk, error)
 	GetPendudukProfile(ctx context.Context, nik string) (GetPendudukProfileRow, error)
+	GetPendudukStatsAdmin(ctx context.Context, kelurahanID pgtype.Int2) (GetPendudukStatsAdminRow, error)
+	GetPermohonanByKodeBooking(ctx context.Context, kodeBooking pgtype.Text) (GetPermohonanByKodeBookingRow, error)
 	GetPermohonanByNIK(ctx context.Context, arg GetPermohonanByNIKParams) ([]GetPermohonanByNIKRow, error)
 	GetPermohonanDetail(ctx context.Context, id uuid.UUID) (GetPermohonanDetailRow, error)
+	GetPermohonanDetailAdmin(ctx context.Context, arg GetPermohonanDetailAdminParams) (GetPermohonanDetailAdminRow, error)
 	GetPermohonanStatusById(ctx context.Context, id uuid.UUID) (GetPermohonanStatusByIdRow, error)
 	GetPetugasByNIP(ctx context.Context, nip pgtype.Text) (Petugas, error)
 	GetPetugasByUsername(ctx context.Context, username string) (Petugas, error)
@@ -38,10 +45,15 @@ type Querier interface {
 	ListAllKelurahan(ctx context.Context) ([]ListAllKelurahanRow, error)
 	ListJadwalSesi(ctx context.Context, arg ListJadwalSesiParams) ([]ListJadwalSesiRow, error)
 	ListKelurahan(ctx context.Context) ([]RefKelurahan, error)
+	ListPendudukAdmin(ctx context.Context, arg ListPendudukAdminParams) ([]ListPendudukAdminRow, error)
+	ListPermohonanAdmin(ctx context.Context, arg ListPermohonanAdminParams) ([]ListPermohonanAdminRow, error)
+	ListPermohonanByJadwal(ctx context.Context, jadwalSesiID pgtype.UUID) ([]ListPermohonanByJadwalRow, error)
 	ListPermohonanByStatus(ctx context.Context, arg ListPermohonanByStatusParams) ([]ListPermohonanByStatusRow, error)
+	ListTodayJadwal(ctx context.Context, kelurahanID pgtype.Int2) ([]ListTodayJadwalRow, error)
 	TruncateSeedTables(ctx context.Context) error
 	UpdateJadwalSesi(ctx context.Context, arg UpdateJadwalSesiParams) error
 	UpdatePermohonanStatus(ctx context.Context, arg UpdatePermohonanStatusParams) error
+	UpdatePermohonanStatusAdmin(ctx context.Context, arg UpdatePermohonanStatusAdminParams) error
 }
 
 var _ Querier = (*Queries)(nil)

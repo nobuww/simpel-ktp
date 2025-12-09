@@ -41,3 +41,22 @@ SELECT
 FROM penduduk p
 LEFT JOIN ref_kelurahan k ON p.kelurahan_id = k.id
 WHERE p.nik = $1;
+
+-- name: GetPermohonanByKodeBooking :one
+SELECT 
+    p.id,
+    p.kode_booking,
+    p.jenis_permohonan,
+    p.status_terkini,
+    p.created_at as tanggal_daftar,
+    p.nomor_antrian_sesi as nomor_antrian,
+    js.tanggal as jadwal_tanggal,
+    js.jam_mulai as jadwal_jam_mulai,
+    js.jam_selesai as jadwal_jam_selesai,
+    k.nama_kelurahan as lokasi_kelurahan,
+    pd.nama_lengkap
+FROM permohonan p
+LEFT JOIN penduduk pd ON p.nik = pd.nik
+LEFT JOIN jadwal_sesi js ON p.jadwal_sesi_id = js.id
+LEFT JOIN ref_kelurahan k ON js.lokasi_kelurahan_id = k.id
+WHERE p.kode_booking = $1;

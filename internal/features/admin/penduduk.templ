@@ -94,7 +94,7 @@ templ PendudukPage(data PendudukPageData) {
 											@click="open = !open"
 										>
 											<span x-text="genderFilter ? formatGender(genderFilter) : 'Semua Gender'"></span>
-											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg>
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"></path></svg>
 										</button>
 										<div
 											x-show="open"
@@ -111,8 +111,8 @@ templ PendudukPage(data PendudukPageData) {
 												Semua Gender
 											</div>
 											<template x-for="gender in ['LAKI_LAKI', 'PEREMPUAN']">
-												<div 
-													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50" 
+												<div
+													class="w-full relative flex cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
 													@click="genderFilter = gender; open = false"
 													:class="genderFilter === gender ? 'bg-accent text-accent-foreground' : ''"
 												>
@@ -121,7 +121,6 @@ templ PendudukPage(data PendudukPageData) {
 											</template>
 										</div>
 									</div>
-
 									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
 										@components.IconDownload()
 										Export
@@ -276,41 +275,45 @@ templ PendudukFilterScript(items []PendudukItem) {
 	<script>
 		function pendudukFilter() {
 			return {
-				search: '',
-				genderFilter: '',
+				search: "",
+				genderFilter: "",
 				items: [],
 				init() {
-					this.items = JSON.parse(document.getElementById('penduduk-data').textContent);
+					this.items = JSON.parse(
+						document.getElementById("penduduk-data").textContent,
+					);
 				},
 				get filteredItems() {
 					const searchLower = this.search.toLowerCase();
-					return this.items.filter(item => {
+					return this.items.filter((item) => {
 						// Search filter (NIK, Nama, Alamat)
-						const matchSearch = !this.search || 
+						const matchSearch =
+							!this.search ||
 							item.nik.toLowerCase().includes(searchLower) ||
 							item.namaLengkap.toLowerCase().includes(searchLower) ||
 							item.alamat.toLowerCase().includes(searchLower);
-						
+
 						// Gender filter
-						const matchGender = !this.genderFilter || item.jenisKelamin === this.genderFilter;
-						
+						const matchGender =
+							!this.genderFilter || item.jenisKelamin === this.genderFilter;
+
 						return matchSearch && matchGender;
 					});
 				},
 				resetFilters() {
-					this.search = '';
-					this.genderFilter = '';
+					this.search = "";
+					this.genderFilter = "";
 				},
 				getGenderBadgeClass(gender) {
 					// Matches the UI: Teal for Male, Pink for Female
-					return gender === 'LAKI_LAKI' 
-						? 'bg-teal-50 text-teal-700' 
-						: 'bg-pink-50 text-pink-700';
+					return gender === "LAKI_LAKI"
+						? "bg-teal-50 text-teal-700"
+						: "bg-pink-50 text-pink-700";
 				},
 				formatGender(gender) {
-					return gender === 'LAKI_LAKI' ? 'Laki-laki' : 'Perempuan';
-				}
-			}
+					return gender === "LAKI_LAKI" ? "Laki-laki" : "Perempuan";
+				},
+			};
 		}
 	</script>
 }

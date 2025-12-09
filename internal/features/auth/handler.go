@@ -144,7 +144,7 @@ func (h *Handler) HandleLoginPetugas(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create session
-	if err := h.session.SetPetugasSession(w, r, result.ID, result.NamaPetugas, result.Role, remember); err != nil {
+	if err := h.session.SetPetugasSession(w, r, result.ID, result.NamaPetugas, result.Role, result.KelurahanID, remember); err != nil {
 		AuthError("Gagal membuat sesi login").Render(ctx, w)
 		return
 	}

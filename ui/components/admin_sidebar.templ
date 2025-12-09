@@ -73,9 +73,6 @@ templ AdminSidebar(data AdminSidebarData) {
 						}) {
 							@IconFileText()
 							<span>Permohonan</span>
-							@sidebar.MenuBadge() {
-								12
-							}
 						}
 					}
 					@sidebar.MenuItem() {
@@ -150,6 +147,7 @@ templ AdminSidebar(data AdminSidebarData) {
 				}
 				@sidebar.MenuItem() {
 					<form hx-post="/auth/logout" hx-swap="none" class="w-full">
+<<<<<<< HEAD
 					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 					@button.Button(button.Props{
 						Variant: button.VariantGhost,
@@ -161,6 +159,19 @@ templ AdminSidebar(data AdminSidebarData) {
 						<span class="group-data-[tui-sidebar-state=collapsed]:hidden">Keluar</span>
 					}
 				</form>
+=======
+						<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+						@button.Button(button.Props{
+							Variant: button.VariantGhost,
+							Size:    button.SizeSm,
+							Type:    button.TypeSubmit,
+							Class:   "w-full justify-start gap-2",
+						}) {
+							@IconLogout()
+							<span class="group-data-[tui-sidebar-state=collapsed]:hidden">Keluar</span>
+						}
+					</form>
+>>>>>>> 0de58a406a9ec895db4eed1b0df046ad72eb9966
 				}
 			}
 		}

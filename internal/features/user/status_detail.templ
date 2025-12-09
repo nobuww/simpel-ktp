@@ -36,8 +36,8 @@ templ StatusDetailPage(data StatusDetailData) {
 			<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 				<!-- Header -->
 				<div class="mb-8">
-					<a 
-						href="/dashboard" 
+					<a
+						href="/dashboard"
 						class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
 					>
 						@components.IconChevronLeft()
@@ -58,7 +58,6 @@ templ StatusDetailPage(data StatusDetailData) {
 						</div>
 					</div>
 				</div>
-
 				<!-- Layout Selection Tabs -->
 				@tabs.Tabs(tabs.Props{ID: "tracker-layout"}) {
 					<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -77,7 +76,6 @@ templ StatusDetailPage(data StatusDetailData) {
 							}
 						}
 					</div>
-
 					<!-- Vertical Layout -->
 					@tabs.Content(tabs.ContentProps{Value: "vertical", IsActive: true}) {
 						@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
@@ -101,7 +99,6 @@ templ StatusDetailPage(data StatusDetailData) {
 							}
 						}
 					}
-
 					<!-- Card Layout -->
 					@tabs.Content(tabs.ContentProps{Value: "card"}) {
 						<div class="mb-6">
@@ -117,7 +114,6 @@ templ StatusDetailPage(data StatusDetailData) {
 						})
 					}
 				}
-
 				<!-- Next Steps Section -->
 				if len(data.NextSteps) > 0 {
 					<div class="mt-8">
@@ -136,7 +132,7 @@ templ StatusDetailPage(data StatusDetailData) {
 							@card.Content() {
 								<div class="grid gap-3 sm:grid-cols-2">
 									for _, step := range data.NextSteps {
-										<a 
+										<a
 											href={ templ.SafeURL(step.ActionURL) }
 											class={
 												"flex items-start gap-3 p-4 rounded-lg border transition-all hover:shadow-md",
@@ -164,7 +160,6 @@ templ StatusDetailPage(data StatusDetailData) {
 						}
 					</div>
 				}
-
 				<!-- Help Section -->
 				<div class="mt-8">
 					@card.Card(card.Props{Class: "border-0 shadow-sm"}) {

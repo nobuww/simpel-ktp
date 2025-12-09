@@ -46,7 +46,11 @@ templ RegisterPage(kelurahanList []KelurahanOption) {
 					hx-swap="innerHTML"
 					hx-indicator="#auth-loading"
 				>
+<<<<<<< HEAD
 				<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+=======
+					<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
+>>>>>>> 0de58a406a9ec895db4eed1b0df046ad72eb9966
 					<div class="space-y-2">
 						@label.Label(label.Props{For: "register-nik"}) {
 							NIK

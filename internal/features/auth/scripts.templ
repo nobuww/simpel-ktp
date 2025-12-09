@@ -2,12 +2,15 @@ package auth
 
 templ Scripts() {
 	<script nonce={ templ.GetNonce(ctx) }>
-        document.addEventListener('htmx:afterSwap', (event) => {
-            if (event.target && event.target.id === 'auth-message') {
-                event.target.classList.add('animate-[fade-in_0.3s_ease]');
-                event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => event.target.classList.remove('animate-[fade-in_0.3s_ease]'), 400);
-            }
-        });
-    </script>
+		document.addEventListener("htmx:afterSwap", (event) => {
+			if (event.target && event.target.id === "auth-message") {
+				event.target.classList.add("animate-[fade-in_0.3s_ease]");
+				event.target.scrollIntoView({ behavior: "smooth", block: "center" });
+				setTimeout(
+					() => event.target.classList.remove("animate-[fade-in_0.3s_ease]"),
+					400,
+				);
+			}
+		});
+	</script>
 }
