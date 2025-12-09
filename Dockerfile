@@ -9,7 +9,7 @@ COPY . .
 
 RUN bun run build
 
-FROM golang:1.23-alpine AS binary-builder
+FROM golang:1.25-alpine AS binary-builder
 WORKDIR /app
 
 RUN apk add --no-cache git make

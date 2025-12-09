@@ -19,7 +19,8 @@ jobs:
           script: |
             cd ~/compose/simpel-ktp
             
-            git pull origin main
+            git fetch origin
+            git reset --hard origin/main
             
             chmod +x deploy.sh
             ./deploy.sh
