@@ -1,10 +1,15 @@
 package layouts
 
+import (
+	"fmt"
+	"github.com/nobuww/simpel-ktp/internal/middleware"
+)
+
 templ Auth(title string, scripts templ.Component) {
 	<!DOCTYPE html>
 	<html lang="id" class="scroll-smooth h-full">
 		@Head(title)
-		<body class="min-h-full py-12 sm:px-6 lg:px-8 font-sans text-foreground bg-background relative">
+		<body class="min-h-full py-12 sm:px-6 lg:px-8 font-sans text-foreground bg-background relative" hx-headers={ fmt.Sprintf(`{"X-CSRF-Token": "%s"}`, middleware.GetCSRFToken(ctx)) }>
 			<!-- Decorative background elements (fixed to viewport) -->
 			<div class="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
 				<!-- Top-right gradient blob -->

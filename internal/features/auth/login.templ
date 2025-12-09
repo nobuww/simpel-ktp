@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/nobuww/simpel-ktp/internal/middleware"
 	authComponents "github.com/nobuww/simpel-ktp/ui/components/auth"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
 	"github.com/nobuww/simpel-ktp/ui/templui/button"
@@ -27,6 +28,7 @@ templ LoginPage() {
 				hx-swap="innerHTML"
 				hx-indicator="#auth-loading"
 			>
+				<input type="hidden" name="csrf.Token" value={ middleware.GetCSRFToken(ctx) }/>
 				<div class="space-y-2">
 					@label.Label(label.Props{For: "login-nik"}) {
 						NIK
