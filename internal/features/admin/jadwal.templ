@@ -481,15 +481,24 @@ templ JadwalAntrianPage(data JadwalAntrianData) {
 						})
 					</div>
 
-					<!-- Stats / Details Card -->
 					<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-						 <div class="p-4 bg-card rounded-lg border shadow-sm">
-							<div class="text-sm font-medium text-muted-foreground">Total Antrian</div>
-							<div class="text-2xl font-bold">{ intToStr(len(data.AntrianList)) }</div>
+						 <div class="rounded-xl p-5 bg-white text-blue-600 shadow-sm flex flex-col justify-between h-28 relative overflow-hidden group hover:shadow-md transition-all">
+							<div class="relative z-10">
+								<h3 class="text-3xl font-bold">{ intToStr(len(data.AntrianList)) }</h3>
+								<p class="text-sm font-medium mt-1 opacity-80">Total Antrian</p>
+							</div>
+							<div class="w-full bg-opacity-20 bg-slate-400 h-1 mt-auto rounded-full overflow-hidden relative z-10">
+								<div class="h-full rounded-full bg-blue-500" style={ fmt.Sprintf("width: %d%%", calculatePercent(len(data.AntrianList), data.JadwalInfo.KuotaMaksimal)) }></div>
+							</div>
 						 </div>
-						 <div class="p-4 bg-card rounded-lg border shadow-sm">
-							<div class="text-sm font-medium text-muted-foreground">Sisa Kuota</div>
-							<div class="text-2xl font-bold">{ intToStr(data.JadwalInfo.KuotaMaksimal - data.JadwalInfo.KuotaTerisi) }</div>
+						 <div class="rounded-xl p-5 bg-white text-emerald-600 shadow-sm flex flex-col justify-between h-28 relative overflow-hidden group hover:shadow-md transition-all">
+							<div class="relative z-10">
+								<h3 class="text-3xl font-bold">{ intToStr(data.JadwalInfo.KuotaMaksimal - data.JadwalInfo.KuotaTerisi) }</h3>
+								<p class="text-sm font-medium mt-1 opacity-80">Sisa Kuota</p>
+							</div>
+							<div class="w-full bg-opacity-20 bg-slate-400 h-1 mt-auto rounded-full overflow-hidden relative z-10">
+								<div class="h-full rounded-full bg-emerald-500" style={ fmt.Sprintf("width: %d%%", calculatePercent(data.JadwalInfo.KuotaMaksimal - data.JadwalInfo.KuotaTerisi, data.JadwalInfo.KuotaMaksimal)) }></div>
+							</div>
 						 </div>
 					</div>
 
@@ -546,4 +555,15 @@ templ JadwalAntrianPage(data JadwalAntrianData) {
 			}
 		}
 	}
+}
+
+func calculatePercent(current, max int) int {
+	if max <= 0 {
+		return 0
+	}
+	percent := (current * 100) / max
+	if percent > 100 {
+		return 100
+	}
+	return percent
 }

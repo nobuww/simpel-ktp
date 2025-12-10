@@ -116,17 +116,6 @@ templ AdminSidebar(data AdminSidebarData) {
 							<span>Kelola Petugas</span>
 						}
 					}
-					@sidebar.MenuItem() {
-						@sidebar.MenuButton(sidebar.MenuButtonProps{
-							Href:     "/admin/laporan",
-							IsActive: data.ActivePage == "laporan",
-							Tooltip:  "Laporan",
-							Class:    activeMenuClass(data.ActivePage == "laporan"),
-						}) {
-							@IconBarChart()
-							<span>Laporan</span>
-						}
-					}
 				}
 			}
 		}

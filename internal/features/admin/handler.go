@@ -563,7 +563,6 @@ func (h *Handler) PendudukHandler(w http.ResponseWriter, r *http.Request) {
 		Total:     int(statsRow.Total),
 		LakiLaki:  int(statsRow.LakiLaki),
 		Perempuan: int(statsRow.Perempuan),
-		WajibKTP:  int(statsRow.WajibKtp),
 	}
 
 	// Fetch List

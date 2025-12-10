@@ -63,16 +63,10 @@ templ StatusDetailPage(data StatusDetailData) {
 					<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						@tabs.List(tabs.ListProps{Class: "grid w-full grid-cols-2 sm:w-auto"}) {
 							@tabs.Trigger(tabs.TriggerProps{Value: "vertical", IsActive: true}) {
-								<span class="hidden sm:inline">Timeline</span>
-								<span class="sm:hidden">
-									@IconList()
-								</span>
+								@IconList()
 							}
 							@tabs.Trigger(tabs.TriggerProps{Value: "card"}) {
-								<span class="hidden sm:inline">Kartu</span>
-								<span class="sm:hidden">
-									@IconGrid()
-								</span>
+								@IconGrid()
 							}
 						}
 					</div>
@@ -171,13 +165,12 @@ templ StatusDetailPage(data StatusDetailData) {
 									</div>
 								</div>
 								<div class="flex gap-2">
+								<a href="https://wa.me/6285892253616?text=Halo%20Admin%20SIMPEL-KTP%2C%20saya%20ingin%20meminta%20bantuan.%0A%0AMohon%20dicek%20data%20berikut%3A%0A*Nama%20Lengkap*%3A%20%0A*NIK*%3A%20%0A*Kode%20Booking%20(jika%20ada)*%3A%20%0A%0A*Kendala%2FPertanyaan*%3A%20%0A%0ATerima%20kasih" target="_blank">
 									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
 										@components.IconPhone()
 										1500-123
 									}
-									@button.Button(button.Props{Variant: button.VariantDefault, Size: button.SizeSm}) {
-										Chat Support
-									}
+								</a>
 								</div>
 							</div>
 						}
@@ -207,7 +200,7 @@ func getCurrentStatus(stages []components.TrackerStage, currentIdx int) string {
 
 // Icons for layout switcher
 templ IconList() {
-	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 		<line x1="8" x2="21" y1="6" y2="6"></line>
 		<line x1="8" x2="21" y1="12" y2="12"></line>
 		<line x1="8" x2="21" y1="18" y2="18"></line>
@@ -227,7 +220,7 @@ templ IconStepper() {
 }
 
 templ IconGrid() {
-	<svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+	<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 		<rect width="7" height="7" x="3" y="3" rx="1"></rect>
 		<rect width="7" height="7" x="14" y="3" rx="1"></rect>
 		<rect width="7" height="7" x="14" y="14" rx="1"></rect>

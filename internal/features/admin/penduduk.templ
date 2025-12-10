@@ -3,8 +3,6 @@ package admin
 import (
 	"github.com/nobuww/simpel-ktp/ui/components"
 	"github.com/nobuww/simpel-ktp/ui/layouts"
-	"github.com/nobuww/simpel-ktp/ui/templui/button"
-
 	"github.com/nobuww/simpel-ktp/ui/templui/sidebar"
 )
 
@@ -32,7 +30,6 @@ type PendudukStats struct {
 	Total     int
 	LakiLaki  int
 	Perempuan int
-	WajibKTP  int
 }
 
 // Main Page Component
@@ -64,9 +61,6 @@ templ PendudukPage(data PendudukPageData) {
 						}
 						@PendudukStatCard("Perempuan", data.Stats.Perempuan, "bg-white text-pink-600", "bg-pink-500", 2) {
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M208,80a80,80,0,1,0-88,79.6V184H96a8,8,0,0,0,0,16h24v24a8,8,0,0,0,16,0V200h24a8,8,0,0,0,0-16H136V159.6A80.11,80.11,0,0,0,208,80ZM128,144a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,144Z"></path></svg>
-						}
-						@PendudukStatCard("Wajib KTP", data.Stats.WajibKTP, "bg-white text-amber-600", "bg-amber-500", 3) {
-							<svg xmlns="http://www.w3.org/2000/svg" class="size-16 opacity-10" fill="currentColor" viewBox="0 0 256 256"><path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,144H32V64H224V192ZM176,100a28,28,0,1,1,28-28A28,28,0,0,1,176,100Zm0-40a12,12,0,1,0,12,12A12,12,0,0,0,176,60ZM96,104a32,32,0,1,1,32-32A32,32,0,0,1,96,104Zm0-48a16,16,0,1,0,16,16A16,16,0,0,0,96,56Z"></path></svg>
 						}
 					</div>
 					<div
@@ -121,14 +115,6 @@ templ PendudukPage(data PendudukPageData) {
 											</template>
 										</div>
 									</div>
-									@button.Button(button.Props{Variant: button.VariantOutline, Size: button.SizeSm}) {
-										@components.IconDownload()
-										Export
-									}
-									@button.Button(button.Props{Variant: button.VariantDefault, Size: button.SizeSm}) {
-										<svg xmlns="http://www.w3.org/2000/svg" class="size-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-										Baru
-									}
 								</div>
 							</div>
 						</div>
