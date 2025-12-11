@@ -83,3 +83,17 @@ FROM permohonan p
 JOIN penduduk pd ON p.nik = pd.nik
 WHERE p.jadwal_sesi_id = $1
 ORDER BY p.nomor_antrian_sesi ASC;
+
+-- name: DeleteJadwalSesi :exec
+DELETE FROM jadwal_sesi
+WHERE id = $1
+  AND (
+    (sqlc.narg('kelurahan_id')::integer IS NOT NULL AND lokasi_kelurahan_id = sqlc.narg('kelurahan_id'))
+    OR
+    (sqlc.narg('kelurahan_id')::integer IS NULL AND lokasi_kelurahan_id IS NULL)
+  );
+
+-- name: CountPermohonanByJadwal :one
+SELECT COUNT(*) as count
+FROM permohonan
+WHERE jadwal_sesi_id = $1;

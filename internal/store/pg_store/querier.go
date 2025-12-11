@@ -16,6 +16,7 @@ type Querier interface {
 	CheckHealth(ctx context.Context) (int32, error)
 	CheckPendudukExists(ctx context.Context, nik string) (bool, error)
 	CountPermohonanAdmin(ctx context.Context, arg CountPermohonanAdminParams) (int64, error)
+	CountPermohonanByJadwal(ctx context.Context, jadwalSesiID pgtype.UUID) (int64, error)
 	CountPermohonanByNIK(ctx context.Context, nik pgtype.Text) (CountPermohonanByNIKRow, error)
 	CountPermohonanByStatus(ctx context.Context) (CountPermohonanByStatusRow, error)
 	CreateDokumenSyarat(ctx context.Context, arg CreateDokumenSyaratParams) error
@@ -24,6 +25,7 @@ type Querier interface {
 	CreatePenduduk(ctx context.Context, arg CreatePendudukParams) (Penduduk, error)
 	CreatePermohonan(ctx context.Context, arg CreatePermohonanParams) (uuid.UUID, error)
 	CreatePetugas(ctx context.Context, arg CreatePetugasParams) (Petugas, error)
+	DeleteJadwalSesi(ctx context.Context, arg DeleteJadwalSesiParams) error
 	GetAdminDashboardStats(ctx context.Context, kelurahanID pgtype.Int2) (GetAdminDashboardStatsRow, error)
 	GetDokumenByPermohonan(ctx context.Context, permohonanID pgtype.UUID) ([]GetDokumenByPermohonanRow, error)
 	GetJadwalSesiById(ctx context.Context, id uuid.UUID) (GetJadwalSesiByIdRow, error)

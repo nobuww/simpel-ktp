@@ -12,6 +12,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countPermohonanByJadwal = `-- name: CountPermohonanByJadwal :one
+SELECT COUNT(*) as count
+FROM permohonan
+WHERE jadwal_sesi_id = $1
+`
+
+func (q *Queries) CountPermohonanByJadwal(ctx context.Context, jadwalSesiID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countPermohonanByJadwal, jadwalSesiID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createJadwalSesi = `-- name: CreateJadwalSesi :one
 INSERT INTO jadwal_sesi (
     lokasi_kelurahan_id,
@@ -45,6 +58,26 @@ func (q *Queries) CreateJadwalSesi(ctx context.Context, arg CreateJadwalSesiPara
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const deleteJadwalSesi = `-- name: DeleteJadwalSesi :exec
+DELETE FROM jadwal_sesi
+WHERE id = $1
+  AND (
+    ($2::integer IS NOT NULL AND lokasi_kelurahan_id = $2)
+    OR
+    ($2::integer IS NULL AND lokasi_kelurahan_id IS NULL)
+  )
+`
+
+type DeleteJadwalSesiParams struct {
+	ID          uuid.UUID   `json:"id"`
+	KelurahanID pgtype.Int4 `json:"kelurahanId"`
+}
+
+func (q *Queries) DeleteJadwalSesi(ctx context.Context, arg DeleteJadwalSesiParams) error {
+	_, err := q.db.Exec(ctx, deleteJadwalSesi, arg.ID, arg.KelurahanID)
+	return err
 }
 
 const getJadwalSesiById = `-- name: GetJadwalSesiById :one

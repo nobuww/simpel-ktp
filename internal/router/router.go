@@ -77,6 +77,8 @@ func New(s *store.Store, sessionMgr *session.Manager) *chi.Mux {
 		r.Post("/admin/jadwal/generate", adminHandler.GenerateJadwalHandler)
 
 		r.Get("/admin/jadwal/{id}/antrian", adminHandler.JadwalAntrianHandler)
+		r.Get("/admin/jadwal/{id}/delete-confirm", adminHandler.DeleteJadwalConfirmHandler)
+		r.Delete("/admin/jadwal/{id}", adminHandler.DeleteJadwalHandler)
 		r.Get("/admin/petugas", adminHandler.PetugasHandler)
 		r.Post("/admin/petugas", adminHandler.CreatePetugasHandler)
 	})

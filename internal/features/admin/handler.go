@@ -916,3 +916,88 @@ func (h *Handler) JadwalAntrianHandler(w http.ResponseWriter, r *http.Request) {
 
 	JadwalAntrianPage(data).Render(ctx, w)
 }
+
+// DeleteJadwalConfirmHandler returns the delete confirmation content
+func (h *Handler) DeleteJadwalConfirmHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	_, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+
+	// Get Jadwal Info
+	item, err := h.store.GetJadwalSesiById(ctx, id)
+	if err != nil {
+		common.WriteNotFound(w, "Jadwal not found")
+		return
+	}
+
+	jadwalItem := JadwalItem{
+		ID:            item.ID.String(),
+		Tanggal:       item.Tanggal.Time.Format("2006-01-02"),
+		TanggalFormat: item.Tanggal.Time.Format("Mon, 2 Jan 2006"),
+		JamMulai:      convertMicrosToTime(item.JamMulai.Microseconds),
+		JamSelesai:    convertMicrosToTime(item.JamSelesai.Microseconds),
+		NamaKelurahan: item.NamaKelurahan,
+		KuotaMaksimal: int(item.KuotaMaksimal),
+		KuotaTerisi:   int(item.KuotaTerisi),
+		StatusSesi:    item.StatusSesi.String,
+	}
+
+	// Check if there are any permohonan in this jadwal
+	permohonanCount, err := h.store.CountPermohonanByJadwal(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil {
+		// If error, assume 0 count and allow deletion
+		permohonanCount = 0
+	}
+
+	if permohonanCount > 0 {
+		// Show error content - cannot delete
+		DeleteJadwalErrorContent(jadwalItem, int(permohonanCount)).Render(ctx, w)
+		return
+	}
+
+	DeleteJadwalConfirmContent(jadwalItem).Render(ctx, w)
+}
+
+// DeleteJadwalHandler handles the actual jadwal deletion
+func (h *Handler) DeleteJadwalHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		common.WriteError(w, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	user, ok := common.GetUserOrRedirect(w, r, "/petugas/login")
+	if !ok {
+		return
+	}
+	ctx := r.Context()
+	scopeID := getKelurahanID(user)
+
+	// Convert scope ID for the delete query
+	var filterKelurahanID pgtype.Int4
+	if scopeID.Valid {
+		filterKelurahanID = pgtype.Int4{Int32: int32(scopeID.Int16), Valid: true}
+	}
+
+	err = h.store.DeleteJadwalSesi(ctx, pg_store.DeleteJadwalSesiParams{
+		ID:          id,
+		KelurahanID: filterKelurahanID,
+	})
+	if err != nil {
+		common.WriteError(w, http.StatusInternalServerError, "Gagal menghapus jadwal: "+err.Error())
+		return
+	}
+
+	common.HXTrigger(w, `{"closeDialog": "delete-jadwal-dialog", "refreshJadwal": true}`)
+	common.HXRedirect(w, "/admin/jadwal")
+}
