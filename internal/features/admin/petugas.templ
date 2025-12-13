@@ -334,7 +334,7 @@ templ CreatePetugasDialog(kelurahanList []KelurahanOption) {
 						},
 					})
 				</div>
-				<div class="space-y-2">
+				<div class="space-y-2 pb-4">
 					@label.Label(label.Props{For: "kelurahan_id"}) {
 						Kelurahan
 					}
@@ -348,7 +348,6 @@ templ CreatePetugasDialog(kelurahanList []KelurahanOption) {
 							<option value={ intToStr(int(kel.ID)) }>{ kel.Nama }</option>
 						}
 					</select>
-					<p class="text-xs text-muted-foreground">Kosongkan untuk Admin Kecamatan</p>
 				</div>
 				@dialog.Footer() {
 					@dialog.Close() {
