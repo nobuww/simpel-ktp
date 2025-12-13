@@ -500,14 +500,41 @@ func (h *Handler) GenerateJadwalHandler(w http.ResponseWriter, r *http.Request) 
 	// Admin Kelurahan: use their kelurahan ID
 	// Admin Kecamatan: use NULL (for Kantor Kecamatan)
 	var lokasiKelurahanID pgtype.Int2
+	searchKelurahanID := pgtype.Int4{Valid: false}
+
 	if scopeID.Valid {
 		lokasiKelurahanID = scopeID
+		searchKelurahanID = pgtype.Int4{Int32: int32(scopeID.Int16), Valid: true}
 	} else {
 		// Admin Kecamatan - lokasi is Kantor Kecamatan (NULL)
 		lokasiKelurahanID = pgtype.Int2{Valid: false}
 	}
 
 	startDate := time.Now() // Start today
+	endDate := startDate.AddDate(0, 0, 30)
+
+	// Fetch existing schedules to prevent duplicates
+	existingSchedules, err := h.store.ListJadwalSesi(ctx, pg_store.ListJadwalSesiParams{
+		Tanggal:     pgtype.Date{Time: startDate, Valid: true},
+		Tanggal_2:   pgtype.Date{Time: endDate, Valid: true},
+		KelurahanID: searchKelurahanID,
+	})
+
+	if err != nil {
+		http.Error(w, "Failed to check existing schedules", http.StatusInternalServerError)
+		return
+	}
+
+	// Create a map of existing schedules for quick lookup
+	// Key: "YYYY-MM-DD|HH:MM"
+	existingMap := make(map[string]bool)
+	for _, s := range existingSchedules {
+		if s.Tanggal.Valid && s.JamMulai.Valid {
+			key := fmt.Sprintf("%s|%d", s.Tanggal.Time.Format("2006-01-02"), s.JamMulai.Microseconds)
+			existingMap[key] = true
+		}
+	}
+
 	for i := range 30 {
 		date := startDate.AddDate(0, 0, i)
 		if date.Weekday() == time.Saturday || date.Weekday() == time.Sunday {
@@ -515,23 +542,35 @@ func (h *Handler) GenerateJadwalHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		pgDate := pgtype.Date{Time: date, Valid: true}
+		dateStr := date.Format("2006-01-02")
 
 		// Session 1: 09:00 - 12:00
-		h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
-			LokasiKelurahanID: lokasiKelurahanID,
-			Tanggal:           pgDate,
-			JamMulai:          pgtype.Time{Microseconds: 9 * 3600 * 1000000, Valid: true},
-			JamSelesai:        pgtype.Time{Microseconds: 12 * 3600 * 1000000, Valid: true},
-			KuotaMaksimal:     50,
-		})
+		jamMulai1 := int64(9 * 3600 * 1000000)
+		key1 := fmt.Sprintf("%s|%d", dateStr, jamMulai1)
+
+		if !existingMap[key1] {
+			h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
+				LokasiKelurahanID: lokasiKelurahanID,
+				Tanggal:           pgDate,
+				JamMulai:          pgtype.Time{Microseconds: jamMulai1, Valid: true},
+				JamSelesai:        pgtype.Time{Microseconds: 12 * 3600 * 1000000, Valid: true},
+				KuotaMaksimal:     50,
+			})
+		}
+
 		// Session 2: 13:00 - 15:00
-		h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
-			LokasiKelurahanID: lokasiKelurahanID,
-			Tanggal:           pgDate,
-			JamMulai:          pgtype.Time{Microseconds: 13 * 3600 * 1000000, Valid: true},
-			JamSelesai:        pgtype.Time{Microseconds: 15 * 3600 * 1000000, Valid: true},
-			KuotaMaksimal:     50,
-		})
+		jamMulai2 := int64(13 * 3600 * 1000000)
+		key2 := fmt.Sprintf("%s|%d", dateStr, jamMulai2)
+
+		if !existingMap[key2] {
+			h.store.CreateJadwalSesi(ctx, pg_store.CreateJadwalSesiParams{
+				LokasiKelurahanID: lokasiKelurahanID,
+				Tanggal:           pgDate,
+				JamMulai:          pgtype.Time{Microseconds: jamMulai2, Valid: true},
+				JamSelesai:        pgtype.Time{Microseconds: 15 * 3600 * 1000000, Valid: true},
+				KuotaMaksimal:     50,
+			})
+		}
 	}
 
 	common.HXRedirect(w, "/admin/jadwal")
