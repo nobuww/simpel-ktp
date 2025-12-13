@@ -31,6 +31,16 @@ type petugasSeed struct {
 	KelurahanID *int16
 }
 
+type pendudukSeed struct {
+	NIK          string
+	Nama         string
+	Email        string
+	Alamat       string
+	NoHP         string
+	JenisKelamin string
+	KodeArea     string
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
@@ -189,6 +199,67 @@ func main() {
 		}
 		fmt.Printf("   Username: %-25s Password: %s (%s)\n", p.Username, p.Password, role)
 	}
+
+	// Data Penduduk (15 entries)
+	pendudukList := []pendudukSeed{
+		{NIK: "3172010101800001", Nama: "Ahmad Supriyadi", Email: "ahmad.supriyadi@example.com", Alamat: "Jl. Pademangan II Gg. 2 No. 10", NoHP: "081234567890", JenisKelamin: "LAKI_LAKI", KodeArea: "PMB"},
+		{NIK: "3172010101850002", Nama: "Siti Aminah", Email: "siti.aminah@example.com", Alamat: "Jl. Pademangan III No. 5", NoHP: "081234567891", JenisKelamin: "PEREMPUAN", KodeArea: "PMB"},
+		{NIK: "3172010101900003", Nama: "Budi Harsono", Email: "budi.harsono@example.com", Alamat: "Jl. Pademangan IV No. 12", NoHP: "081234567892", JenisKelamin: "LAKI_LAKI", KodeArea: "PMB"},
+		{NIK: "3172010101950004", Nama: "Dewi Kartika", Email: "dewi.kartika@example.com", Alamat: "Jl. Budi Mulia No. 8", NoHP: "081234567893", JenisKelamin: "PEREMPUAN", KodeArea: "PMB"},
+		{NIK: "3172010101880005", Nama: "Eko Prasetyo", Email: "eko.prasetyo@example.com", Alamat: "Jl. Hidup Baru No. 3", NoHP: "081234567894", JenisKelamin: "LAKI_LAKI", KodeArea: "PMB"},
+		{NIK: "3172020202820001", Nama: "Fajar Nugraha", Email: "fajar.nugraha@example.com", Alamat: "Jl. Pademangan Timur VIII No. 20", NoHP: "081234567895", JenisKelamin: "LAKI_LAKI", KodeArea: "PMT"},
+		{NIK: "3172020202870002", Nama: "Gita Permata", Email: "gita.permata@example.com", Alamat: "Jl. Pademangan Timur IX No. 15", NoHP: "081234567896", JenisKelamin: "PEREMPUAN", KodeArea: "PMT"},
+		{NIK: "3172020202920003", Nama: "Hendra Wijaya", Email: "hendra.wijaya@example.com", Alamat: "Jl. Pademangan Timur X No. 7", NoHP: "081234567897", JenisKelamin: "LAKI_LAKI", KodeArea: "PMT"},
+		{NIK: "3172020202970004", Nama: "Indah Sari", Email: "indah.sari@example.com", Alamat: "Jl. Pademangan Timur XI No. 4", NoHP: "081234567898", JenisKelamin: "PEREMPUAN", KodeArea: "PMT"},
+		{NIK: "3172020202850005", Nama: "Joko Susilo", Email: "joko.susilo@example.com", Alamat: "Jl. Pademangan Timur XII No. 9", NoHP: "081234567899", JenisKelamin: "LAKI_LAKI", KodeArea: "PMT"},
+		{NIK: "3172030303830001", Nama: "Kartini Putri", Email: "kartini.putri@example.com", Alamat: "Jl. Lodan Raya No. 10", NoHP: "081234567900", JenisKelamin: "PEREMPUAN", KodeArea: "ACL"},
+		{NIK: "3172030303880002", Nama: "Lukman Hakim", Email: "lukman.hakim@example.com", Alamat: "Jl. Pasir Putih No. 5", NoHP: "081234567901", JenisKelamin: "LAKI_LAKI", KodeArea: "ACL"},
+		{NIK: "3172030303930003", Nama: "Maya Puspita", Email: "maya.puspita@example.com", Alamat: "Jl. Pantai Indah No. 12", NoHP: "081234567902", JenisKelamin: "PEREMPUAN", KodeArea: "ACL"},
+		{NIK: "3172030303980004", Nama: "Nurhadi Surya", Email: "nurhadi.surya@example.com", Alamat: "Jl. Ancol Barat No. 8", NoHP: "081234567903", JenisKelamin: "LAKI_LAKI", KodeArea: "ACL"},
+		{NIK: "3172030303860005", Nama: "Oki Pradana", Email: "oki.pradana@example.com", Alamat: "Jl. Ancol Timur No. 3", NoHP: "081234567904", JenisKelamin: "LAKI_LAKI", KodeArea: "ACL"},
+	}
+
+	fmt.Println("\n👥 Seeding Penduduk...")
+	pendudukPassword := "rahasia123"
+	hashedPendudukPassword, err := bcrypt.GenerateFromPassword([]byte(pendudukPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Failed to hash penduduk password: %v", err)
+	}
+
+	for _, p := range pendudukList {
+		exists, err := s.CheckPendudukExists(ctx, p.NIK)
+		if err != nil {
+			log.Fatalf("Failed to check penduduk existence %s: %v", p.NIK, err)
+		}
+		if exists {
+			fmt.Printf("   ✓ Penduduk %s already exists\n", p.Nama)
+			continue
+		}
+
+		kelID, ok := kelurahanIDs[p.KodeArea]
+		if !ok {
+			log.Fatalf("Kode area %s not found for penduduk %s", p.KodeArea, p.Nama)
+		}
+
+		created, err := s.CreatePenduduk(ctx, pg_store.CreatePendudukParams{
+			Nik:          p.NIK,
+			KelurahanID:  pgtype.Int2{Int16: kelID, Valid: true},
+			Email:        pgtype.Text{String: p.Email, Valid: true},
+			PasswordHash: pgtype.Text{String: string(hashedPendudukPassword), Valid: true},
+			NamaLengkap:  p.Nama,
+			Alamat:       pgtype.Text{String: p.Alamat, Valid: true},
+			NoHp:         pgtype.Text{String: p.NoHP, Valid: true},
+			JenisKelamin: p.JenisKelamin,
+		})
+		if err != nil {
+			log.Fatalf("Failed to create penduduk %s: %v", p.Nama, err)
+		}
+
+		fmt.Printf("   ✓ Created penduduk: %s (%s) - %s\n", created.NamaLengkap, created.Nik, p.KodeArea)
+	}
+
+	fmt.Println("\nPenduduk Credentials (All):")
+	fmt.Println("   Password: rahasia123")
 	fmt.Println("   ─────────────────────────────────────────")
 }
 
