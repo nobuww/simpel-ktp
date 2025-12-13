@@ -67,7 +67,7 @@ templ DashboardPage(data DashboardData) {
 
 				</div>
 				<!-- Tutorial Section -->
-				<div class="mt-8 mb-12">
+				<div class="mt-8 mb-6">
 					@TutorialSection()
 				</div>
 			</div>
@@ -109,7 +109,7 @@ templ UserNavbar(userName string) {
 }
 
 templ RecentPermohonanCard(items []PermohonanItem) {
-	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+	@card.Card(card.Props{Class: "border-0 shadow-lg"}) {
 		@card.Header() {
 			@card.Title() {
 				Permohonan Saya
@@ -160,7 +160,7 @@ templ RecentPermohonanCard(items []PermohonanItem) {
 templ PermohonanModal() {
 	@dialog.Dialog(dialog.Props{ID: "permohonan-modal"}) {
 		@dialog.Trigger(dialog.TriggerProps{Class: "w-full sm:w-auto"}) {
-			@button.Button(button.Props{Variant: button.VariantDefault, Class: "w-full sm:w-auto"}) {
+			@button.Button(button.Props{Variant: button.VariantDefault, Class: "w-full sm:w-auto shadow-blue-500/50"}) {
 				@components.IconPlus()
 				Ajukan Permohonan Baru
 			}
@@ -206,7 +206,7 @@ templ PermohonanOption(title, description, href string, icon templ.Component) {
 }
 
 templ InfoCard() {
-	@card.Card(card.Props{Class: "border-0 shadow-sm"}) {
+	@card.Card(card.Props{Class: "border-0 shadow-lg"}) {
 		@card.Header() {
 			@card.Title() {
 				Informasi Penting
@@ -243,7 +243,7 @@ templ TutorialSection() {
 		</div>
 		<div class="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
 			for i, step := range getTutorialSteps() {
-				<div class="min-w-[280px] md:min-w-[320px] lg:min-w-0 snap-center group bg-card rounded-xl p-5 shadow-sm border border-border hover:shadow-md transition-all duration-300">
+				<div class="min-w-[280px] md:min-w-[320px] lg:min-w-0 snap-center group bg-card rounded-xl p-5 shadow-lg border border-border hover:shadow-xl transition-all duration-300">
 					<div class="flex items-start gap-4">
 						<div class={ "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 " + step.ColorRef }>
 							<div class="[&>svg]:size-6">

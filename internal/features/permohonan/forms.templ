@@ -513,7 +513,7 @@ templ FormFileUpload(labelText, fieldName, accept, helpText string, required boo
 }
 
 templ PersonalDataSection(data FormData) {
-	@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+	@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 		@card.Header() {
 			@card.Title() {
 				Data Pribadi
@@ -545,7 +545,7 @@ templ PersonalDataSection(data FormData) {
 }
 
 templ JadwalSection(locations []LocationOption, jadwalList []JadwalOption, errors map[string]string) {
-	@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+	@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 		@card.Header() {
 			@card.Title() {
 				Jadwal Kedatangan
@@ -592,7 +592,7 @@ templ KTPBaruFormPage(data FormData, locations []LocationOption, jadwalList []Ja
 		@AlpineFormWrapper("baru") {
 			@PersonalDataSection(data)
 			@JadwalSection(locations, jadwalList, data.Errors)
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Dokumen Persyaratan
@@ -624,7 +624,7 @@ templ KTPHilangFormPage(data FormData, locations []LocationOption, jadwalList []
 		@AlpineFormWrapper("hilang") {
 			@PersonalDataSection(data)
 			@JadwalSection(locations, jadwalList, data.Errors)
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Informasi Kehilangan
@@ -640,7 +640,7 @@ templ KTPHilangFormPage(data FormData, locations []LocationOption, jadwalList []
 					</div>
 				}
 			}
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Dokumen Persyaratan
@@ -672,7 +672,7 @@ templ KTPRusakFormPage(data FormData, locations []LocationOption, jadwalList []J
 		@AlpineFormWrapper("rusak") {
 			@PersonalDataSection(data)
 			@JadwalSection(locations, jadwalList, data.Errors)
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Deskripsi Kerusakan
@@ -685,7 +685,7 @@ templ KTPRusakFormPage(data FormData, locations []LocationOption, jadwalList []J
 					@FormTextareaAlpine("Deskripsi Kerusakan", "deskripsi_kerusakan", "", "Jelaskan kondisi kerusakan KTP Anda (misal: patah, pudar, sobek, dll)", true, data.Errors["deskripsi_kerusakan"])
 				}
 			}
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Dokumen Persyaratan
@@ -725,7 +725,7 @@ templ KTPUbahFormPage(data FormData, locations []LocationOption, jadwalList []Ja
 		@AlpineFormWrapper("ubah") {
 			@PersonalDataSection(data)
 			@JadwalSection(locations, jadwalList, data.Errors)
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Alasan Perubahan
@@ -738,7 +738,7 @@ templ KTPUbahFormPage(data FormData, locations []LocationOption, jadwalList []Ja
 					@FormTextareaAlpine("Alasan Perubahan Data", "alasan_perubahan", "", "Jelaskan data apa yang ingin diubah (misal: nama, alamat, status perkawinan, dll) dan alasannya", true, data.Errors["alasan_perubahan"])
 				}
 			}
-			@card.Card(card.Props{Class: "mb-6 border-0 shadow-sm"}) {
+			@card.Card(card.Props{Class: "mb-6 border-0 shadow-lg"}) {
 				@card.Header() {
 					@card.Title() {
 						Dokumen Persyaratan

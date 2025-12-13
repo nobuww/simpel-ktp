@@ -197,7 +197,7 @@ templ PetugasPage(data PetugasPageData) {
 												<td class="px-6 py-4 text-right">
 													<button
 														class="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition-colors"
-														@click="if(confirm('Yakin ingin menghapus petugas ini?')) { deletePetugas(item.id) }"
+														@click="openDeleteDialog(item)"
 														title="Hapus Petugas"
 													>
 														<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
@@ -220,7 +220,7 @@ templ PetugasPage(data PetugasPageData) {
 										if data.IsKecamatan {
 											<button
 												class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
-												@click="if(confirm('Yakin ingin menghapus petugas ini?')) { deletePetugas(item.id) }"
+												@click="openDeleteDialog(item)"
 												title="Hapus Petugas"
 											>
 												<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
@@ -258,6 +258,7 @@ templ PetugasPage(data PetugasPageData) {
 		@PetugasFilterScript(data.List)
 		if data.IsKecamatan {
 			@CreatePetugasDialog(data.KelurahanList)
+			@DeletePetugasDialog()
 		}
 	}
 }
@@ -364,6 +365,68 @@ templ CreatePetugasDialog(kelurahanList []KelurahanOption) {
 	}
 }
 
+// Delete Petugas Confirmation Dialog
+templ DeletePetugasDialog() {
+	@dialog.Dialog(dialog.Props{ID: "delete-petugas-dialog"}) {
+		@dialog.Content(dialog.ContentProps{Class: "max-w-md w-[calc(100vw-2rem)] sm:w-full"}) {
+			@dialog.Header() {
+				@dialog.Title() {
+					Konfirmasi Hapus Petugas
+				}
+				@dialog.Description() {
+					Tindakan ini tidak dapat dibatalkan.
+				}
+			}
+			<div class="pt-2 pb-4" x-data="deletePetugasContent()" x-init="loadData()">
+				<div class="flex items-start gap-3 p-4 mb-4 bg-red-50 border border-red-200 rounded-lg">
+					<svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-red-600 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
+						<path d="M12 9v4"></path>
+						<path d="M12 17h.01"></path>
+					</svg>
+					<div class="text-sm">
+						<p class="font-medium text-red-800">Peringatan</p>
+						<p class="text-red-700 mt-1">
+							Anda akan menghapus petugas <strong x-text="petugas.namaLengkap"></strong> dari sistem. Tindakan ini tidak dapat dibatalkan.
+						</p>
+					</div>
+				</div>
+				@dialog.Footer() {
+					@dialog.Close() {
+						@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
+							Batal
+						}
+					}
+					@button.Button(button.Props{Type: button.TypeButton, Variant: button.VariantDestructive, Attributes: templ.Attributes{"@click": "confirmDelete()"}}) {
+						Ya, Hapus Petugas
+					}
+				}
+			</div>
+		}
+	}
+	<script>
+		function deletePetugasContent() {
+			return {
+				petugas: {},
+				loadData() {
+					this.petugas = window.deletePetugasData || {};
+				},
+				formatRole(role) {
+					if (role === "ADMIN_KECAMATAN") return "Admin Kecamatan";
+					if (role === "ADMIN_KELURAHAN") return "Admin Kelurahan";
+					return role;
+				},
+				confirmDelete() {
+					// TODO: implement actual delete via HTMX
+					console.log("Delete petugas:", this.petugas.id);
+					alert("Fitur hapus akan diimplementasikan dengan backend");
+					window.tui.dialog.close('delete-petugas-dialog');
+				}
+			};
+		}
+	</script>
+}
+
 // Stat Card Component specific for Petugas Page
 templ PetugasStatCard(label string, value int, colorClass string, barColorClass string, index int) {
 	<div
@@ -449,6 +512,10 @@ templ PetugasFilterScript(items []PetugasItem) {
 					if (role === "ADMIN_KECAMATAN") return "Admin Kecamatan";
 					if (role === "ADMIN_KELURAHAN") return "Admin Kelurahan";
 					return role;
+				},
+				openDeleteDialog(item) {
+					window.deletePetugasData = item;
+					window.tui.dialog.open('delete-petugas-dialog');
 				},
 				deletePetugas(id) {
 					// TODO: implement delete via HTMX
