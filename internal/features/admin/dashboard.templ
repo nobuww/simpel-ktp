@@ -49,10 +49,6 @@ templ DashboardPage(data DashboardData) {
 					<div class="mb-8">
 						<h2 class="text-lg font-semibold text-foreground mb-4">Aksi Cepat</h2>
 						<div class="flex flex-wrap gap-3">
-							@button.Button(button.Props{Variant: button.VariantDefault, Href: "/admin/permohonan?status=VERIFIKASI"}) {
-								@components.IconPlus()
-								Permohonan Baru
-							}
 							@button.Button(button.Props{Variant: button.VariantOutline, Href: "/admin/permohonan"}) {
 								@components.IconSearch()
 								Cari Permohonan
