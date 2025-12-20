@@ -226,6 +226,12 @@ func determineNextSteps(p pg_store.GetPermohonanByKodeBookingRow) []NextStep {
 			Description: "Mohon tunggu petugas memverifikasi dokumen Anda.",
 			IsPrimary:   false,
 		})
+	case "PROSES":
+		steps = append(steps, NextStep{
+			Title:       "Proses Pencetakan",
+			Description: "Anda perlu datang ke kelurahan/kecamatan untuk mengambil foto, lalu tunggu proses pencetakan.",
+			IsPrimary:   false,
+		})
 	case "SIAP_AMBIL":
 		steps = append(steps, NextStep{
 			Title:       "Ambil KTP",

@@ -238,10 +238,10 @@ templ TutorialSection() {
 		<div class="mb-6">
 			<h2 class="text-lg md:text-xl font-bold text-foreground">Cara Penggunaan</h2>
 			<p class="text-sm text-muted-foreground mt-1">
-				Ikuti langkah-langkah berikut untuk mengurus KTP-el Anda
+				Ikuti langkah-langkah berikut untuk mengurus KTP Anda
 			</p>
 		</div>
-		<div class="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
+		<div class="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-8">
 			for i, step := range getTutorialSteps() {
 				<div class="min-w-[280px] md:min-w-[320px] lg:min-w-0 snap-center group bg-card rounded-xl p-5 shadow-lg border border-border hover:shadow-xl transition-all duration-300">
 					<div class="flex items-start gap-4">
@@ -294,7 +294,7 @@ func getTutorialSteps() []TutorialStep {
 		{
 			Number:      "3",
 			Title:       "Proses Pembuatan",
-			Description: "Permohonan disetujui dan KTP sedang dalam proses pencetakan.",
+			Description: "Datang ke kelurahan atau kecamatan untuk foto dan tunggu proses pencetakan KTP.",
 			Icon:        components.IconSettings(),
 			ColorRef:    "bg-orange-100 text-orange-600",
 		},
